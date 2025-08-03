@@ -167,6 +167,13 @@ function BlockedProfiles({
           />
         )}
         keyExtractor={(item) => item.BlockedProfileID.toString()}
+        ListEmptyComponent={() => (
+          <View>
+            <Text style={{ fontSize: 16, color: "#999" }}>
+              Nothing to see here...
+            </Text>
+          </View>
+        )}
         style={{ padding: 20 }}
       />
     </View>
