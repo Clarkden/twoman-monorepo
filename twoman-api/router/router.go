@@ -72,6 +72,9 @@ func Router(liveDB, demoDB *gorm.DB, rdb *redis.Client, s3 *s3.S3, rlmdb *redis.
 	router.Handle("GET /v1/referral/rewards", middlewareProvider.AuthMiddleware(middlewareProvider.DatabaseMiddleware(handler.HandleGetAvailableRewards())))
 	router.Handle("POST /v1/referral/reward/{rewardId}/claim", middlewareProvider.AuthMiddleware(middlewareProvider.DatabaseMiddleware(handler.HandleClaimReferralReward())))
 
+	// Subscription Routes
+	router.Handle("GET /v1/subscription/status", middlewareProvider.AuthMiddleware(middlewareProvider.DatabaseMiddleware(handler.HandleGetSubscriptionStatus())))
+
 	// Match Routes
 	router.Handle("GET /v1/match", middlewareProvider.AuthMiddleware(middlewareProvider.DatabaseMiddleware(handler.HandleGetAcceptedMatches())))
 	router.Handle("GET /v1/match/{matchId}", middlewareProvider.AuthMiddleware(middlewareProvider.DatabaseMiddleware(handler.HandleGetMatch())))

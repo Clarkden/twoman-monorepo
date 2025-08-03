@@ -14,7 +14,6 @@ const apiFetch = async <T = unknown>(
   url: string,
   options: CustomRequestInit = {},
 ): Promise<ApiResponse<T>> => {
-  console.log("apiFetch called with url:", url);
   const { method = "GET", headers = {}, body, ...otherOptions } = options;
 
   const session = useSession.getState().session;

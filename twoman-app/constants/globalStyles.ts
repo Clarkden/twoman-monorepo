@@ -1,6 +1,7 @@
 import { StyleSheet } from "react-native";
 
 export const mainPurple = "#a364f5";
+export const goldYellow = "#f5d364"; // Goldish yellow that complements the purple
 export const mainBackgroundColor = "#0c0c0d";
 export const secondaryBackgroundColor = "#1b1b1c";
 export const accentGray = "#7f7985";

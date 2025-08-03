@@ -21,8 +21,10 @@ const (
 	ReferralCodeChars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 	// ReferralRewardThreshold is the number of completed referrals needed for reward
 	ReferralRewardThreshold = 3
-	// RewardDurationDays is how long referral rewards last (30 days)
-	RewardDurationDays = 30
+	// FriendRewardDurationDays is how long friend rewards last (7 days)
+	FriendRewardDurationDays = 7
+	// ReferrerRewardDurationDays is how long referrer rewards last (30 days)
+	ReferrerRewardDurationDays = 30
 )
 
 // GenerateReferralCode creates a unique 8-character referral code
@@ -264,7 +266,7 @@ func GetReferralStats(userID uint, db *gorm.DB) (*types.ReferralStats, error) {
 	// Check if user was referred by someone
 	var wasReferred bool
 	var referralRecord schemas.Referral
-	if err := db.Where("referred_user_id = ?", userID).First(&referralRecord).Error; err == nil {
+	if err := db.Where("referred_id = ?", userID).First(&referralRecord).Error; err == nil {
 		wasReferred = true
 	}
 

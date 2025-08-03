@@ -11,6 +11,7 @@ import { FontAwesome5 } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSession } from "@/stores/auth";
+import { useSubscriptionStore } from "@/stores/subscription";
 import useWebSocket from "@/hooks/useWebsocket";
 
 export default function TabLayout() {
@@ -22,6 +23,9 @@ export default function TabLayout() {
   const [waitlistEnabled, setWaitlistEnabled] = useState(false);
   const { connectionStatus } = useWebSocket();
   const [initialized, setInitialized] = useState(false);
+  
+  // Get subscription store
+  const { fetchSubscriptionStatus } = useSubscriptionStore();
 
   const handleGetProfile = async () => {
     if (!session) return;
@@ -42,6 +46,10 @@ export default function TabLayout() {
       }
 
       await handleGetWaitlistFlag();
+      
+      // Fetch subscription status on app initialization
+      console.log("Fetching subscription status on app init...");
+      await fetchSubscriptionStatus();
     } catch (error) {
       console.log(error);
     } finally {
@@ -79,6 +87,14 @@ export default function TabLayout() {
       setInitialized(false);
     };
   }, [connectionStatus, session]);
+
+  // Fetch subscription status when session is available
+  useEffect(() => {
+    if (session && connectionStatus === "connected") {
+      console.log("Session available, fetching subscription status...");
+      fetchSubscriptionStatus();
+    }
+  }, [session, connectionStatus, fetchSubscriptionStatus]);
 
   useEffect(() => {
     const handleChatMessage = (data: Message) => {

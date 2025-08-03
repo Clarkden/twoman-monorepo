@@ -8,6 +8,8 @@ import (
 	"time"
 	"twoman/globals"
 	"twoman/handlers/helpers/matches"
+	"twoman/handlers/helpers/notifications"
+	"twoman/handlers/helpers/profile"
 	"twoman/handlers/helpers/referral"
 	"twoman/handlers/helpers/subscription"
 	"twoman/handlers/response"
@@ -94,11 +96,31 @@ func (h Handler) HandleRedeemReferralCode() http.Handler {
 			}
 
 			// Create friend reward for the referred user
-			_, err = referral.CreateFriendReward(session.UserID, h.DB(r))
+			friendReward, err := referral.CreateFriendReward(session.UserID, h.DB(r))
 			if err != nil {
 				log.Println("Error creating friend reward:", err)
 				sentry.CaptureException(err)
 				// Don't fail the request for this
+			} else {
+				// Grant the Pro subscription immediately for the referral reward
+				sub, err := subscription.GrantReferralReward(session.UserID, friendReward.RewardType, h.DB(r))
+				if err != nil {
+					log.Println("Error granting referral subscription:", err)
+					sentry.CaptureException(err)
+					// Don't fail the request for this
+				} else {
+					// Mark reward as claimed
+					friendReward.Status = schemas.RewardStatusClaimed
+					now := time.Now()
+					friendReward.ClaimedAt = &now
+					friendReward.SubscriptionID = &sub.ID
+
+					if err := h.DB(r).Save(friendReward).Error; err != nil {
+						log.Println("Error updating friend reward status:", err)
+						sentry.CaptureException(err)
+						// Don't fail the request for this
+					}
+				}
 			}
 
 			// Create friend match so they can chat
@@ -107,6 +129,37 @@ func (h Handler) HandleRedeemReferralCode() http.Handler {
 				log.Printf("Error creating friend match for referral: %v", err)
 				// Don't fail the request for this
 			}
+
+			// Send notification to referrer about successful referral
+			go func() {
+				// Get referred user's profile for the notification
+				referredProfile, err := profile.GetProfileById(session.UserID, h.DB(r))
+				if err != nil {
+					log.Printf("Error getting referred user profile for notification: %v", err)
+					return
+				}
+
+				// Get updated referral stats for the referrer
+				stats, err := referral.GetReferralStats(referralRecord.ReferrerID, h.DB(r))
+				if err != nil {
+					log.Printf("Error getting referral stats for notification: %v", err)
+					return
+				}
+
+				// Send notification
+				err = notifications.SendReferralSuccessNotification(
+					referralRecord.ReferrerID,
+					referredProfile.Name,
+					stats.CompletedCount,
+					stats.RemainingNeeded,
+					h.DB(r),
+				)
+				if err != nil {
+					log.Printf("Error sending referral notification: %v", err)
+				} else {
+					log.Printf("Sent referral success notification to user %d", referralRecord.ReferrerID)
+				}
+			}()
 
 			response.OKWithData(w, "Referral code redeemed successfully", map[string]interface{}{
 				"referral_id": referralRecord.ID,

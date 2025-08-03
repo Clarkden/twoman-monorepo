@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import {
   accentGray,
+  goldYellow,
   mainBackgroundColor,
   mainPurple,
   secondaryBackgroundColor,
@@ -32,6 +33,7 @@ import profileStore from "@/stores/profile";
 import Toast from "react-native-toast-message";
 import { messageHandler } from "@/utils/websocket";
 import { useSession } from "@/stores/auth";
+import { useSubscriptionStore } from "@/stores/subscription";
 import * as Contacts from "expo-contacts";
 import { shareReferralLink } from "@/utils/deep-links";
 import {
@@ -41,6 +43,7 @@ import {
   type ReferralStats,
 } from "@/utils/referral";
 import { LinearGradient } from "expo-linear-gradient";
+import LottieView from "lottie-react-native";
 
 export default function FriendsScreen() {
   const [friends, setFriends] = useState<Friendship[]>([]);
@@ -51,7 +54,7 @@ export default function FriendsScreen() {
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const { profile: storedProfile } = profileStore();
   const [currentUserProfile, setCurrentUserProfile] = useState<Profile | null>(
-    storedProfile,
+    storedProfile
   );
   const [showContactsModal, setShowContactsModal] = useState(false);
   const [contacts, setContacts] = useState<Contacts.Contact[]>([]);
@@ -59,15 +62,106 @@ export default function FriendsScreen() {
   const [loadingContacts, setLoadingContacts] = useState(false);
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [referralStats, setReferralStats] = useState<ReferralStats | null>(
-    null,
+    null
   );
   const [loadingReferralStats, setLoadingReferralStats] = useState(true);
   const navigation = useNavigation();
 
+  // Get subscription store
+  const { refreshSubscriptionStatus } = useSubscriptionStore();
+
+  // Modal state for redeem modal - keep at top level to prevent unmounting
+  const [showRedeemModal, setShowRedeemModal] = useState(false);
+  const [redeemStep, setRedeemStep] = useState<
+    "input" | "success" | "error"
+  >("input");
+  const [codeInput, setCodeInput] = useState("");
+  const [redeeming, setRedeeming] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [showConfetti, setShowConfetti] = useState(false);
+  const slideAnim = useState(new Animated.Value(300))[0];
+
+  // Modal animation effect
+  useEffect(() => {
+    if (showRedeemModal) {
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(slideAnim, {
+        toValue: 300,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [showRedeemModal, slideAnim]);
+
+  // Confetti debug
+  useEffect(() => {
+    console.log("Confetti state changed:", showConfetti);
+    console.trace("Confetti state change stack trace");
+  }, [showConfetti]);
+
+  // Modal handlers
+  const handleRedeemCode = async () => {
+    if (!codeInput.trim() || codeInput.length !== 8) {
+      Alert.alert(
+        "Invalid Code",
+        "Please enter a valid 8-character referral code"
+      );
+      return;
+    }
+
+    setRedeeming(true);
+    try {
+      console.log("Starting referral code redemption...");
+      const result = await redeemReferralCode(codeInput.toUpperCase());
+      console.log("Referral code redeemed successfully:", result);
+
+      setCodeInput("");
+
+      // Start confetti animation immediately
+      console.log("Starting confetti animation...");
+      setShowConfetti(true);
+
+      // Move to success step
+      console.log("Moving to success step...");
+      setRedeemStep("success");
+
+      // Refresh all data that might be affected by the redemption
+      console.log("Refreshing app data...");
+      await fetchReferralData(); // Refresh the referral stats
+      await fetchFriends(); // Refresh friends list
+      await fetchFriendRequests(); // Refresh friend requests
+
+      // Refresh subscription status for Pro benefits
+      console.log("Refreshing subscription status...");
+      await refreshSubscriptionStatus();
+
+      console.log("Data refresh completed");
+
+      // Keep confetti animation playing for the full duration
+      setTimeout(() => {
+        console.log("Hiding confetti animation");
+        setShowConfetti(false);
+      }, 4000);
+    } catch (error) {
+      console.error("Error redeeming code:", error);
+      setErrorMessage(
+        error instanceof Error ? error.message : "Invalid referral code"
+      );
+      setRedeemStep("error");
+    } finally {
+      setRedeeming(false);
+    }
+  };
+
   const fetchFriends = async () => {
     try {
       const response = await apiFetch<Friendship[]>(
-        `/profile/${userId}/friends`,
+        `/profile/${userId}/friends`
       );
 
       if (response.code !== 200) {
@@ -116,7 +210,7 @@ export default function FriendsScreen() {
       const friendship = friends.find(
         (friendship) =>
           friendship.Friend.user_id === profile.user_id ||
-          friendship.Profile.user_id === profile.user_id,
+          friendship.Profile.user_id === profile.user_id
       );
 
       if (!friendship) {
@@ -166,7 +260,7 @@ export default function FriendsScreen() {
       }
 
       setFriendRequests(
-        friendRequests.filter((request) => request.ID !== friendship!.ID),
+        friendRequests.filter((request) => request.ID !== friendship!.ID)
       );
       setSelectedFriendRequestProfile(null);
       await fetchFriends();
@@ -202,7 +296,7 @@ export default function FriendsScreen() {
       }
 
       setFriendRequests(
-        friendRequests.filter((request) => request.ID !== friendship!.ID),
+        friendRequests.filter((request) => request.ID !== friendship!.ID)
       );
       setSelectedFriendRequestProfile(null);
       await fetchFriends();
@@ -252,7 +346,7 @@ export default function FriendsScreen() {
         [
           { text: "Cancel", style: "cancel" },
           { text: "Settings", onPress: () => {} }, // Could open settings in future
-        ],
+        ]
       );
     }
   };
@@ -267,7 +361,7 @@ export default function FriendsScreen() {
 
       // Filter contacts that have phone numbers
       const contactsWithPhones = data.filter(
-        (contact) => contact.phoneNumbers && contact.phoneNumbers.length > 0,
+        (contact) => contact.phoneNumbers && contact.phoneNumbers.length > 0
       );
 
       setContacts(contactsWithPhones);
@@ -413,7 +507,7 @@ export default function FriendsScreen() {
               <ReferralSection
                 stats={referralStats}
                 onContactsPress={requestContactsPermission}
-                onCodeRedeem={fetchReferralData}
+                onOpenRedeemModal={() => setShowRedeemModal(true)}
               />
             )}
 
@@ -700,6 +794,208 @@ export default function FriendsScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Redeem Code Modal */}
+      {showRedeemModal && (
+        <Modal
+          visible={showRedeemModal}
+          transparent
+          animationType="fade"
+          presentationStyle="overFullScreen"
+          onRequestClose={() => {
+            console.log("Modal onRequestClose called - NOT resetting confetti");
+            setShowRedeemModal(false);
+            setRedeemStep("input");
+            setCodeInput("");
+            setErrorMessage("");
+            // Don't reset confetti here - let it finish naturally
+          }}
+        >
+          <View style={styles.fullScreenModalOverlay}>
+            <Animated.View
+              style={[
+                styles.animatedBottomSheetContainer,
+                {
+                  transform: [{ translateY: slideAnim }],
+                },
+              ]}
+            >
+              {redeemStep === "input" ? (
+                <>
+                  <View style={styles.nativeModalHeader}>
+                    <Text style={styles.nativeModalTitle}>
+                      Enter Referral Code
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setShowRedeemModal(false);
+                        setRedeemStep("input");
+                      }}
+                      style={styles.nativeModalCloseButton}
+                    >
+                      <Text style={styles.nativeModalCloseButtonText}>✕</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <Text style={styles.nativeModalSubtitle}>
+                    Enter your friend's code to get 1 week of 2 Man Pro free!
+                  </Text>
+
+                  <TextInput
+                    value={codeInput}
+                    onChangeText={(text) => setCodeInput(text.toUpperCase())}
+                    style={styles.nativeModalCodeInput}
+                    placeholder="Enter 8-character code"
+                    placeholderTextColor="#666"
+                    maxLength={8}
+                    autoCapitalize="characters"
+                    autoCorrect={false}
+                    autoFocus
+                  />
+
+                  <TouchableOpacity
+                    style={[
+                      styles.nativeModalRedeemButton,
+                      (!codeInput.trim() || redeeming) &&
+                        styles.nativeModalRedeemButtonDisabled,
+                    ]}
+                    onPress={handleRedeemCode}
+                    disabled={!codeInput.trim() || redeeming}
+                  >
+                    {redeeming ? (
+                      <LoadingIndicator size={16} />
+                    ) : (
+                      <Text style={styles.nativeModalRedeemButtonText}>
+                        Redeem Code
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                </>
+              ) : redeemStep === "success" ? (
+                <>
+                  <View style={styles.nativeModalHeader}>
+                    <Text style={styles.nativeModalTitle}>Success!</Text>
+                    <TouchableOpacity
+                      style={styles.nativeModalCloseButton}
+                      onPress={() => {
+                        setShowRedeemModal(false);
+                        setRedeemStep("input");
+                      }}
+                    >
+                      <Text style={styles.nativeModalCloseButtonText}>✕</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.successContent}>
+                    <Text style={styles.successTitle}>Success! 🎉</Text>
+
+                    <Text style={styles.successSubtitle}>
+                      Your referral code has been redeemed successfully!
+                    </Text>
+
+                    <View style={styles.successBenefitsContainer}>
+                      <View style={styles.successBenefitItem}>
+                        <Users size={20} color={goldYellow} />
+                        <Text style={styles.successBenefitText}>
+                          You got 1 week of Pro free!
+                        </Text>
+                      </View>
+
+                      <View style={styles.successBenefitItem}>
+                        <Users size={20} color={goldYellow} />
+                        <Text style={styles.successBenefitText}>
+                          You're now friends with your referrer!
+                        </Text>
+                      </View>
+                    </View>
+
+                    <TouchableOpacity
+                      style={styles.successContinueButton}
+                      onPress={() => {
+                        setShowRedeemModal(false);
+                        setRedeemStep("input");
+                        setCodeInput("");
+                        setErrorMessage("");
+                        setShowConfetti(false);
+                      }}
+                    >
+                      <Text style={styles.successContinueButtonText}>
+                        Let's Go!
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              ) : redeemStep === "error" ? (
+                <>
+                  <View style={styles.nativeModalHeader}>
+                    <Text style={styles.nativeModalTitle}>Error</Text>
+                    <TouchableOpacity
+                      style={styles.nativeModalCloseButton}
+                      onPress={() => {
+                        setShowRedeemModal(false);
+                        setRedeemStep("input");
+                        setCodeInput("");
+                        setErrorMessage("");
+                      }}
+                    >
+                      <Text style={styles.nativeModalCloseButtonText}>✕</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.errorContent}>
+                    {/* Error Icon */}
+                    <View style={styles.errorAnimationPlaceholder}>
+                      <Text style={styles.errorIcon}>⚠️</Text>
+                    </View>
+
+                    <Text style={styles.errorTitle}>Oops!</Text>
+
+                    <Text style={styles.errorSubtitle}>{errorMessage}</Text>
+
+                    <View style={styles.errorButtonsContainer}>
+                      <TouchableOpacity
+                        style={styles.errorTryAgainButton}
+                        onPress={() => {
+                          setRedeemStep("input");
+                          setErrorMessage("");
+                        }}
+                      >
+                        <Text style={styles.errorTryAgainButtonText}>
+                          Try Again
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </>
+              ) : null}
+            </Animated.View>
+          </View>
+        </Modal>
+      )}
+
+      {/* Full-screen Confetti Animation - Absolute positioned view */}
+      {showConfetti && (
+        <View style={styles.confettiOverlay}>
+          {(() => {
+            console.log("CONFETTI OVERLAY IS RENDERING!");
+            return null;
+          })()}
+          <LottieView
+            key={`confetti-${Date.now()}`} // Force re-render with timestamp
+            source={require("@/assets/animations/confetti.json")}
+            autoPlay={true}
+            loop={false}
+            style={styles.confettiAnimation}
+            resizeMode="contain"
+            onAnimationFinish={() => {
+              console.log("Full-screen confetti animation finished");
+            }}
+            onAnimationLoaded={() => {
+              console.log("Confetti animation loaded successfully");
+            }}
+          />
+        </View>
+      )}
     </View>
   );
 }
@@ -711,7 +1007,7 @@ function UsernameSearch() {
   const handleSearch = async () => {
     try {
       const response = await apiFetch<Profile[]>(
-        `/profile/search?username=${search}`,
+        `/profile/search?username=${search}`
       );
 
       if (!response.success) {
@@ -824,309 +1120,55 @@ function UsernameSearch() {
 function ReferralSection({
   stats,
   onContactsPress,
-  onCodeRedeem,
+  onOpenRedeemModal,
 }: {
   stats: ReferralStats;
   onContactsPress: () => void;
-  onCodeRedeem: () => void;
+  onOpenRedeemModal: () => void;
 }) {
-  const [codeInput, setCodeInput] = useState("");
-  const [redeeming, setRedeeming] = useState(false);
-  const [showRedeemModal, setShowRedeemModal] = useState(false);
-  const [redeemStep, setRedeemStep] = useState<"input" | "success" | "error">(
-    "input",
-  );
-  const [referrerName, setReferrerName] = useState<string>("");
-  const [errorMessage, setErrorMessage] = useState<string>("");
-  const slideAnim = useState(new Animated.Value(300))[0]; // Start off-screen
-
-  // Animate modal in/out
-  useEffect(() => {
-    if (showRedeemModal) {
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.timing(slideAnim, {
-        toValue: 300,
-        duration: 250,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [showRedeemModal, slideAnim]);
-
-  const handleRedeemCode = async () => {
-    if (!codeInput.trim() || codeInput.length !== 8) {
-      Alert.alert(
-        "Invalid Code",
-        "Please enter a valid 8-character referral code",
-      );
-      return;
-    }
-
-    setRedeeming(true);
-    try {
-      const result = await redeemReferralCode(codeInput.toUpperCase());
-      setCodeInput("");
-      setRedeemStep("success");
-      onCodeRedeem(); // Refresh the stats
-    } catch (error) {
-      console.error("Error redeeming code:", error);
-      setErrorMessage(
-        error instanceof Error ? error.message : "Invalid referral code",
-      );
-      setRedeemStep("error");
-    } finally {
-      setRedeeming(false);
-    }
-  };
-
   return (
-    <>
-      <View style={styles.inviteFriendsSection}>
-        {/* Always show invite friends button */}
-        {/* Show referral code button for users who can redeem codes */}
-        {stats.can_redeem_code && (
-          <TouchableOpacity
-            onPress={() => setShowRedeemModal(true)}
-            activeOpacity={0.8}
+    <View style={styles.inviteFriendsSection}>
+      {/* Always show invite friends button */}
+      {/* Show referral code button for users who can redeem codes and haven't been referred yet */}
+      {stats.can_redeem_code && !stats.was_referred && (
+        <TouchableOpacity onPress={onOpenRedeemModal} activeOpacity={0.8}>
+          <LinearGradient
+            colors={[mainPurple, "#7a14ff"]}
+            style={{
+              borderRadius: 10,
+              padding: 16,
+              marginBottom: 10,
+            }}
           >
-            <LinearGradient
-              colors={[mainPurple, "#7a14ff"]}
-              style={{
-                borderRadius: 10,
-                padding: 16,
-                marginBottom: 10,
-              }}
-            >
-              <View style={styles.referralCodeButtonContent}>
-                <Text style={styles.referralCodeButtonText}>
-                  Have a referral code?
-                </Text>
-                <Text style={styles.referralCodeButtonSubtext}>
-                  Get 1 week of 2 Man Pro free!
-                </Text>
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
-        )}
-
-        <TouchableOpacity
-          style={styles.contactsButton}
-          onPress={onContactsPress}
-          activeOpacity={0.8}
-        >
-          <View style={styles.contactsButtonContent}>
-            <View style={styles.contactsButtonTextContainer}>
-              <Text style={styles.contactsButtonText}>
-                Invite your friends!
+            <View style={styles.referralCodeButtonContent}>
+              <Text style={styles.referralCodeButtonText}>
+                Have a referral code?
               </Text>
-              <Text style={styles.contactsButtonSubtext}>
-                Get 3 friends to join and get 2 Man Pro free for a month. They
-                get 1 week Pro for free!
+              <Text style={styles.referralCodeButtonSubtext}>
+                Get 1 week of 2 Man Pro free!
               </Text>
             </View>
-          </View>
-          <ShareIcon size={16} color="white" />
+          </LinearGradient>
         </TouchableOpacity>
-      </View>
-
-      {/* Redeem Code Modal - only show if user can redeem codes */}
-      {stats.can_redeem_code && (
-        <Modal
-          visible={showRedeemModal}
-          transparent
-          animationType="fade"
-          presentationStyle="overFullScreen"
-          onRequestClose={() => {
-            setShowRedeemModal(false);
-            setRedeemStep("input");
-            setCodeInput("");
-            setErrorMessage("");
-          }}
-        >
-          <View style={styles.fullScreenModalOverlay}>
-            <Animated.View
-              style={[
-                styles.animatedBottomSheetContainer,
-                {
-                  transform: [{ translateY: slideAnim }],
-                },
-              ]}
-            >
-              {redeemStep === "input" ? (
-                <>
-                  <View style={styles.nativeModalHeader}>
-                    <Text style={styles.nativeModalTitle}>
-                      Enter Referral Code
-                    </Text>
-                    <TouchableOpacity
-                      onPress={() => {
-                        setShowRedeemModal(false);
-                        setRedeemStep("input");
-                      }}
-                      style={styles.nativeModalCloseButton}
-                    >
-                      <Text style={styles.nativeModalCloseButtonText}>✕</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  <Text style={styles.nativeModalSubtitle}>
-                    Enter your friend's code to get 1 week of 2 Man Pro free!
-                  </Text>
-
-                  <TextInput
-                    value={codeInput}
-                    onChangeText={(text) => setCodeInput(text.toUpperCase())}
-                    style={styles.nativeModalCodeInput}
-                    placeholder="Enter 8-character code"
-                    placeholderTextColor="#666"
-                    maxLength={8}
-                    autoCapitalize="characters"
-                    autoCorrect={false}
-                    autoFocus
-                  />
-
-                  <TouchableOpacity
-                    style={[
-                      styles.nativeModalRedeemButton,
-                      (!codeInput.trim() || redeeming) &&
-                        styles.nativeModalRedeemButtonDisabled,
-                    ]}
-                    onPress={handleRedeemCode}
-                    disabled={!codeInput.trim() || redeeming}
-                  >
-                    {redeeming ? (
-                      <LoadingIndicator size={16} />
-                    ) : (
-                      <Text style={styles.nativeModalRedeemButtonText}>
-                        Redeem Code
-                      </Text>
-                    )}
-                  </TouchableOpacity>
-                </>
-              ) : redeemStep === "success" ? (
-                <>
-                  {/* Handle bar */}
-                  <View style={styles.nativeModalHandle} />
-
-                  <TouchableOpacity
-                    style={styles.nativeModalCloseButton}
-                    onPress={() => {
-                      setShowRedeemModal(false);
-                      setRedeemStep("input");
-                    }}
-                  >
-                    <Text style={styles.nativeModalCloseButtonText}>✕</Text>
-                  </TouchableOpacity>
-
-                  <View style={styles.successContent}>
-                    {/* TODO: Replace with Lottie animation */}
-                    <View style={styles.successAnimationPlaceholder}>
-                      <Users size={60} color="#4CAF50" />
-                    </View>
-
-                    <Text style={styles.successTitle}>Welcome to 2 Man!</Text>
-
-                    <Text style={styles.successSubtitle}>
-                      Referral code redeemed successfully!
-                    </Text>
-
-                    <View style={styles.successBenefitsContainer}>
-                      <View style={styles.successBenefitItem}>
-                        <Users size={20} color="#4CAF50" />
-                        <Text style={styles.successBenefitText}>
-                          You got 1 week of Pro free!
-                        </Text>
-                      </View>
-
-                      <View style={styles.successBenefitItem}>
-                        <Users size={20} color="#4CAF50" />
-                        <Text style={styles.successBenefitText}>
-                          {referrerName
-                            ? `You're now friends with ${referrerName}!`
-                            : "You're now friends with your referrer!"}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <TouchableOpacity
-                      style={styles.successContinueButton}
-                      onPress={() => {
-                        setShowRedeemModal(false);
-                        setRedeemStep("input");
-                        setCodeInput("");
-                        setErrorMessage("");
-                      }}
-                    >
-                      <Text style={styles.successContinueButtonText}>
-                        Let's Go!
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </>
-              ) : redeemStep === "error" ? (
-                <>
-                  {/* Handle bar */}
-                  <View style={styles.nativeModalHandle} />
-
-                  <TouchableOpacity
-                    style={styles.nativeModalCloseButton}
-                    onPress={() => {
-                      setShowRedeemModal(false);
-                      setRedeemStep("input");
-                      setCodeInput("");
-                      setErrorMessage("");
-                    }}
-                  >
-                    <Text style={styles.nativeModalCloseButtonText}>✕</Text>
-                  </TouchableOpacity>
-
-                  <View style={styles.errorContent}>
-                    {/* Error Icon */}
-                    <View style={styles.errorAnimationPlaceholder}>
-                      <Text style={styles.errorIcon}>⚠️</Text>
-                    </View>
-
-                    <Text style={styles.errorTitle}>Oops!</Text>
-
-                    <Text style={styles.errorSubtitle}>{errorMessage}</Text>
-
-                    <View style={styles.errorButtonsContainer}>
-                      <TouchableOpacity
-                        style={styles.errorTryAgainButton}
-                        onPress={() => {
-                          setRedeemStep("input");
-                          setErrorMessage("");
-                        }}
-                      >
-                        <Text style={styles.errorTryAgainButtonText}>
-                          Try Again
-                        </Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={styles.errorCancelButton}
-                        onPress={() => {
-                          setShowRedeemModal(false);
-                          setRedeemStep("input");
-                          setCodeInput("");
-                          setErrorMessage("");
-                        }}
-                      >
-                        <Text style={styles.errorCancelButtonText}>Cancel</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </>
-              ) : null}
-            </Animated.View>
-          </View>
-        </Modal>
       )}
-    </>
+
+      <TouchableOpacity
+        style={styles.contactsButton}
+        onPress={onContactsPress}
+        activeOpacity={0.8}
+      >
+        <View style={styles.contactsButtonContent}>
+          <View style={styles.contactsButtonTextContainer}>
+            <Text style={styles.contactsButtonText}>Invite your friends!</Text>
+            <Text style={styles.contactsButtonSubtext}>
+              Get 3 friends to join and get 2 Man Pro free for a month. They get
+              1 week Pro for free!
+            </Text>
+          </View>
+        </View>
+        <ShareIcon size={16} color="white" />
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -1670,17 +1712,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 20,
   },
-  successAnimationPlaceholder: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "rgba(76, 175, 80, 0.1)",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 20,
-  },
+
   successTitle: {
-    color: "white",
+    color: "#f5d364", // Use goldish yellow for success title
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 8,
@@ -1698,7 +1732,7 @@ const styles = StyleSheet.create({
   successBenefitItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(76, 175, 80, 0.1)",
+    backgroundColor: "rgba(245, 211, 100, 0.1)", // Goldish yellow with 10% opacity
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
@@ -1710,13 +1744,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   successContinueButton: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#f5d364", // Use goldish yellow
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 12,
     minWidth: 200,
     alignItems: "center",
-    shadowColor: "#4CAF50",
+    shadowColor: "#f5d364", // Use goldish yellow for shadow
     shadowOffset: {
       width: 0,
       height: 4,
@@ -1726,7 +1760,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   successContinueButtonText: {
-    color: "white",
+    color: "#1a1a1a", // Dark text for better contrast on gold background
     fontSize: 16,
     fontWeight: "600",
   },
@@ -1797,5 +1831,23 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "500",
+  },
+  // Confetti animation styles
+  confettiOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "transparent",
+    pointerEvents: "none",
+    zIndex: 999999, // Even higher z-index
+    elevation: 999999, // Even higher elevation for Android
+  },
+  confettiAnimation: {
+    width: "100%",
+    height: "100%",
   },
 });

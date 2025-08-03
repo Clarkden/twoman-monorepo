@@ -95,8 +95,14 @@ func GrantReferralReward(userID uint, rewardType string, db *gorm.DB) (*schemas.
 		return nil, errors.New("user already has active pro subscription")
 	}
 
-	// Create referral reward subscription (1 month)
-	expiresAt := time.Now().Add(30 * 24 * time.Hour) // 30 days
+	// Create referral reward subscription with appropriate duration
+	var duration time.Duration
+	if rewardType == schemas.RewardTypeFriend {
+		duration = 7 * 24 * time.Hour // 7 days for referred friends
+	} else {
+		duration = 30 * 24 * time.Hour // 30 days for referrers
+	}
+	expiresAt := time.Now().Add(duration)
 	subscription := schemas.ProSubscriptionV2{
 		UserID:    userID,
 		Source:    getSourceFromRewardType(rewardType),
@@ -140,10 +146,10 @@ func DeactivateExistingSubscriptions(userID uint, db *gorm.DB) error {
 // CleanupExpiredSubscriptions removes expired referral rewards
 func CleanupExpiredSubscriptions(db *gorm.DB) error {
 	now := time.Now()
-	
+
 	// Find expired subscriptions
 	var expiredSubs []schemas.ProSubscriptionV2
-	err := db.Where("expires_at IS NOT NULL AND expires_at < ? AND is_active = ?", 
+	err := db.Where("expires_at IS NOT NULL AND expires_at < ? AND is_active = ?",
 		now, true).Find(&expiredSubs).Error
 	if err != nil {
 		return err
@@ -161,7 +167,7 @@ func CleanupExpiredSubscriptions(db *gorm.DB) error {
 		db.Model(&schemas.ProSubscriptionV2{}).
 			Where("user_id = ? AND is_active = ?", sub.UserID, true).
 			Count(&activeCount)
-		
+
 		if activeCount == 0 {
 			db.Where("user_id = ?", sub.UserID).Delete(&schemas.PaidUser{})
 		}

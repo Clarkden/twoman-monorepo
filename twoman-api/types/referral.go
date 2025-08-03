@@ -1,5 +1,7 @@
 package types
 
+import "time"
+
 // ReferralStats represents user referral statistics and progress
 type ReferralStats struct {
 	ReferralCode     string `json:"referral_code"`     // User's unique referral code
@@ -20,4 +22,13 @@ type ReferralCodeRequest struct {
 // ReferralRewardClaim represents a request to claim a referral reward
 type ReferralRewardClaim struct {
 	RewardID uint `json:"reward_id" validate:"required"`
+}
+
+// SubscriptionInfo represents user's subscription status
+type SubscriptionInfo struct {
+	IsPro     bool       `json:"is_pro"`
+	Plan      string     `json:"plan"`
+	Source    string     `json:"source"`
+	ExpiresAt *time.Time `json:"expires_at"`
+	IsActive  bool       `json:"is_active"`
 }

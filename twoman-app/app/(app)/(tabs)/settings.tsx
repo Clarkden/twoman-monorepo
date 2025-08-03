@@ -24,6 +24,7 @@ import {
 } from "lucide-react-native";
 import {
   accentGray,
+  goldYellow,
   mainBackgroundColor,
   mainPurple,
   secondaryBackgroundColor,
@@ -36,6 +37,17 @@ import Purchases from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSession } from "@/stores/auth";
+import {
+  useSubscriptionStore,
+  useIsPro,
+  useIsActive,
+  useExpiresAt,
+  useSource,
+} from "@/stores/subscription";
+import {
+  getSubscriptionStatus,
+  type SubscriptionInfo,
+} from "@/utils/subscription";
 
 async function presentPaywall(): Promise<boolean> {
   console.log("Starting presentPaywall function");
@@ -73,7 +85,14 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { setSession } = useSession();
   const [reportBugModal, setReportBugModal] = useState(false);
-  const [hasPro, setHasPro] = useState(false);
+
+  // Use subscription store
+  const { fetchSubscriptionStatus, refreshSubscriptionStatus } =
+    useSubscriptionStore();
+  const isPro = useIsPro();
+  const isActive = useIsActive();
+  const expiresAt = useExpiresAt();
+  const source = useSource();
 
   const handleDeleteUser = async () => {
     try {
@@ -93,32 +112,55 @@ export default function SettingsScreen() {
   };
 
   const presentPurchaseModal = async () => {
-    await presentPaywall();
+    const purchased = await presentPaywall();
+    if (purchased) {
+      // Refresh subscription status after purchase
+      await refreshSubscriptionStatus();
+    }
   };
 
   const handleSignOut = async () => {
     await setSession(null);
   };
 
+  const formatTimeRemaining = (expirationDate: Date): string => {
+    const now = new Date();
+    const timeRemaining = expirationDate.getTime() - now.getTime();
+
+    if (timeRemaining <= 0) {
+      return "Expired";
+    }
+
+    const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+    const hours = Math.floor(
+      (timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+    );
+
+    if (days > 0) {
+      return `${days} day${days !== 1 ? "s" : ""} remaining`;
+    } else if (hours > 0) {
+      return `${hours} hour${hours !== 1 ? "s" : ""} remaining`;
+    } else {
+      const minutes = Math.floor(
+        (timeRemaining % (1000 * 60 * 60)) / (1000 * 60)
+      );
+      return `${minutes} minute${minutes !== 1 ? "s" : ""} remaining`;
+    }
+  };
+
   useEffect(() => {
-    const handleEntitlements = async () => {
-      try {
-        const customerInfo = await Purchases.getCustomerInfo();
+    // Fetch subscription status on mount
+    fetchSubscriptionStatus();
 
-        if (customerInfo.entitlements.active["Pro"]) {
-          setHasPro(true);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    handleEntitlements();
-
-    Purchases.addCustomerInfoUpdateListener(() => {
-      handleEntitlements();
+    // Listen for RevenueCat updates and refresh our store
+    const listener = Purchases.addCustomerInfoUpdateListener(() => {
+      refreshSubscriptionStatus();
     });
-  }, []);
+
+    return () => {
+      // Cleanup listener if needed
+    };
+  }, [fetchSubscriptionStatus, refreshSubscriptionStatus]);
 
   return (
     <View
@@ -139,7 +181,59 @@ export default function SettingsScreen() {
 
       <ScrollView>
         <View style={styles.container}>
-          {!hasPro && (
+          {isPro ? (
+            <View
+              style={{
+                height: 100,
+                borderRadius: 10,
+                padding: 20,
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <LinearGradient
+                colors={[goldYellow, "#e6c355"]}
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  height: 99,
+                  borderRadius: 12,
+                }}
+              />
+              <View>
+                <Text
+                  style={[
+                    styles.settingsItemText,
+                    {
+                      fontSize: 20,
+                      fontWeight: "bold",
+                      marginBottom: 5,
+                      color: "#1a1a1a", // Much darker text
+                    },
+                  ]}
+                >
+                  2 Man Pro Active
+                </Text>
+                <Text
+                  style={[
+                    styles.settingsItemText,
+                    {
+                      fontSize: 16,
+                      fontWeight: "500",
+                      color: "#4a4a4a", // Darker subtitle text
+                    },
+                  ]}
+                >
+                  {expiresAt ? formatTimeRemaining(expiresAt) : "Active"}
+                  {source === "friend_reward" && " • Referral Reward"}
+                  {source === "referral_reward" && " • Referral Reward"}
+                </Text>
+              </View>
+            </View>
+          ) : (
             <TouchableOpacity
               style={{
                 height: 100,
@@ -333,7 +427,7 @@ export default function SettingsScreen() {
                         style: "destructive",
                         onPress: handleDeleteUser,
                       },
-                    ],
+                    ]
                   );
                 }}
               >

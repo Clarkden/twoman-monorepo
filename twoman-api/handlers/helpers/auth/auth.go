@@ -266,6 +266,12 @@ func DecodeAppleIdentityToken(tokenString string) (*types.AppleIdentity, error) 
 }
 
 func SendVerifyCode(phone string, twClient *twilio.RestClient) error {
+	// In development environment, skip sending SMS codes
+	if os.Getenv("ENVIRONMENT") == "development" {
+		log.Printf("Development mode: skipping SMS send for phone %s (use code 000000)", phone)
+		return nil
+	}
+
 	params := &verify.CreateVerificationParams{}
 	params.SetTo(phone)
 	params.SetChannel("sms")
@@ -282,6 +288,12 @@ func SendVerifyCode(phone string, twClient *twilio.RestClient) error {
 }
 
 func VerifyCode(code, phone string, twClient *twilio.RestClient) (bool, error) {
+	// In development environment, allow 000000 for any phone number
+	if os.Getenv("ENVIRONMENT") == "development" && code == "000000" {
+		log.Printf("Development mode: accepting code 000000 for phone %s", phone)
+		return true, nil
+	}
+
 	params := &verify.CreateVerificationCheckParams{}
 	params.SetTo(phone)
 	params.SetCode(code)

@@ -13,6 +13,7 @@ import { Platform, TouchableOpacity } from "react-native";
 import Purchases from "react-native-purchases";
 import { ConnectionStatusOverlay } from "@/components/ConnectionStatusOverlay";
 import { useSession } from "@/stores/auth";
+import { useSubscriptionStore } from "@/stores/subscription";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -39,6 +40,9 @@ export default function RootLayout() {
   const notificationListener = useRef<Notifications.Subscription>();
   const responseListener = useRef<Notifications.Subscription>();
   const userId = useSession((state) => state.session?.user_id);
+  
+  // Get subscription store
+  const { fetchSubscriptionStatus } = useSubscriptionStore();
 
   useEffect(() => {
     Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
@@ -47,7 +51,13 @@ export default function RootLayout() {
       apiKey: REVENUE_CAT_APPLE_API_KEY,
       ...(userId && { appUserID: userId.toString() }),
     });
-  }, [userId]);
+    
+    // Initialize subscription status when user is available
+    if (userId) {
+      console.log("User ID available in root layout, fetching subscription status...");
+      fetchSubscriptionStatus();
+    }
+  }, [userId, fetchSubscriptionStatus]);
 
   useEffect(() => {
     registerForPushNotificationsAsync().then((token) => {

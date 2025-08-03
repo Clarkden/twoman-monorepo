@@ -157,3 +157,56 @@ func GetNotificationPreferences(userId uint, db *gorm.DB) (*schemas.PushTokens, 
 
 	return &preferences, nil
 }
+
+// SendReferralSuccessNotification sends a notification to the referrer when someone uses their code
+func SendReferralSuccessNotification(referrerID uint, referredUserName string, completedCount int64, remainingNeeded int, db *gorm.DB) error {
+	// Get referrer's push tokens
+	pushTokens, err := GetPushTokensByUserId(referrerID, db)
+	if err != nil {
+		return fmt.Errorf("error getting push tokens: %v", err)
+	}
+
+	if len(pushTokens) == 0 {
+		log.Printf("No push tokens found for user %d", referrerID)
+		return nil
+	}
+
+	// Check if notifications are enabled
+	if !pushTokens[0].NotificationsEnabled {
+		log.Printf("Notifications disabled for user %d", referrerID)
+		return nil
+	}
+
+	// Create notification message
+	var title, body string
+	if remainingNeeded <= 0 {
+		// User has reached the threshold for free month
+		title = "🎉 Free Month Unlocked!"
+		body = fmt.Sprintf("%s joined using your code! You've earned a free month of 2 Man Pro!", referredUserName)
+	} else if remainingNeeded == 1 {
+		// One more needed
+		title = "🚀 Almost There!"
+		body = fmt.Sprintf("%s joined using your code! Invite 1 more friend to get a free month of Pro!", referredUserName)
+	} else {
+		// Multiple still needed
+		title = "💫 Friend Joined!"
+		body = fmt.Sprintf("%s joined using your code! Invite %d more friends to get a free month of Pro!", referredUserName, remainingNeeded)
+	}
+
+	// Extract tokens
+	tokens := make([]string, len(pushTokens))
+	for i, pt := range pushTokens {
+		tokens[i] = pt.Token
+	}
+
+	// Send notification with referral data
+	data := map[string]interface{}{
+		"type":             "referral_success",
+		"referrer_id":      referrerID,
+		"completed_count":  completedCount,
+		"remaining_needed": remainingNeeded,
+		"referred_user":    referredUserName,
+	}
+
+	return SendExpoNotifications(tokens, title, body, data)
+}
