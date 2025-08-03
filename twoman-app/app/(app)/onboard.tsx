@@ -14,7 +14,9 @@ import {
   borderColor,
   mainBackgroundColor,
   mainPurple,
+  globalStyles,
 } from "@/constants/globalStyles";
+import LottieView from "lottie-react-native";
 import { useSession } from "@/stores/auth";
 import apiFetch from "@/utils/fetch";
 import { uploadFile } from "@/utils/files";
@@ -409,7 +411,7 @@ export default function OnBoardScreen() {
       case "gender":
         return "What's your gender?";
       case "images":
-        return "Add some photos";
+        return "Add at least 1 photo";
       case "bio":
         return "Tell us about yourself";
       case "interests":
@@ -433,13 +435,13 @@ export default function OnBoardScreen() {
           position: "absolute",
           left: 0,
           right: 0,
-          top: 0,
+          bottom: 0,
           height: SCREEN_HEIGHT,
           zIndex: 0,
         }}
       >
         <LinearGradient
-          colors={["#770EFF", "#A364F5"]}
+          colors={["transparent", "#9141fa"]}
           style={{
             height: SCREEN_HEIGHT,
             width: "100%",
@@ -526,53 +528,104 @@ function DoneScreen({
   if (loading) {
     return (
       <View style={{ alignItems: "center", justifyContent: "center", flex: 1 }}>
-        <LoadingIndicator color={"black"} size={48} />
+        <LoadingIndicator color={"white"} size={48} />
+        <Text
+          style={{
+            color: "white",
+            fontSize: 18,
+            fontWeight: "500",
+            marginTop: 20,
+            textAlign: "center",
+          }}
+        >
+          Creating your profile...
+        </Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.screenContainer}>
-        <Text style={styles.title}>An error occurred</Text>
-        <Text style={styles.description}>{error}</Text>
-        <Button title="Retry" onPress={retry} />
+      <View style={{ flex: 1, padding: 20, justifyContent: "space-between" }}>
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Text style={styles.doneTitle}>Oops! Something went wrong</Text>
+          <Text style={styles.doneDescription}>{error}</Text>
+        </View>
+        <View style={globalStyles.onboardingNextButtonContainer}>
+          <TouchableOpacity
+            onPress={retry}
+            style={globalStyles.onboardingNextButton}
+            activeOpacity={0.8}
+          >
+            <Text style={globalStyles.onBoardingNextButtonText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
 
   return (
-    <View
-      style={{
-        flex: 1,
-        padding: 20,
-        justifyContent: "flex-start",
-        alignItems: "center",
-      }}
-    >
-      <Text style={styles.title}>All Done!</Text>
-      <Text style={styles.description}>Your profile is complete.</Text>
+    <View style={{ flex: 1, position: "relative" }}>
+      {/* Confetti Animation - Full Screen */}
       <View
         style={{
-          flex: 1,
-          justifyContent: "flex-end",
-          alignItems: "center",
-          width: "100%",
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 10,
+          pointerEvents: "none",
         }}
       >
-        <TouchableOpacity
-          onPress={next}
+        <LottieView
+          source={require("../../assets/animations/confetti.json")}
+          autoPlay
+          loop={false}
           style={{
             width: "100%",
-            height: 45,
-            borderRadius: 25,
-            backgroundColor: "black",
-            alignItems: "center",
+            height: "100%",
+          }}
+          resizeMode="cover"
+        />
+      </View>
+
+      {/* Content */}
+      <View style={{ flex: 1, padding: 20, justifyContent: "space-between" }}>
+        <View
+          style={{
+            flex: 1,
             justifyContent: "center",
+            alignItems: "center",
           }}
         >
-          <MoveRight size={24} color={"white"} />
-        </TouchableOpacity>
+          <View style={styles.celebrationContainer}>
+            <Text style={styles.celebrationEmoji}>🎉</Text>
+            <Text style={styles.doneTitle}>Welcome to 2 Man!</Text>
+            <Text style={styles.doneDescription}>
+              Your profile is ready and you're all set to start making amazing
+              connections. Let's find your perfect match!
+            </Text>
+          </View>
+        </View>
+
+        <View style={globalStyles.onboardingNextButtonContainer}>
+          <TouchableOpacity
+            onPress={next}
+            style={globalStyles.onboardingNextButton}
+            activeOpacity={0.8}
+          >
+            <Text style={globalStyles.onBoardingNextButtonText}>
+              Start Dating
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -640,5 +693,30 @@ const styles = StyleSheet.create({
   screen: {
     width: SCREEN_WIDTH,
     flex: 1,
+  },
+  celebrationContainer: {
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  celebrationEmoji: {
+    fontSize: 80,
+    marginBottom: 20,
+  },
+  doneTitle: {
+    color: "white",
+    fontSize: 32,
+    fontWeight: "800",
+    textAlign: "center",
+    marginBottom: 16,
+    letterSpacing: -0.5,
+  },
+  doneDescription: {
+    color: "#aaa",
+    fontSize: 18,
+    fontWeight: "500",
+    textAlign: "center",
+    lineHeight: 24,
+    marginBottom: 40,
+    paddingHorizontal: 10,
   },
 });

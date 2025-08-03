@@ -986,7 +986,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   imagePickerButton: {
-                    backgroundColor: secondaryBackgroundColor,
+    backgroundColor: secondaryBackgroundColor,
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
@@ -1017,7 +1017,7 @@ const styles = StyleSheet.create({
   emptyImageContainer: {
     width: "100%",
     height: "100%",
-                    backgroundColor: secondaryBackgroundColor,
+    backgroundColor: secondaryBackgroundColor,
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",

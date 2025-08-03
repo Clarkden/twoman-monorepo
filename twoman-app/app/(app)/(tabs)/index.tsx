@@ -20,7 +20,18 @@ import {
 import { goldYellow } from "@/constants/globalStyles";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Heart, RotateCw, UsersRound, X, MoreHorizontal, NotepadText, Cake, MapPin, Book, BriefcaseBusiness } from "lucide-react-native";
+import {
+  Heart,
+  RotateCw,
+  UsersRound,
+  X,
+  MoreHorizontal,
+  NotepadText,
+  Cake,
+  MapPin,
+  Book,
+  BriefcaseBusiness,
+} from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import {
   Dimensions,
@@ -97,18 +108,18 @@ function SoloLikeAnimation({
   const heartOpacity = useSharedValue(0);
   const heartRotation = useSharedValue(0);
   const flashOpacity = useSharedValue(0);
-  
+
   // Particle effects
   const particle1Scale = useSharedValue(0);
   const particle1X = useSharedValue(0);
   const particle1Y = useSharedValue(0);
   const particle1Opacity = useSharedValue(0);
-  
+
   const particle2Scale = useSharedValue(0);
   const particle2X = useSharedValue(0);
   const particle2Y = useSharedValue(0);
   const particle2Opacity = useSharedValue(0);
-  
+
   const particle3Scale = useSharedValue(0);
   const particle3X = useSharedValue(0);
   const particle3Y = useSharedValue(0);
@@ -128,9 +139,9 @@ function SoloLikeAnimation({
       // PHASE 1: Instant flash + shockwave burst (anime impact effect)
       flashOpacity.value = withSequence(
         withTiming(1, { duration: 50, easing: Easing.out(Easing.quad) }),
-        withTiming(0, { duration: 150, easing: Easing.out(Easing.quad) })
+        withTiming(0, { duration: 150, easing: Easing.out(Easing.quad) }),
       );
-      
+
       backgroundOpacity.value = withTiming(0.8, {
         duration: 100,
         easing: Easing.out(Easing.quad),
@@ -139,7 +150,7 @@ function SoloLikeAnimation({
       // Explosive shockwave
       shockwaveOpacity.value = withSequence(
         withTiming(0.8, { duration: 100, easing: Easing.out(Easing.quad) }),
-        withTiming(0, { duration: 600, easing: Easing.out(Easing.cubic) })
+        withTiming(0, { duration: 600, easing: Easing.out(Easing.cubic) }),
       );
       shockwaveScale.value = withTiming(8, {
         duration: 700,
@@ -155,28 +166,46 @@ function SoloLikeAnimation({
       // Gentle converging lines (more romantic than aggressive)
       soloActionLine1Y.value = withSequence(
         withTiming(-15, { duration: 400, easing: Easing.in(Easing.sin) }),
-        withDelay(300, withTiming(-700, { duration: 500, easing: Easing.out(Easing.sin) }))
+        withDelay(
+          300,
+          withTiming(-700, { duration: 500, easing: Easing.out(Easing.sin) }),
+        ),
       );
       soloActionLine2Y.value = withSequence(
         withTiming(-10, { duration: 420, easing: Easing.in(Easing.sin) }),
-        withDelay(280, withTiming(-680, { duration: 520, easing: Easing.out(Easing.sin) }))
+        withDelay(
+          280,
+          withTiming(-680, { duration: 520, easing: Easing.out(Easing.sin) }),
+        ),
       );
       soloActionLine3Y.value = withSequence(
         withTiming(-5, { duration: 440, easing: Easing.in(Easing.sin) }),
-        withDelay(260, withTiming(-660, { duration: 540, easing: Easing.out(Easing.sin) }))
+        withDelay(
+          260,
+          withTiming(-660, { duration: 540, easing: Easing.out(Easing.sin) }),
+        ),
       );
 
       soloActionLine4Y.value = withSequence(
         withTiming(15, { duration: 400, easing: Easing.in(Easing.sin) }),
-        withDelay(300, withTiming(700, { duration: 500, easing: Easing.out(Easing.sin) }))
+        withDelay(
+          300,
+          withTiming(700, { duration: 500, easing: Easing.out(Easing.sin) }),
+        ),
       );
       soloActionLine5Y.value = withSequence(
         withTiming(10, { duration: 420, easing: Easing.in(Easing.sin) }),
-        withDelay(280, withTiming(680, { duration: 520, easing: Easing.out(Easing.sin) }))
+        withDelay(
+          280,
+          withTiming(680, { duration: 520, easing: Easing.out(Easing.sin) }),
+        ),
       );
       soloActionLine6Y.value = withSequence(
         withTiming(5, { duration: 440, easing: Easing.in(Easing.sin) }),
-        withDelay(260, withTiming(660, { duration: 540, easing: Easing.out(Easing.sin) }))
+        withDelay(
+          260,
+          withTiming(660, { duration: 540, easing: Easing.out(Easing.sin) }),
+        ),
       );
 
       // PHASE 2: Heart dramatic entrance (anime-style impact)
@@ -185,7 +214,7 @@ function SoloLikeAnimation({
           duration: 100,
           easing: Easing.out(Easing.quad),
         });
-        
+
         // Explosive scale-in with overshoot
         heartScale.value = withSequence(
           withTiming(2.5, {
@@ -195,9 +224,9 @@ function SoloLikeAnimation({
           withTiming(1.8, {
             duration: 400,
             easing: Easing.bezier(0.25, 0.46, 0.45, 0.94),
-          })
+          }),
         );
-        
+
         // Dramatic rotation spin
         heartRotation.value = withSequence(
           withTiming(360, {
@@ -207,7 +236,7 @@ function SoloLikeAnimation({
           withTiming(720, {
             duration: 400,
             easing: Easing.out(Easing.cubic),
-          })
+          }),
         );
       }, 200);
 
@@ -216,11 +245,11 @@ function SoloLikeAnimation({
         // Particle 1 - Top right
         particle1Opacity.value = withSequence(
           withTiming(1, { duration: 100 }),
-          withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) })
+          withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) }),
         );
         particle1Scale.value = withSequence(
           withTiming(1.5, { duration: 300, easing: Easing.out(Easing.quad) }),
-          withTiming(0.5, { duration: 300, easing: Easing.out(Easing.cubic) })
+          withTiming(0.5, { duration: 300, easing: Easing.out(Easing.cubic) }),
         );
         particle1X.value = withTiming(120, {
           duration: 600,
@@ -234,11 +263,11 @@ function SoloLikeAnimation({
         // Particle 2 - Bottom left
         particle2Opacity.value = withSequence(
           withTiming(1, { duration: 100 }),
-          withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) })
+          withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) }),
         );
         particle2Scale.value = withSequence(
           withTiming(1.2, { duration: 300, easing: Easing.out(Easing.quad) }),
-          withTiming(0.3, { duration: 300, easing: Easing.out(Easing.cubic) })
+          withTiming(0.3, { duration: 300, easing: Easing.out(Easing.cubic) }),
         );
         particle2X.value = withTiming(-100, {
           duration: 600,
@@ -252,11 +281,11 @@ function SoloLikeAnimation({
         // Particle 3 - Top left
         particle3Opacity.value = withSequence(
           withTiming(1, { duration: 100 }),
-          withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) })
+          withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) }),
         );
         particle3Scale.value = withSequence(
           withTiming(1.8, { duration: 300, easing: Easing.out(Easing.quad) }),
-          withTiming(0.2, { duration: 300, easing: Easing.out(Easing.cubic) })
+          withTiming(0.2, { duration: 300, easing: Easing.out(Easing.cubic) }),
         );
         particle3X.value = withTiming(-80, {
           duration: 600,
@@ -283,7 +312,7 @@ function SoloLikeAnimation({
           },
           () => {
             runOnJS(onAnimationComplete)();
-          }
+          },
         );
 
         // Final dramatic scale down
@@ -340,7 +369,7 @@ function SoloLikeAnimation({
     opacity: heartOpacity.value,
     transform: [
       { scale: heartScale.value },
-      { rotateZ: `${heartRotation.value}deg` }
+      { rotateZ: `${heartRotation.value}deg` },
     ],
   }));
 
@@ -349,7 +378,7 @@ function SoloLikeAnimation({
     transform: [
       { scale: particle1Scale.value },
       { translateX: particle1X.value },
-      { translateY: particle1Y.value }
+      { translateY: particle1Y.value },
     ],
   }));
 
@@ -358,7 +387,7 @@ function SoloLikeAnimation({
     transform: [
       { scale: particle2Scale.value },
       { translateX: particle2X.value },
-      { translateY: particle2Y.value }
+      { translateY: particle2Y.value },
     ],
   }));
 
@@ -367,7 +396,7 @@ function SoloLikeAnimation({
     transform: [
       { scale: particle3Scale.value },
       { translateX: particle3X.value },
-      { translateY: particle3Y.value }
+      { translateY: particle3Y.value },
     ],
   }));
 
@@ -429,7 +458,7 @@ function SoloLikeAnimation({
           backgroundStyle,
         ]}
       />
-      
+
       {/* Flash effect */}
       <Animated.View
         style={[
@@ -455,7 +484,7 @@ function SoloLikeAnimation({
             width: 3,
             height: 90,
             backgroundColor: "#81C784", // Light green for romantic feel
-            transform: [{ rotateZ: '12deg' }],
+            transform: [{ rotateZ: "12deg" }],
           },
           soloActionLine1Style,
         ]}
@@ -469,7 +498,7 @@ function SoloLikeAnimation({
             width: 2,
             height: 70,
             backgroundColor: "#A5D6A7", // Very light green
-            transform: [{ rotateZ: '8deg' }],
+            transform: [{ rotateZ: "8deg" }],
           },
           soloActionLine2Style,
         ]}
@@ -483,7 +512,7 @@ function SoloLikeAnimation({
             width: 4,
             height: 100,
             backgroundColor: "#66BB6A", // Medium green
-            transform: [{ rotateZ: '-10deg' }],
+            transform: [{ rotateZ: "-10deg" }],
           },
           soloActionLine3Style,
         ]}
@@ -499,7 +528,7 @@ function SoloLikeAnimation({
             width: 3,
             height: 90,
             backgroundColor: "#81C784",
-            transform: [{ rotateZ: '-12deg' }],
+            transform: [{ rotateZ: "-12deg" }],
           },
           soloActionLine4Style,
         ]}
@@ -513,7 +542,7 @@ function SoloLikeAnimation({
             width: 2,
             height: 70,
             backgroundColor: "#A5D6A7",
-            transform: [{ rotateZ: '-8deg' }],
+            transform: [{ rotateZ: "-8deg" }],
           },
           soloActionLine5Style,
         ]}
@@ -527,7 +556,7 @@ function SoloLikeAnimation({
             width: 4,
             height: 100,
             backgroundColor: "#66BB6A",
-            transform: [{ rotateZ: '10deg' }],
+            transform: [{ rotateZ: "10deg" }],
           },
           soloActionLine6Style,
         ]}
@@ -666,23 +695,23 @@ function DuoLikeAnimation({
   const heart1X = useSharedValue(-40);
   const heart1Y = useSharedValue(0);
   const heart1Rotation = useSharedValue(0);
-  
+
   const heart2Scale = useSharedValue(0);
   const heart2Opacity = useSharedValue(0);
   const heart2X = useSharedValue(40);
   const heart2Y = useSharedValue(0);
   const heart2Rotation = useSharedValue(0);
-  
+
   const sparkleOpacity = useSharedValue(0);
   const sparkleScale = useSharedValue(0);
   const connectionOpacity = useSharedValue(0);
   const connectionScale = useSharedValue(0);
   const flashOpacity = useSharedValue(0);
-  
+
   // Celebration particles
   const celebrationOpacity = useSharedValue(0);
   const celebrationScale = useSharedValue(0);
-  
+
   // Power-up ring effect
   const powerRingScale = useSharedValue(0);
   const powerRingOpacity = useSharedValue(0);
@@ -707,13 +736,13 @@ function DuoLikeAnimation({
       // Power-up flash
       flashOpacity.value = withSequence(
         withTiming(1, { duration: 80, easing: Easing.out(Easing.quad) }),
-        withTiming(0, { duration: 120, easing: Easing.out(Easing.quad) })
+        withTiming(0, { duration: 120, easing: Easing.out(Easing.quad) }),
       );
 
       // Power ring expansion
       powerRingOpacity.value = withSequence(
         withTiming(1, { duration: 150 }),
-        withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) })
+        withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) }),
       );
       powerRingScale.value = withTiming(3, {
         duration: 650,
@@ -729,28 +758,46 @@ function DuoLikeAnimation({
       // Synchronized converging lines (teamwork coordination)
       duoActionLine1Y.value = withSequence(
         withTiming(-20, { duration: 350, easing: Easing.in(Easing.cubic) }),
-        withDelay(250, withTiming(-750, { duration: 450, easing: Easing.out(Easing.cubic) }))
+        withDelay(
+          250,
+          withTiming(-750, { duration: 450, easing: Easing.out(Easing.cubic) }),
+        ),
       );
       duoActionLine2Y.value = withSequence(
         withTiming(-15, { duration: 370, easing: Easing.in(Easing.cubic) }),
-        withDelay(230, withTiming(-730, { duration: 470, easing: Easing.out(Easing.cubic) }))
+        withDelay(
+          230,
+          withTiming(-730, { duration: 470, easing: Easing.out(Easing.cubic) }),
+        ),
       );
       duoActionLine3Y.value = withSequence(
         withTiming(-10, { duration: 390, easing: Easing.in(Easing.cubic) }),
-        withDelay(210, withTiming(-710, { duration: 490, easing: Easing.out(Easing.cubic) }))
+        withDelay(
+          210,
+          withTiming(-710, { duration: 490, easing: Easing.out(Easing.cubic) }),
+        ),
       );
 
       duoActionLine4Y.value = withSequence(
         withTiming(20, { duration: 350, easing: Easing.in(Easing.cubic) }),
-        withDelay(250, withTiming(750, { duration: 450, easing: Easing.out(Easing.cubic) }))
+        withDelay(
+          250,
+          withTiming(750, { duration: 450, easing: Easing.out(Easing.cubic) }),
+        ),
       );
       duoActionLine5Y.value = withSequence(
         withTiming(15, { duration: 370, easing: Easing.in(Easing.cubic) }),
-        withDelay(230, withTiming(730, { duration: 470, easing: Easing.out(Easing.cubic) }))
+        withDelay(
+          230,
+          withTiming(730, { duration: 470, easing: Easing.out(Easing.cubic) }),
+        ),
       );
       duoActionLine6Y.value = withSequence(
         withTiming(10, { duration: 390, easing: Easing.in(Easing.cubic) }),
-        withDelay(210, withTiming(710, { duration: 490, easing: Easing.out(Easing.cubic) }))
+        withDelay(
+          210,
+          withTiming(710, { duration: 490, easing: Easing.out(Easing.cubic) }),
+        ),
       );
 
       // PHASE 2: Hearts emerge from opposite sides (duo entrance)
@@ -768,7 +815,7 @@ function DuoLikeAnimation({
           withTiming(1.2, {
             duration: 200,
             easing: Easing.out(Easing.cubic),
-          })
+          }),
         );
         heart1X.value = withTiming(-60, {
           duration: 400,
@@ -792,7 +839,7 @@ function DuoLikeAnimation({
           withTiming(1.2, {
             duration: 200,
             easing: Easing.out(Easing.cubic),
-          })
+          }),
         );
         heart2X.value = withTiming(60, {
           duration: 400,
@@ -819,11 +866,11 @@ function DuoLikeAnimation({
         // Connection effect appears
         connectionOpacity.value = withSequence(
           withTiming(1, { duration: 200 }),
-          withTiming(0.8, { duration: 400 })
+          withTiming(0.8, { duration: 400 }),
         );
         connectionScale.value = withSequence(
           withTiming(1.5, { duration: 300, easing: Easing.out(Easing.quad) }),
-          withTiming(1, { duration: 200, easing: Easing.out(Easing.cubic) })
+          withTiming(1, { duration: 200, easing: Easing.out(Easing.cubic) }),
         );
       }, 700);
 
@@ -832,7 +879,7 @@ function DuoLikeAnimation({
         // Sparkle explosion
         sparkleOpacity.value = withSequence(
           withTiming(1, { duration: 150 }),
-          withTiming(0, { duration: 600, easing: Easing.out(Easing.cubic) })
+          withTiming(0, { duration: 600, easing: Easing.out(Easing.cubic) }),
         );
         sparkleScale.value = withTiming(2.5, {
           duration: 750,
@@ -842,7 +889,7 @@ function DuoLikeAnimation({
         // Celebration particles
         celebrationOpacity.value = withSequence(
           withTiming(1, { duration: 200 }),
-          withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) })
+          withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) }),
         );
         celebrationScale.value = withTiming(3, {
           duration: 700,
@@ -880,7 +927,7 @@ function DuoLikeAnimation({
           },
           () => {
             runOnJS(onAnimationComplete)();
-          }
+          },
         );
 
         connectionOpacity.value = withTiming(0, {
@@ -942,7 +989,7 @@ function DuoLikeAnimation({
       { scale: heart1Scale.value },
       { translateX: heart1X.value },
       { translateY: heart1Y.value },
-      { rotateZ: `${heart1Rotation.value}deg` }
+      { rotateZ: `${heart1Rotation.value}deg` },
     ],
   }));
 
@@ -952,7 +999,7 @@ function DuoLikeAnimation({
       { scale: heart2Scale.value },
       { translateX: heart2X.value },
       { translateY: heart2Y.value },
-      { rotateZ: `${heart2Rotation.value}deg` }
+      { rotateZ: `${heart2Rotation.value}deg` },
     ],
   }));
 
@@ -998,7 +1045,7 @@ function DuoLikeAnimation({
           backgroundStyle,
         ]}
       />
-      
+
       {/* Flash effect */}
       <Animated.View
         style={[
@@ -1224,7 +1271,7 @@ function XAnimation({
   const actionLine1Y = useSharedValue(-400); // Top lines - start further off-screen
   const actionLine2Y = useSharedValue(-380);
   const actionLine3Y = useSharedValue(-360);
-  const actionLine4Y = useSharedValue(400);  // Bottom lines - start further off-screen
+  const actionLine4Y = useSharedValue(400); // Bottom lines - start further off-screen
   const actionLine5Y = useSharedValue(380);
   const actionLine6Y = useSharedValue(360);
   const actionLinesOpacity = useSharedValue(0);
@@ -1245,14 +1292,14 @@ function XAnimation({
         withTiming(-5, { duration: 50 }),
         withTiming(3, { duration: 50 }),
         withTiming(-3, { duration: 50 }),
-        withTiming(0, { duration: 100 })
+        withTiming(0, { duration: 100 }),
       );
       shakeY.value = withSequence(
         withTiming(-3, { duration: 50 }),
         withTiming(3, { duration: 50 }),
         withTiming(-2, { duration: 50 }),
         withTiming(2, { duration: 50 }),
-        withTiming(0, { duration: 100 })
+        withTiming(0, { duration: 100 }),
       );
 
       // Action lines converging animation - EASE IN → PAUSE → EASE OUT
@@ -1264,42 +1311,60 @@ function XAnimation({
       // Top lines move to center (ease in)
       actionLine1Y.value = withSequence(
         withTiming(-20, { duration: 300, easing: Easing.in(Easing.quad) }),
-        withDelay(200, withTiming(-800, { duration: 400, easing: Easing.out(Easing.quad) }))
+        withDelay(
+          200,
+          withTiming(-800, { duration: 400, easing: Easing.out(Easing.quad) }),
+        ),
       );
       actionLine2Y.value = withSequence(
         withTiming(-10, { duration: 320, easing: Easing.in(Easing.quad) }),
-        withDelay(180, withTiming(-780, { duration: 420, easing: Easing.out(Easing.quad) }))
+        withDelay(
+          180,
+          withTiming(-780, { duration: 420, easing: Easing.out(Easing.quad) }),
+        ),
       );
       actionLine3Y.value = withSequence(
         withTiming(0, { duration: 340, easing: Easing.in(Easing.quad) }),
-        withDelay(160, withTiming(-760, { duration: 440, easing: Easing.out(Easing.quad) }))
+        withDelay(
+          160,
+          withTiming(-760, { duration: 440, easing: Easing.out(Easing.quad) }),
+        ),
       );
 
       // Bottom lines move to center (ease in)
       actionLine4Y.value = withSequence(
         withTiming(20, { duration: 300, easing: Easing.in(Easing.quad) }),
-        withDelay(200, withTiming(800, { duration: 400, easing: Easing.out(Easing.quad) }))
+        withDelay(
+          200,
+          withTiming(800, { duration: 400, easing: Easing.out(Easing.quad) }),
+        ),
       );
       actionLine5Y.value = withSequence(
         withTiming(10, { duration: 320, easing: Easing.in(Easing.quad) }),
-        withDelay(180, withTiming(780, { duration: 420, easing: Easing.out(Easing.quad) }))
+        withDelay(
+          180,
+          withTiming(780, { duration: 420, easing: Easing.out(Easing.quad) }),
+        ),
       );
       actionLine6Y.value = withSequence(
         withTiming(0, { duration: 340, easing: Easing.in(Easing.quad) }),
-        withDelay(160, withTiming(760, { duration: 440, easing: Easing.out(Easing.quad) }))
+        withDelay(
+          160,
+          withTiming(760, { duration: 440, easing: Easing.out(Easing.quad) }),
+        ),
       );
 
       // PHASE 2: Lightning flash + slash effect
       setTimeout(() => {
         flashOpacity.value = withSequence(
           withTiming(1, { duration: 80, easing: Easing.out(Easing.quad) }),
-          withTiming(0, { duration: 120, easing: Easing.out(Easing.quad) })
+          withTiming(0, { duration: 120, easing: Easing.out(Easing.quad) }),
         );
 
         // Lightning bolts
         lightningOpacity.value = withSequence(
           withTiming(1, { duration: 100 }),
-          withTiming(0, { duration: 300, easing: Easing.out(Easing.cubic) })
+          withTiming(0, { duration: 300, easing: Easing.out(Easing.cubic) }),
         );
         lightningScale.value = withTiming(1.5, {
           duration: 400,
@@ -1319,7 +1384,7 @@ function XAnimation({
           withTiming(1.2, {
             duration: 200,
             easing: Easing.out(Easing.cubic),
-          })
+          }),
         );
         slashRotation.value = withTiming(45, {
           duration: 400,
@@ -1343,7 +1408,7 @@ function XAnimation({
           withTiming(1.5, {
             duration: 300,
             easing: Easing.out(Easing.cubic),
-          })
+          }),
         );
 
         xRotation.value = withSequence(
@@ -1354,13 +1419,13 @@ function XAnimation({
           withTiming(360, {
             duration: 300,
             easing: Easing.out(Easing.cubic),
-          })
+          }),
         );
 
         // Screen crack effect
         crackOpacity.value = withSequence(
           withTiming(0.8, { duration: 150 }),
-          withTiming(0.3, { duration: 400, easing: Easing.out(Easing.cubic) })
+          withTiming(0.3, { duration: 400, easing: Easing.out(Easing.cubic) }),
         );
         crackScale.value = withTiming(6, {
           duration: 550,
@@ -1397,7 +1462,7 @@ function XAnimation({
           () => {
             console.log("X animation complete callback triggered");
             runOnJS(onAnimationComplete)();
-          }
+          },
         );
 
         // Final scale down
@@ -1437,10 +1502,7 @@ function XAnimation({
   }));
 
   const containerStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: shakeX.value },
-      { translateY: shakeY.value }
-    ],
+    transform: [{ translateX: shakeX.value }, { translateY: shakeY.value }],
   }));
 
   const flashStyle = useAnimatedStyle(() => ({
@@ -1451,16 +1513,13 @@ function XAnimation({
     opacity: slashOpacity.value,
     transform: [
       { scale: slashScale.value },
-      { rotateZ: `${slashRotation.value}deg` }
+      { rotateZ: `${slashRotation.value}deg` },
     ],
   }));
 
   const xStyle = useAnimatedStyle(() => ({
     opacity: xOpacity.value,
-    transform: [
-      { scale: xScale.value },
-      { rotateZ: `${xRotation.value}deg` }
-    ],
+    transform: [{ scale: xScale.value }, { rotateZ: `${xRotation.value}deg` }],
   }));
 
   const crackStyle = useAnimatedStyle(() => ({
@@ -1534,7 +1593,7 @@ function XAnimation({
           backgroundStyle,
         ]}
       />
-      
+
       {/* Flash effect */}
       <Animated.View
         style={[
@@ -1560,7 +1619,7 @@ function XAnimation({
             width: 4,
             height: 100,
             backgroundColor: "#ffffff",
-            transform: [{ rotateZ: '15deg' }],
+            transform: [{ rotateZ: "15deg" }],
           },
           actionLine1Style,
         ]}
@@ -1574,7 +1633,7 @@ function XAnimation({
             width: 3,
             height: 80,
             backgroundColor: "#ffffff",
-            transform: [{ rotateZ: '10deg' }],
+            transform: [{ rotateZ: "10deg" }],
           },
           actionLine2Style,
         ]}
@@ -1588,7 +1647,7 @@ function XAnimation({
             width: 5,
             height: 120,
             backgroundColor: "#ffffff",
-            transform: [{ rotateZ: '-12deg' }],
+            transform: [{ rotateZ: "-12deg" }],
           },
           actionLine3Style,
         ]}
@@ -1604,7 +1663,7 @@ function XAnimation({
             width: 4,
             height: 100,
             backgroundColor: "#ffffff",
-            transform: [{ rotateZ: '-15deg' }],
+            transform: [{ rotateZ: "-15deg" }],
           },
           actionLine4Style,
         ]}
@@ -1618,7 +1677,7 @@ function XAnimation({
             width: 3,
             height: 80,
             backgroundColor: "#ffffff",
-            transform: [{ rotateZ: '-10deg' }],
+            transform: [{ rotateZ: "-10deg" }],
           },
           actionLine5Style,
         ]}
@@ -1632,7 +1691,7 @@ function XAnimation({
             width: 5,
             height: 120,
             backgroundColor: "#ffffff",
-            transform: [{ rotateZ: '12deg' }],
+            transform: [{ rotateZ: "12deg" }],
           },
           actionLine6Style,
         ]}
@@ -1648,7 +1707,7 @@ function XAnimation({
             width: 4,
             height: 200,
             backgroundColor: "#ffeb3b",
-            transform: [{ rotateZ: '15deg' }],
+            transform: [{ rotateZ: "15deg" }],
           },
           lightningStyle,
         ]}
@@ -1662,7 +1721,7 @@ function XAnimation({
             width: 3,
             height: 150,
             backgroundColor: "#ffeb3b",
-            transform: [{ rotateZ: '-25deg' }],
+            transform: [{ rotateZ: "-25deg" }],
           },
           lightningStyle,
         ]}
@@ -2051,65 +2110,84 @@ function SelectFriendMenu({
                 ))}
               </>
             ) : (
-              <View style={{ 
-                flexDirection: "column", 
-                padding: 20,
-                alignItems: "center",
-                justifyContent: "center",
-                flex: 1,
-              }}>
-                {/* Hero Icon */}
-                <View style={{
-                  backgroundColor: mainPurple,
-                  width: 80,
-                  height: 80,
-                  borderRadius: 40,
-                  justifyContent: "center",
+              <View
+                style={{
+                  flexDirection: "column",
+                  padding: 20,
                   alignItems: "center",
-                  marginBottom: 20,
-                }}>
+                  justifyContent: "center",
+                  flex: 1,
+                }}
+              >
+                {/* Hero Icon */}
+                <View
+                  style={{
+                    backgroundColor: mainPurple,
+                    width: 80,
+                    height: 80,
+                    borderRadius: 40,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    marginBottom: 20,
+                  }}
+                >
                   <UsersRound size={40} color="white" />
                 </View>
 
                 {/* Main Message */}
-                <Text style={{ 
-                  color: "white", 
-                  fontWeight: "800",
-                  fontSize: 20,
-                  textAlign: "center",
-                  marginBottom: 8,
-                }}>
+                <Text
+                  style={{
+                    color: "white",
+                    fontWeight: "800",
+                    fontSize: 20,
+                    textAlign: "center",
+                    marginBottom: 8,
+                  }}
+                >
                   No Friends Yet?
                 </Text>
-                
-                <Text style={{ 
-                  color: "#888", 
-                  fontSize: 16,
-                  textAlign: "center",
-                  lineHeight: 22,
-                  marginBottom: 30,
-                }}>
-                  Invite friends to unlock duo matches{"\n"}and earn amazing rewards!
+
+                <Text
+                  style={{
+                    color: "#888",
+                    fontSize: 16,
+                    textAlign: "center",
+                    lineHeight: 22,
+                    marginBottom: 30,
+                  }}
+                >
+                  Invite friends to unlock duo matches{"\n"}and earn amazing
+                  rewards!
                 </Text>
 
                 {/* Benefits Cards */}
                 <View style={{ width: "100%", gap: 15, marginBottom: 30 }}>
                   {/* Friend Benefit */}
-                  <View style={{
-                    backgroundColor: "rgba(245, 211, 100, 0.1)",
-                    borderRadius: 12,
-                    padding: 16,
-                    borderWidth: 1,
-                    borderColor: "rgba(245, 211, 100, 0.2)",
-                  }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+                  <View
+                    style={{
+                      backgroundColor: "rgba(245, 211, 100, 0.1)",
+                      borderRadius: 12,
+                      padding: 16,
+                      borderWidth: 1,
+                      borderColor: "rgba(245, 211, 100, 0.2)",
+                    }}
+                  >
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginBottom: 8,
+                      }}
+                    >
                       <FontAwesome name="gift" size={18} color={goldYellow} />
-                      <Text style={{ 
-                        color: goldYellow, 
-                        fontWeight: "700", 
-                        fontSize: 16,
-                        marginLeft: 10,
-                      }}>
+                      <Text
+                        style={{
+                          color: goldYellow,
+                          fontWeight: "700",
+                          fontSize: 16,
+                          marginLeft: 10,
+                        }}
+                      >
                         Friend Gets 1 Week Pro Free
                       </Text>
                     </View>
@@ -2119,21 +2197,31 @@ function SelectFriendMenu({
                   </View>
 
                   {/* Your Benefit */}
-                  <View style={{
-                    backgroundColor: "rgba(163, 100, 245, 0.1)",
-                    borderRadius: 12,
-                    padding: 16,
-                    borderWidth: 1,
-                    borderColor: "rgba(163, 100, 245, 0.2)",
-                  }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+                  <View
+                    style={{
+                      backgroundColor: "rgba(163, 100, 245, 0.1)",
+                      borderRadius: 12,
+                      padding: 16,
+                      borderWidth: 1,
+                      borderColor: "rgba(163, 100, 245, 0.2)",
+                    }}
+                  >
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginBottom: 8,
+                      }}
+                    >
                       <FontAwesome name="star" size={18} color={mainPurple} />
-                      <Text style={{ 
-                        color: mainPurple, 
-                        fontWeight: "700", 
-                        fontSize: 16,
-                        marginLeft: 10,
-                      }}>
+                      <Text
+                        style={{
+                          color: mainPurple,
+                          fontWeight: "700",
+                          fontSize: 16,
+                          marginLeft: 10,
+                        }}
+                      >
                         You Get 1 Month Pro Free
                       </Text>
                     </View>
@@ -2178,13 +2266,15 @@ function SelectFriendMenu({
                 </TouchableOpacity>
 
                 {/* Small Motivational Text */}
-                <Text style={{
-                  color: "#666",
-                  fontSize: 12,
-                  textAlign: "center",
-                  marginTop: 16,
-                  fontStyle: "italic",
-                }}>
+                <Text
+                  style={{
+                    color: "#666",
+                    fontSize: 12,
+                    textAlign: "center",
+                    marginTop: 16,
+                    fontStyle: "italic",
+                  }}
+                >
                   More friends = More matches = More fun! 🎉
                 </Text>
               </View>
@@ -2257,32 +2347,44 @@ function EnhancedProfileCard({
         }}
       >
         <Text style={styles.profileName}>{profile.name}</Text>
-        <TouchableOpacity onPress={() => {/* Options functionality if needed */}}>
+        <TouchableOpacity
+          onPress={() => {
+            /* Options functionality if needed */
+          }}
+        >
           <MoreHorizontal color={"white"} size={20} />
         </TouchableOpacity>
       </View>
 
       {/* Profile Image */}
-      <Image
-        source={{ uri: profile.image1 }}
-        style={styles.mainProfileImage}
-      />
+      <Image source={{ uri: profile.image1 }} style={styles.mainProfileImage} />
 
       {/* Friends Section - Right after image */}
-      <View style={{
-        backgroundColor: secondaryBackgroundColor,
-        borderRadius: 12,
-        padding: 16,
-        marginTop: 16,
-        marginBottom: 16,
-      }}>
+      <View
+        style={{
+          backgroundColor: secondaryBackgroundColor,
+          borderRadius: 12,
+          padding: 16,
+          marginTop: 16,
+          marginBottom: 16,
+        }}
+      >
         {!friendsFetched ? (
           <View style={{ alignItems: "center", paddingVertical: 12 }}>
-            <Text style={{ color: "#888", fontSize: 14 }}>Loading friends...</Text>
+            <Text style={{ color: "#888", fontSize: 14 }}>
+              Loading friends...
+            </Text>
           </View>
         ) : friends.length === 0 ? (
           <View style={{ alignItems: "center", paddingVertical: 12 }}>
-            <Text style={{ color: "#888", fontSize: 16, fontWeight: "600", marginBottom: 4 }}>
+            <Text
+              style={{
+                color: "#888",
+                fontSize: 16,
+                fontWeight: "600",
+                marginBottom: 4,
+              }}
+            >
               No Friends for Duo Dating
             </Text>
             <Text style={{ color: "#666", fontSize: 14, textAlign: "center" }}>
@@ -2291,12 +2393,19 @@ function EnhancedProfileCard({
           </View>
         ) : (
           <>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 12,
+              }}
+            >
               <Text style={{ color: "white", fontSize: 16, fontWeight: "700" }}>
                 {profile.name}'s Friends ({friends.length})
               </Text>
               {friends.length > 3 && (
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={onViewAllFriends}
                   style={{
                     backgroundColor: mainPurple,
@@ -2305,13 +2414,15 @@ function EnhancedProfileCard({
                     borderRadius: 15,
                   }}
                 >
-                  <Text style={{ color: "white", fontSize: 12, fontWeight: "600" }}>
+                  <Text
+                    style={{ color: "white", fontSize: 12, fontWeight: "600" }}
+                  >
                     View All
                   </Text>
                 </TouchableOpacity>
               )}
             </View>
-            
+
             <View style={{ flexDirection: "row", gap: 12 }}>
               {friends.slice(0, 3).map((friendship, index) => {
                 const friendProfile = getFriendProfile(friendship);
@@ -2336,10 +2447,10 @@ function EnhancedProfileCard({
                         marginBottom: 8,
                       }}
                     />
-                    <Text 
-                      style={{ 
-                        color: "white", 
-                        fontSize: 12, 
+                    <Text
+                      style={{
+                        color: "white",
+                        fontSize: 12,
                         fontWeight: "600",
                         textAlign: "center",
                       }}
@@ -2347,9 +2458,9 @@ function EnhancedProfileCard({
                     >
                       {friendProfile.name}
                     </Text>
-                    <Text 
-                      style={{ 
-                        color: "#888", 
+                    <Text
+                      style={{
+                        color: "#888",
                         fontSize: 10,
                         textAlign: "center",
                         marginTop: 2,
@@ -2362,7 +2473,7 @@ function EnhancedProfileCard({
                 );
               })}
             </View>
-            
+
             {friends.length > 0 && (
               <TouchableOpacity
                 onPress={onViewAllFriends}
@@ -2376,7 +2487,9 @@ function EnhancedProfileCard({
                   alignItems: "center",
                 }}
               >
-                <Text style={{ color: mainPurple, fontSize: 14, fontWeight: "600" }}>
+                <Text
+                  style={{ color: mainPurple, fontSize: 14, fontWeight: "600" }}
+                >
                   🎭 Start Duo Match with {profile.name}
                 </Text>
               </TouchableOpacity>
@@ -2421,7 +2534,6 @@ function EnhancedProfileCard({
             <Text style={globalStyles.regularText}>{profile.education}</Text>
           </View>
         )}
-
       </View>
     </Animated.View>
   );
@@ -2951,18 +3063,27 @@ export default function TabOneScreen() {
                   {potentialMatchFriends.length > 0 ? (
                     <>
                       {/* Compact Duo Match Tip */}
-                      <View style={{
-                        backgroundColor: "rgba(163, 100, 245, 0.08)",
-                        marginHorizontal: 20,
-                        marginBottom: 8,
-                        paddingVertical: 8,
-                        paddingHorizontal: 12,
-                        borderRadius: 8,
-                        borderLeftWidth: 3,
-                        borderLeftColor: mainPurple,
-                      }}>
-                        <Text style={{ color: "#bbb", fontSize: 12, lineHeight: 16 }}>
-                          💡 Browse {profile.name}'s friends - pick one you like for a double date!
+                      <View
+                        style={{
+                          backgroundColor: "rgba(163, 100, 245, 0.08)",
+                          marginHorizontal: 20,
+                          marginBottom: 8,
+                          paddingVertical: 8,
+                          paddingHorizontal: 12,
+                          borderRadius: 8,
+                          borderLeftWidth: 3,
+                          borderLeftColor: mainPurple,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: "#bbb",
+                            fontSize: 12,
+                            lineHeight: 16,
+                          }}
+                        >
+                          💡 Browse {profile.name}'s friends - pick one you like
+                          for a double date!
                         </Text>
                       </View>
 
@@ -3027,8 +3148,8 @@ export default function TabOneScreen() {
             }}
             showsVerticalScrollIndicator={false}
           >
-            <EnhancedProfileCard 
-              profile={profile} 
+            <EnhancedProfileCard
+              profile={profile}
               friends={potentialMatchFriends}
               friendsFetched={potentialMatchFriendsFetched}
               onBlock={handleBlock}
@@ -3044,25 +3165,31 @@ export default function TabOneScreen() {
               activeOpacity={0.8}
             >
               <X size={20} color="white" />
-              <Text style={[styles.actionButtonText, { color: "white" }]}>Pass</Text>
+              <Text style={[styles.actionButtonText, { color: "white" }]}>
+                Pass
+              </Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[styles.actionButton, styles.likeButton]}
               onPress={() => handleAccept()}
               activeOpacity={0.8}
             >
               <Heart size={20} color="white" />
-              <Text style={[styles.actionButtonText, { color: "white" }]}>Like</Text>
+              <Text style={[styles.actionButtonText, { color: "white" }]}>
+                Like
+              </Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[styles.actionButton, styles.duoButton]}
               onPress={() => setShowLikeModal(true)}
               activeOpacity={0.8}
             >
               <UsersRound size={20} color="white" />
-              <Text style={[styles.actionButtonText, { color: "white" }]}>Duo Match</Text>
+              <Text style={[styles.actionButtonText, { color: "white" }]}>
+                Duo Match
+              </Text>
             </TouchableOpacity>
           </View>
         </>

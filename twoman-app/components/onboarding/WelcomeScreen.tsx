@@ -21,10 +21,8 @@ export default function WelcomeScreen({ onNext }: { onNext: () => void }) {
         alignItems: "center",
       }}
     >
-      <Text style={styles.title}>Welcome</Text>
-      <Text style={styles.description}>
-        Let's get started with your profile!
-      </Text>
+      <Text style={styles.title}>Welcome to 2 Man</Text>
+      <Text style={styles.description}>Dating made twice as fun</Text>
       <View style={styles.imageContainer}>
         <Image
           source={glossyTextMessageImage}
@@ -32,12 +30,25 @@ export default function WelcomeScreen({ onNext }: { onNext: () => void }) {
           resizeMode="contain"
         />
       </View>
+
+      <View style={styles.featuresCard}>
+        <Text style={styles.featuresTitle}>What makes us different:</Text>
+        <View style={styles.featuresList}>
+          <Text style={styles.featureItem}>✨ Solo & duo dating options</Text>
+          <Text style={styles.featureItem}>
+            👫 Match with friends and couples
+          </Text>
+          <Text style={styles.featureItem}>🔒 Safe, verified connections</Text>
+          <Text style={styles.featureItem}>🎉 Make dating fun again</Text>
+        </View>
+      </View>
+
       <View style={globalStyles.onboardingNextButtonContainer}>
         <TouchableOpacity
           onPress={onNext}
           style={globalStyles.onboardingNextButton}
         >
-          <MoveRight size={24} color={mainPurple} />
+          <MoveRight size={28} color={mainPurple} />
         </TouchableOpacity>
       </View>
     </View>
@@ -58,17 +69,18 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: "bold",
-    marginBottom: 4,
+    marginBottom: 8,
     color: "white",
   },
   description: {
-    fontSize: 16,
-    fontWeight: "500",
+    fontSize: 18,
+    fontWeight: "400",
     textAlign: "center",
     marginBottom: 30,
-    color: "white",
+    color: "#ccc",
+    lineHeight: 24,
   },
   imageContainer: {
     flex: 1,
@@ -78,5 +90,32 @@ const styles = StyleSheet.create({
   image: {
     width: "90%",
     height: "80%",
+  },
+  featuresCard: {
+    width: "100%",
+    marginTop: 20,
+    marginBottom: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+  },
+  featuresTitle: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "600",
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  featuresList: {
+    alignItems: "flex-start",
+  },
+  featureItem: {
+    color: "#ddd",
+    fontSize: 15,
+    fontWeight: "400",
+    marginBottom: 8,
+    paddingLeft: 10,
   },
 });

@@ -35,7 +35,7 @@ export default function PhoneAuthVerifyModal({
   return (
     <View style={{ flex: 1, backgroundColor: mainBackgroundColor }}>
       <View style={styles.nativeModalHeader}>
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={onBack}
           style={styles.backButton}
           activeOpacity={0.7}
@@ -46,7 +46,7 @@ export default function PhoneAuthVerifyModal({
         <View style={{ width: 40 }} />
       </View>
 
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={0}
@@ -55,7 +55,8 @@ export default function PhoneAuthVerifyModal({
           <View style={styles.headerSection}>
             <Text style={styles.mainTitle}>Enter Verification Code</Text>
             <Text style={styles.subtitle}>
-              We've sent a 6-digit code to your phone number. Enter it below to continue.
+              We've sent a 6-digit code to your phone number. Enter it below to
+              continue.
             </Text>
           </View>
 
@@ -89,10 +90,7 @@ export default function PhoneAuthVerifyModal({
           <View style={styles.helpSection}>
             <Text style={styles.helpText}>
               Didn't receive the code? Check your spam folder or{" "}
-              <Text 
-                style={styles.helpLink}
-                onPress={resendCode}
-              >
+              <Text style={styles.helpLink} onPress={resendCode}>
                 resend it
               </Text>
               .
@@ -108,15 +106,17 @@ export default function PhoneAuthVerifyModal({
           >
             <Text style={styles.secondaryButtonText}>Resend Code</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             onPress={() => verifyCode(code)}
             style={[
               styles.primaryButton,
               {
-                backgroundColor: code.length >= 6 ? mainPurple : secondaryBackgroundColor,
+                backgroundColor:
+                  code.length >= 6 ? mainPurple : secondaryBackgroundColor,
                 borderWidth: code.length >= 6 ? 0 : 1,
-                borderColor: code.length >= 6 ? "transparent" : "rgba(163, 100, 245, 0.3)",
+                borderColor:
+                  code.length >= 6 ? "transparent" : "rgba(163, 100, 245, 0.3)",
               },
             ]}
             disabled={code.length < 6}

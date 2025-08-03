@@ -62,6 +62,13 @@ export default function Steps({ onNext }: { onNext: () => void }) {
                   ? "Add your friends"
                   : "Start making matches"}
             </Text>
+            <Text style={styles.descriptionText}>
+              {step === 0
+                ? "Set up your personal profile with photos, interests, and a bio that shows your authentic self"
+                : step === 1
+                  ? "Connect with friends who are also dating to unlock duo match opportunities and double dates"
+                  : "Discover amazing people through solo likes and duo adventures"}
+            </Text>
           </View>
 
           <View style={styles.imageContainer}>
@@ -87,7 +94,7 @@ export default function Steps({ onNext }: { onNext: () => void }) {
           {step < 2 ? (
             <Text style={globalStyles.onBoardingNextButtonText}>Next</Text>
           ) : (
-            <MoveRight size={20} color={"white"} />
+            <MoveRight size={24} color={"white"} />
           )}
         </TouchableOpacity>
       </View>
@@ -123,15 +130,26 @@ const styles = StyleSheet.create({
     borderRadius: 30,
   },
   titleContainer: {
-    flexDirection: "row",
+    flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
     width: "100%",
     marginBottom: 40,
+    paddingHorizontal: 20,
   },
   titleText: {
     color: "white",
-    fontWeight: "500",
+    fontWeight: "700",
+    fontSize: 24,
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  descriptionText: {
+    color: "#aaa",
+    fontWeight: "400",
+    fontSize: 16,
+    textAlign: "center",
+    lineHeight: 22,
   },
   imageContainer: {
     width: SCREEN_WIDTH - 60,

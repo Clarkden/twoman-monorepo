@@ -14,7 +14,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { LinearGradient } from "expo-linear-gradient";
-import { mainBackgroundColor, mainPurple, secondaryBackgroundColor, accentGray } from "@/constants/globalStyles";
+import {
+  mainBackgroundColor,
+  mainPurple,
+  secondaryBackgroundColor,
+  accentGray,
+} from "@/constants/globalStyles";
 import { StatusBar } from "expo-status-bar";
 import { BlurView } from "expo-blur";
 import { FeatureFlag, SessionData } from "@/types/api";
@@ -65,11 +70,13 @@ interface AuthModalProps {
 // Header Component
 function AuthHeader({ screenHeight }: AuthHeaderProps) {
   return (
-    <View style={{
-      alignItems: "center",
-      marginBottom: screenHeight > 800 ? 20 : 15,
-      marginTop: screenHeight > 800 ? 50 : screenHeight > 700 ? 35 : 20,
-    }}>
+    <View
+      style={{
+        alignItems: "center",
+        marginBottom: screenHeight > 800 ? 20 : 15,
+        marginTop: screenHeight > 800 ? 50 : screenHeight > 700 ? 35 : 20,
+      }}
+    >
       <Text
         style={{
           color: "white",
@@ -139,11 +146,13 @@ function FeatureIcon({ emoji, label, screenHeight }: FeatureIconProps) {
           {emoji}
         </Text>
       </View>
-      <Text style={{ 
-        color: "white", 
-        fontWeight: "700",
-        fontSize: labelSize,
-      }}>
+      <Text
+        style={{
+          color: "white",
+          fontWeight: "700",
+          fontSize: labelSize,
+        }}
+      >
         {label}
       </Text>
     </View>
@@ -191,23 +200,29 @@ function SignInSection({
         elevation: 20,
       }}
     >
-      <View style={{
-        alignItems: "center",
-        marginBottom: 8,
-      }}>
-        <Text style={{ 
-          fontSize: screenHeight > 800 ? 24 : screenHeight > 700 ? 22 : 20, 
-          fontWeight: "800", 
-          color: "white",
-          marginBottom: 4,
-        }}>
+      <View
+        style={{
+          alignItems: "center",
+          marginBottom: 8,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: screenHeight > 800 ? 24 : screenHeight > 700 ? 22 : 20,
+            fontWeight: "800",
+            color: "white",
+            marginBottom: 4,
+          }}
+        >
           Get Started
         </Text>
-        <Text style={{
-          color: accentGray,
-          fontSize: screenHeight > 800 ? 16 : screenHeight > 700 ? 15 : 14,
-          fontWeight: "500",
-        }}>
+        <Text
+          style={{
+            color: accentGray,
+            fontSize: screenHeight > 800 ? 16 : screenHeight > 700 ? 15 : 14,
+            fontWeight: "500",
+          }}
+        >
           Sign in to start your dating journey
         </Text>
       </View>
@@ -216,14 +231,17 @@ function SignInSection({
         buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
         buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
         cornerRadius={15}
-        style={[styles.button, { 
-          height: screenHeight > 800 ? 52 : 48,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.15,
-          shadowRadius: 8,
-          elevation: 8,
-        }]}
+        style={[
+          styles.button,
+          {
+            height: screenHeight > 800 ? 52 : 48,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.15,
+            shadowRadius: 8,
+            elevation: 8,
+          },
+        ]}
         onPress={onAppleSignIn}
       />
 

@@ -53,53 +53,49 @@ export default function NamePicker({
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+      keyboardVerticalOffset={0}
     >
       <TouchableWithoutFeedback onPress={dismissKeyboard}>
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.container}>
-            <TextInput
-              value={value}
-              style={styles.input}
-              onChangeText={(text: string) => handleValueChange(text)}
-              placeholder="Enter your first name"
-              placeholderTextColor={"#6c6c6c"}
-              returnKeyType="done"
-              blurOnSubmit={true}
-              onSubmitEditing={dismissKeyboard}
-            />
-            {value.length > 50 && (
-              <Text style={{ color: "#f05d5d" }}>
-                Name must be less than 50 characters
-              </Text>
-            )}
-            <TouchableOpacity
-              onPress={onNext}
-              style={[
-                globalStyles.onboardingNextButton,
-                {
-                  backgroundColor: !next ? "transparent" : "black",
-                },
-              ]}
-              disabled={!next}
-            >
-              <Text
-                style={[
-                  globalStyles.onBoardingNextButtonText,
-                  {
-                    color: !next ? "lightgray" : "white",
-                  },
-                ]}
+        <View style={{ flex: 1, padding: 20, justifyContent: "space-between" }}>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ flexGrow: 1 }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.container}>
+              <TextInput
+                value={value}
+                style={styles.input}
+                onChangeText={(text: string) => handleValueChange(text)}
+                placeholder="Enter your first name"
+                placeholderTextColor={"#6c6c6c"}
+                returnKeyType="done"
+                blurOnSubmit={true}
+                onSubmitEditing={dismissKeyboard}
+              />
+              {value.length > 50 && (
+                <Text style={{ color: "#f05d5d" }}>
+                  Name must be less than 50 characters
+                </Text>
+              )}
+            </View>
+          </ScrollView>
+
+          {next && (
+            <View style={globalStyles.onboardingNextButtonContainer}>
+              <TouchableOpacity
+                onPress={onNext}
+                style={globalStyles.onboardingNextButton}
+                activeOpacity={0.8}
               >
-                Next
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
+                <Text style={globalStyles.onBoardingNextButtonText}>
+                  Continue
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
@@ -108,10 +104,21 @@ export default function NamePicker({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     alignItems: "center",
-    padding: 20,
     gap: 15,
+  },
+  headerContainer: {
+    width: "100%",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  title: {
+    color: "white",
+    fontSize: 28,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 12,
   },
   input: {
     width: "100%",

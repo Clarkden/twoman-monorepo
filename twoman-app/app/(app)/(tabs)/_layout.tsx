@@ -6,7 +6,10 @@ import apiFetch from "@/utils/fetch";
 import { FeatureFlag, Friendship, Match, Message, Profile } from "@/types/api";
 import { messageHandler } from "@/utils/websocket";
 import Toast from "react-native-toast-message";
-import { mainBackgroundColor, secondaryBackgroundColor } from "@/constants/globalStyles";
+import {
+  mainBackgroundColor,
+  secondaryBackgroundColor,
+} from "@/constants/globalStyles";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
@@ -23,7 +26,7 @@ export default function TabLayout() {
   const [waitlistEnabled, setWaitlistEnabled] = useState(false);
   const { connectionStatus } = useWebSocket();
   const [initialized, setInitialized] = useState(false);
-  
+
   // Get subscription store
   const { fetchSubscriptionStatus } = useSubscriptionStore();
 
@@ -46,7 +49,7 @@ export default function TabLayout() {
       }
 
       await handleGetWaitlistFlag();
-      
+
       // Fetch subscription status on app initialization
       console.log("Fetching subscription status on app init...");
       await fetchSubscriptionStatus();

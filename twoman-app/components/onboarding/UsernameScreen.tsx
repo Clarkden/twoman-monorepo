@@ -84,81 +84,76 @@ export default function NamePicker({
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+      keyboardVerticalOffset={0}
     >
       <TouchableWithoutFeedback onPress={dismissKeyboard}>
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.container}>
-            <View
-              style={{
-                gap: 15,
-                width: "100%",
-                alignItems: "center",
-              }}
-            >
-              <TextInput
-                value={value}
-                style={styles.input}
-                onChangeText={(text: string) => handleValueChange(text)}
-                placeholder="Enter a username"
-                placeholderTextColor={"#6c6c6c"}
-                returnKeyType="done"
-                blurOnSubmit={true}
-                onSubmitEditing={dismissKeyboard}
-              />
-
-              {value.length > 3 && value.length <= 50 && (
-                <>
-                  {!next ? (
-                    <Text style={{ color: "#f05d5d" }}>
-                      Username is not available
-                    </Text>
-                  ) : (
-                    <Text style={{ color: "white" }}>
-                      Username is available
-                    </Text>
-                  )}
-                </>
-              )}
-              {value.length > 50 && (
-                <Text style={{ color: "#f05d5d" }}>
-                  Username must be less than 50 characters
-                </Text>
-              )}
-              {value.length < 3 && value.length > 1 && (
-                <Text style={{ color: "#f05d5d" }}>
-                  Username length should at least 3 characters
-                </Text>
-              )}
-            </View>
-            <TouchableOpacity
-              onPress={onNext}
-              style={[
-                styles.nextButton,
-                {
-                  backgroundColor:
-                    !next || isCheckingUsername ? "transparent" : "black",
-                },
-              ]}
-              disabled={!next || isCheckingUsername}
-            >
-              <Text
-                style={[
-                  globalStyles.onBoardingNextButtonText,
-                  {
-                    color: !next || isCheckingUsername ? "lightgray" : "white",
-                  },
-                ]}
+        <View style={{ flex: 1, padding: 20, justifyContent: "space-between" }}>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ flexGrow: 1 }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.container}>
+              <View
+                style={{
+                  gap: 15,
+                  width: "100%",
+                  alignItems: "center",
+                }}
               >
-                Next
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
+                <TextInput
+                  value={value}
+                  style={styles.input}
+                  onChangeText={(text: string) => handleValueChange(text)}
+                  placeholder="Enter a username"
+                  placeholderTextColor={"#6c6c6c"}
+                  returnKeyType="done"
+                  blurOnSubmit={true}
+                  onSubmitEditing={dismissKeyboard}
+                />
+
+                {value.length > 3 && value.length <= 50 && (
+                  <>
+                    {!next ? (
+                      <Text style={{ color: "#f05d5d" }}>
+                        Username is not available
+                      </Text>
+                    ) : (
+                      <Text style={{ color: "white" }}>
+                        Username is available
+                      </Text>
+                    )}
+                  </>
+                )}
+                {value.length > 50 && (
+                  <Text style={{ color: "#f05d5d" }}>
+                    Username must be less than 50 characters
+                  </Text>
+                )}
+                {value.length < 3 && value.length > 1 && (
+                  <Text style={{ color: "#f05d5d" }}>
+                    Username length should at least 3 characters
+                  </Text>
+                )}
+              </View>
+            </View>
+          </ScrollView>
+
+          {next && !isCheckingUsername && (
+            <View style={globalStyles.onboardingNextButtonContainer}>
+              <TouchableOpacity
+                onPress={onNext}
+                style={globalStyles.onboardingNextButton}
+                activeOpacity={0.8}
+              >
+                <Text style={globalStyles.onBoardingNextButtonText}>
+                  Continue
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
@@ -187,10 +182,21 @@ const validateUsername = async (
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     alignItems: "center",
-    padding: 20,
     gap: 15,
+  },
+  headerContainer: {
+    width: "100%",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  title: {
+    color: "white",
+    fontSize: 28,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 12,
   },
   input: {
     width: "100%",
@@ -198,18 +204,5 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     backgroundColor: "white",
     color: "black",
-  },
-  nextButton: {
-    backgroundColor: mainPurple,
-    padding: 10,
-    borderRadius: 25,
-    width: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  nextButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
   },
 });

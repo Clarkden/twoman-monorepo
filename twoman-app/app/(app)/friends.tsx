@@ -54,7 +54,7 @@ export default function FriendsScreen() {
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const { profile: storedProfile } = profileStore();
   const [currentUserProfile, setCurrentUserProfile] = useState<Profile | null>(
-    storedProfile
+    storedProfile,
   );
   const [showContactsModal, setShowContactsModal] = useState(false);
   const [contacts, setContacts] = useState<Contacts.Contact[]>([]);
@@ -62,7 +62,7 @@ export default function FriendsScreen() {
   const [loadingContacts, setLoadingContacts] = useState(false);
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [referralStats, setReferralStats] = useState<ReferralStats | null>(
-    null
+    null,
   );
   const [loadingReferralStats, setLoadingReferralStats] = useState(true);
   const navigation = useNavigation();
@@ -72,9 +72,9 @@ export default function FriendsScreen() {
 
   // Modal state for redeem modal - keep at top level to prevent unmounting
   const [showRedeemModal, setShowRedeemModal] = useState(false);
-  const [redeemStep, setRedeemStep] = useState<
-    "input" | "success" | "error"
-  >("input");
+  const [redeemStep, setRedeemStep] = useState<"input" | "success" | "error">(
+    "input",
+  );
   const [codeInput, setCodeInput] = useState("");
   const [redeeming, setRedeeming] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -109,7 +109,7 @@ export default function FriendsScreen() {
     if (!codeInput.trim() || codeInput.length !== 8) {
       Alert.alert(
         "Invalid Code",
-        "Please enter a valid 8-character referral code"
+        "Please enter a valid 8-character referral code",
       );
       return;
     }
@@ -150,7 +150,7 @@ export default function FriendsScreen() {
     } catch (error) {
       console.error("Error redeeming code:", error);
       setErrorMessage(
-        error instanceof Error ? error.message : "Invalid referral code"
+        error instanceof Error ? error.message : "Invalid referral code",
       );
       setRedeemStep("error");
     } finally {
@@ -161,7 +161,7 @@ export default function FriendsScreen() {
   const fetchFriends = async () => {
     try {
       const response = await apiFetch<Friendship[]>(
-        `/profile/${userId}/friends`
+        `/profile/${userId}/friends`,
       );
 
       if (response.code !== 200) {
@@ -210,7 +210,7 @@ export default function FriendsScreen() {
       const friendship = friends.find(
         (friendship) =>
           friendship.Friend.user_id === profile.user_id ||
-          friendship.Profile.user_id === profile.user_id
+          friendship.Profile.user_id === profile.user_id,
       );
 
       if (!friendship) {
@@ -260,7 +260,7 @@ export default function FriendsScreen() {
       }
 
       setFriendRequests(
-        friendRequests.filter((request) => request.ID !== friendship!.ID)
+        friendRequests.filter((request) => request.ID !== friendship!.ID),
       );
       setSelectedFriendRequestProfile(null);
       await fetchFriends();
@@ -296,7 +296,7 @@ export default function FriendsScreen() {
       }
 
       setFriendRequests(
-        friendRequests.filter((request) => request.ID !== friendship!.ID)
+        friendRequests.filter((request) => request.ID !== friendship!.ID),
       );
       setSelectedFriendRequestProfile(null);
       await fetchFriends();
@@ -346,7 +346,7 @@ export default function FriendsScreen() {
         [
           { text: "Cancel", style: "cancel" },
           { text: "Settings", onPress: () => {} }, // Could open settings in future
-        ]
+        ],
       );
     }
   };
@@ -361,7 +361,7 @@ export default function FriendsScreen() {
 
       // Filter contacts that have phone numbers
       const contactsWithPhones = data.filter(
-        (contact) => contact.phoneNumbers && contact.phoneNumbers.length > 0
+        (contact) => contact.phoneNumbers && contact.phoneNumbers.length > 0,
       );
 
       setContacts(contactsWithPhones);
@@ -1007,7 +1007,7 @@ function UsernameSearch() {
   const handleSearch = async () => {
     try {
       const response = await apiFetch<Profile[]>(
-        `/profile/search?username=${search}`
+        `/profile/search?username=${search}`,
       );
 
       if (!response.success) {

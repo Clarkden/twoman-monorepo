@@ -196,7 +196,7 @@ function PendingTargetContent({
 
     try {
       const response = await apiFetch<Friendship[]>(
-        `/profile/${match.profile3.user_id}/friends`
+        `/profile/${match.profile3.user_id}/friends`,
       );
 
       if (response.code !== 200) {
@@ -563,14 +563,14 @@ export default function LikeScreen() {
 
       const updateList = (
         list: Match[],
-        setList: React.Dispatch<React.SetStateAction<Match[]>>
+        setList: React.Dispatch<React.SetStateAction<Match[]>>,
       ) => {
         const index = list.findIndex(
-          (match) => Number(match.ID) === Number(ID)
+          (match) => Number(match.ID) === Number(ID),
         );
         if (index !== -1 && status !== "pending") {
           setList((prev) =>
-            prev.filter((match) => Number(match.ID) !== Number(ID))
+            prev.filter((match) => Number(match.ID) !== Number(ID)),
           );
         }
       };
@@ -586,7 +586,7 @@ export default function LikeScreen() {
             if (userId === data.profile3_id && !data.profile3_accepted) {
               console.log("User is profile3 and profile3 has not accepted");
               const index = pendingMatches.findIndex(
-                (match) => match.ID === data.ID
+                (match) => match.ID === data.ID,
               );
 
               if (index === -1) {
@@ -597,7 +597,7 @@ export default function LikeScreen() {
               console.log("User is profile4 and profile4 has not accepted");
 
               const index = pendingMatches.findIndex(
-                (match) => match.ID === data.ID
+                (match) => match.ID === data.ID,
               );
 
               if (index === -1) {
@@ -606,10 +606,10 @@ export default function LikeScreen() {
               }
             } else {
               console.log(
-                "User is not profile3 or profile4, removing match if it exists"
+                "User is not profile3 or profile4, removing match if it exists",
               );
               setPendingMatches((prev) =>
-                prev.filter((match) => match.ID !== data.ID)
+                prev.filter((match) => match.ID !== data.ID),
               );
             }
           } else {
@@ -617,14 +617,14 @@ export default function LikeScreen() {
 
             if (data.profile2_id === userId && !data.profile4_id) {
               console.log(
-                "User is profile2 and profile4 is null, meaning user is sole recipient of like, adding it to pending matches"
+                "User is profile2 and profile4 is null, meaning user is sole recipient of like, adding it to pending matches",
               );
               setPendingMatches((prev) => [...prev, data]);
             }
           }
         } else if (data.profile2_id === userId && !data.profile4_id) {
           console.log(
-            "User is profile2 in duo match and profile4 is null, adding it to pending targets"
+            "User is profile2 in duo match and profile4 is null, adding it to pending targets",
           );
           setPendingTargets((prev) => [...prev, data]);
         }
@@ -906,7 +906,7 @@ async function GetPendingTargets(): Promise<Match[]> {
 function MatchDecision(
   id: string,
   accept: boolean,
-  sendMessage: <T = unknown>(message: T) => void
+  sendMessage: <T = unknown>(message: T) => void,
 ): void {
   sendMessage({
     type: "match",

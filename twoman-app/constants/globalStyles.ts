@@ -77,12 +77,14 @@ export const globalStyles = StyleSheet.create({
   },
   onboardingNextButton: {
     backgroundColor: "black",
-    padding: 10,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
     borderRadius: 25,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 10,
     width: "100%",
+    minHeight: 56,
   },
   onboardingNextButtonContainer: {
     width: "100%",
@@ -91,7 +93,9 @@ export const globalStyles = StyleSheet.create({
   },
   onBoardingNextButtonText: {
     color: "white",
-    fontWeight: "600",
+    fontWeight: "700",
+    fontSize: 18,
+    letterSpacing: 0.5,
   },
   onboardingInputColor: {
     backgroundColor: "white",

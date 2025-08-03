@@ -40,71 +40,67 @@ export default function BioPicker({
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+      keyboardVerticalOffset={0}
     >
       <TouchableWithoutFeedback onPress={dismissKeyboard}>
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.container}>
-            <View style={{ width: "100%" }}>
-              <View
-                style={{
-                  width: "100%",
-                  alignItems: "flex-end",
-                  marginBottom: 10,
-                }}
-              >
-                <Text
+        <View style={{ flex: 1, padding: 20, justifyContent: "space-between" }}>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ flexGrow: 1 }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.container}>
+              <View style={{ width: "100%" }}>
+                <View
                   style={{
-                    color: localValue.length > 200 ? "#f05d5d" : "lightgray",
-                    fontSize: 14,
-                    fontWeight: "500",
-                    opacity: localValue.length > 100 ? 1 : 0,
+                    width: "100%",
+                    alignItems: "flex-end",
+                    marginBottom: 10,
                   }}
                 >
-                  {localValue.length}/200
-                </Text>
-              </View>
-              <View style={styles.inputContainer}>
-                <TextInput
-                  value={localValue}
-                  style={styles.input}
-                  onChangeText={(text: string) => setLocalValue(text)}
-                  placeholder="Enter a short bio"
-                  placeholderTextColor={"#6c6c6c"}
-                  multiline
-                  returnKeyType="done"
-                  blurOnSubmit={true}
-                  onSubmitEditing={dismissKeyboard}
-                />
+                  <Text
+                    style={{
+                      color: localValue.length > 200 ? "#f05d5d" : "lightgray",
+                      fontSize: 14,
+                      fontWeight: "500",
+                      opacity: localValue.length > 100 ? 1 : 0,
+                    }}
+                  >
+                    {localValue.length}/200
+                  </Text>
+                </View>
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    value={localValue}
+                    style={styles.input}
+                    onChangeText={(text: string) => setLocalValue(text)}
+                    placeholder="Enter a short bio"
+                    placeholderTextColor={"#6c6c6c"}
+                    multiline
+                    returnKeyType="done"
+                    blurOnSubmit={true}
+                    onSubmitEditing={dismissKeyboard}
+                  />
+                </View>
               </View>
             </View>
-            <TouchableOpacity
-              onPress={onNext}
-              style={[
-                styles.nextButton,
-                {
-                  backgroundColor: !next ? "transparent" : "black",
-                },
-              ]}
-              disabled={!next}
-            >
-              <Text
-                style={[
-                  globalStyles.onBoardingNextButtonText,
-                  {
-                    color: !next ? "lightgray" : "white",
-                  },
-                ]}
+          </ScrollView>
+
+          {next && (
+            <View style={globalStyles.onboardingNextButtonContainer}>
+              <TouchableOpacity
+                onPress={onNext}
+                style={globalStyles.onboardingNextButton}
+                activeOpacity={0.8}
               >
-                Next
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
+                <Text style={globalStyles.onBoardingNextButtonText}>
+                  Continue
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
@@ -112,11 +108,12 @@ export default function BioPicker({
 
 const styles = StyleSheet.create({
   container: {
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     alignItems: "center",
-    padding: 20,
     flex: 1,
+    gap: 15,
   },
+
   inputContainer: {
     width: "100%",
     height: 100,
@@ -129,18 +126,5 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "white",
     color: "black",
-  },
-  nextButton: {
-    backgroundColor: mainPurple,
-    padding: 10,
-    borderRadius: 25,
-    width: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  nextButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
   },
 });

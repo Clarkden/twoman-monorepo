@@ -19,7 +19,6 @@ import {
   secondaryBackgroundColor,
 } from "@/constants/globalStyles";
 
-
 export default function PhoneAuthModal({
   phoneNumber,
   setPhoneNumber,
@@ -46,9 +45,9 @@ export default function PhoneAuthModal({
   return (
     <View style={{ flex: 1, backgroundColor: mainBackgroundColor }}>
       <StatusBar style="light" />
-      
+
       <View style={styles.nativeModalHeader}>
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={onClose}
           style={styles.closeButton}
           activeOpacity={0.7}
@@ -59,7 +58,7 @@ export default function PhoneAuthModal({
         <View style={{ width: 24 }} />
       </View>
 
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={0}
@@ -96,7 +95,9 @@ export default function PhoneAuthModal({
               }}
               flagButtonStyle={styles.flagButton}
               countryPickerButtonStyle={styles.countryPickerButton}
-              renderDropdownImage={<Text style={{ color: "white", fontSize: 16 }}>▼</Text>}
+              renderDropdownImage={
+                <Text style={{ color: "white", fontSize: 16 }}>▼</Text>
+              }
               withDarkTheme
               autoFocus
             />
@@ -104,7 +105,8 @@ export default function PhoneAuthModal({
 
           <View style={styles.disclaimerSection}>
             <Text style={styles.disclaimerText}>
-              By continuing, you may receive SMS messages for verification and security purposes.
+              By continuing, you may receive SMS messages for verification and
+              security purposes.
             </Text>
           </View>
         </View>
