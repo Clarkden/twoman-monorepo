@@ -9,6 +9,7 @@ import {
 } from "@/constants/globalStyles";
 import useWebSocket from "@/hooks/useWebsocket";
 import { useSession } from "@/stores/auth";
+import { useIsPro, useSubscriptionStore } from "@/stores/subscription";
 import { Friendship, Match, Profile } from "@/types/api";
 import apiFetch from "@/utils/fetch";
 import { messageHandler } from "@/utils/websocket";
@@ -29,8 +30,43 @@ import {
   View,
 } from "react-native";
 import PagerView from "react-native-pager-view";
+import { BlurView } from "expo-blur";
+import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
+import Purchases from "react-native-purchases";
 
 const { width } = Dimensions.get("window");
+
+async function presentPaywall(): Promise<boolean> {
+  console.log("Starting presentPaywall function for likes");
+  try {
+    const paywallResult: PAYWALL_RESULT = await RevenueCatUI.presentPaywall();
+    console.log("Paywall result received:", paywallResult);
+
+    switch (paywallResult) {
+      case PAYWALL_RESULT.NOT_PRESENTED:
+        console.log("Paywall was not presented");
+        return false;
+      case PAYWALL_RESULT.ERROR:
+        console.log("Error occurred while presenting paywall");
+        return false;
+      case PAYWALL_RESULT.CANCELLED:
+        console.log("Paywall was cancelled by user");
+        return false;
+      case PAYWALL_RESULT.PURCHASED:
+        console.log("Purchase was successful");
+        return true;
+      case PAYWALL_RESULT.RESTORED:
+        console.log("Purchase was restored");
+        return true;
+      default:
+        console.log("Unknown paywall result:", paywallResult);
+        return false;
+    }
+  } catch (error) {
+    console.error("Exception caught in presentPaywall:", error);
+    return false;
+  }
+}
 
 // TODO: Refactor this component to be re-useable since it is also similar to the component in index.tsx
 function FriendshipPager({
@@ -160,7 +196,7 @@ function PendingTargetContent({
 
     try {
       const response = await apiFetch<Friendship[]>(
-        `/profile/${match.profile3.user_id}/friends`,
+        `/profile/${match.profile3.user_id}/friends`
       );
 
       if (response.code !== 200) {
@@ -474,6 +510,10 @@ export default function LikeScreen() {
   const { sendMessage } = useWebSocket();
   const userId = useSession((state) => state.session?.user_id);
 
+  // Pro status from subscription store
+  const isPro = useIsPro();
+  const { refreshSubscriptionStatus } = useSubscriptionStore();
+
   const handleGetMatches = async () => {
     const matches = await GetPendingMatches();
     setPendingMatches(matches);
@@ -507,20 +547,30 @@ export default function LikeScreen() {
     setModalVisible(false);
   };
 
+  const handleBlurredMatchTap = async () => {
+    console.log("Blurred match tapped, presenting paywall...");
+    const purchased = await presentPaywall();
+
+    if (purchased) {
+      console.log("Purchase successful, refreshing subscription status...");
+      await refreshSubscriptionStatus();
+    }
+  };
+
   useEffect(() => {
     const handleMatchMessage = (data: Match) => {
       const { ID, status, is_duo } = data;
 
       const updateList = (
         list: Match[],
-        setList: React.Dispatch<React.SetStateAction<Match[]>>,
+        setList: React.Dispatch<React.SetStateAction<Match[]>>
       ) => {
         const index = list.findIndex(
-          (match) => Number(match.ID) === Number(ID),
+          (match) => Number(match.ID) === Number(ID)
         );
         if (index !== -1 && status !== "pending") {
           setList((prev) =>
-            prev.filter((match) => Number(match.ID) !== Number(ID)),
+            prev.filter((match) => Number(match.ID) !== Number(ID))
           );
         }
       };
@@ -536,7 +586,7 @@ export default function LikeScreen() {
             if (userId === data.profile3_id && !data.profile3_accepted) {
               console.log("User is profile3 and profile3 has not accepted");
               const index = pendingMatches.findIndex(
-                (match) => match.ID === data.ID,
+                (match) => match.ID === data.ID
               );
 
               if (index === -1) {
@@ -547,7 +597,7 @@ export default function LikeScreen() {
               console.log("User is profile4 and profile4 has not accepted");
 
               const index = pendingMatches.findIndex(
-                (match) => match.ID === data.ID,
+                (match) => match.ID === data.ID
               );
 
               if (index === -1) {
@@ -556,10 +606,10 @@ export default function LikeScreen() {
               }
             } else {
               console.log(
-                "User is not profile3 or profile4, removing match if it exists",
+                "User is not profile3 or profile4, removing match if it exists"
               );
               setPendingMatches((prev) =>
-                prev.filter((match) => match.ID !== data.ID),
+                prev.filter((match) => match.ID !== data.ID)
               );
             }
           } else {
@@ -567,14 +617,14 @@ export default function LikeScreen() {
 
             if (data.profile2_id === userId && !data.profile4_id) {
               console.log(
-                "User is profile2 and profile4 is null, meaning user is sole recipient of like, adding it to pending matches",
+                "User is profile2 and profile4 is null, meaning user is sole recipient of like, adding it to pending matches"
               );
               setPendingMatches((prev) => [...prev, data]);
             }
           }
         } else if (data.profile2_id === userId && !data.profile4_id) {
           console.log(
-            "User is profile2 in duo match and profile4 is null, adding it to pending targets",
+            "User is profile2 in duo match and profile4 is null, adding it to pending targets"
           );
           setPendingTargets((prev) => [...prev, data]);
         }
@@ -597,47 +647,97 @@ export default function LikeScreen() {
     handleGetTargets();
   }, [isFocused]);
 
-  const MatchItem = ({ item }: { item: Match }) => (
+  // Listen for RevenueCat subscription updates
+  useEffect(() => {
+    const listener = Purchases.addCustomerInfoUpdateListener(() => {
+      refreshSubscriptionStatus();
+    });
+
+    return () => {
+      // Cleanup listener
+    };
+  }, [refreshSubscriptionStatus]);
+
+  const MatchItem = ({
+    item,
+    isBlurred = false,
+  }: {
+    item: Match;
+    isBlurred?: boolean;
+  }) => (
     <TouchableOpacity
       style={styles.matchContainer}
       onPress={() => {
-        setSelectedMatch(item);
-        setModalVisible(true);
+        if (isBlurred) {
+          handleBlurredMatchTap();
+        } else {
+          setSelectedMatch(item);
+          setModalVisible(true);
+        }
       }}
     >
-      {!item.is_duo ? (
-        <View style={styles.profileContainer}>
-          <Image
-            source={{ uri: item.profile1.image1 }}
-            style={[styles.profileImage]}
-          />
-          {item.is_duo && item.profile2 && (
+      <View
+        style={{ position: "relative", borderRadius: 10, overflow: "hidden" }}
+      >
+        {!item.is_duo ? (
+          <View style={styles.profileContainer}>
             <Image
-              source={{ uri: item.profile2.image1 }}
+              source={{ uri: item.profile1.image1 }}
               style={[styles.profileImage]}
             />
-          )}
-        </View>
-      ) : (
-        <View style={styles.pendingTargetContainer}>
-          <Image
-            source={{ uri: item.profile1.image1 }}
-            style={[styles.pendingTargetImage]}
-          />
-          <Image
-            source={{ uri: item.profile3?.image1 }}
-            style={[styles.pendingTargetImage]}
-          />
-          <Image
-            source={{ uri: item.profile2?.image1 }}
-            style={[styles.pendingTargetImage]}
-          />
-          <Image
-            source={{ uri: item.profile4?.image1 }}
-            style={[styles.pendingTargetImage]}
-          />
-        </View>
-      )}
+            {item.is_duo && item.profile2 && (
+              <Image
+                source={{ uri: item.profile2.image1 }}
+                style={[styles.profileImage]}
+              />
+            )}
+          </View>
+        ) : (
+          <View style={styles.pendingTargetContainer}>
+            <Image
+              source={{ uri: item.profile1.image1 }}
+              style={[styles.pendingTargetImage]}
+            />
+            <Image
+              source={{ uri: item.profile3?.image1 }}
+              style={[styles.pendingTargetImage]}
+            />
+            <Image
+              source={{ uri: item.profile2?.image1 }}
+              style={[styles.pendingTargetImage]}
+            />
+            <Image
+              source={{ uri: item.profile4?.image1 }}
+              style={[styles.pendingTargetImage]}
+            />
+          </View>
+        )}
+
+        {isBlurred && (
+          <BlurView
+            intensity={90}
+            style={[
+              {
+                position: "absolute",
+                top: 10,
+                left: 0,
+                right: 0,
+                height: !item.is_duo ? width - 10 : (width / 2 - 25) * 2 + 10,
+                justifyContent: "center",
+                alignItems: "center",
+                borderRadius: 10,
+                overflow: "hidden",
+              },
+            ]}
+          >
+            <View style={styles.blurOverlay}>
+              <FontAwesome name="lock" size={40} color="white" />
+              <Text style={styles.blurText}>Upgrade to 2 Man Pro</Text>
+              <Text style={styles.blurSubtext}>to see all your likes</Text>
+            </View>
+          </BlurView>
+        )}
+      </View>
 
       <View style={styles.matchInfo}>
         <Text style={styles.matchText}>
@@ -735,9 +835,24 @@ export default function LikeScreen() {
               Likes ({pendingMatches.length})
             </Text>
             {pendingMatches.length > 0 &&
-              pendingMatches.map((match) => (
-                <MatchItem key={match.ID} item={match} />
-              ))}
+              pendingMatches.map((match, index) => {
+                // If user has Pro, show all likes normally
+                if (isPro) {
+                  return (
+                    <MatchItem key={match.ID} item={match} isBlurred={false} />
+                  );
+                }
+
+                // If user doesn't have Pro, show first like clearly, blur the rest
+                const isBlurred = index > 0;
+                return (
+                  <MatchItem
+                    key={match.ID}
+                    item={match}
+                    isBlurred={isBlurred}
+                  />
+                );
+              })}
           </View>
           <PotentialMatchModal
             visible={modalVisible}
@@ -791,7 +906,7 @@ async function GetPendingTargets(): Promise<Match[]> {
 function MatchDecision(
   id: string,
   accept: boolean,
-  sendMessage: <T = unknown>(message: T) => void,
+  sendMessage: <T = unknown>(message: T) => void
 ): void {
   sendMessage({
     type: "match",
@@ -828,7 +943,6 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-
     backgroundColor: mainBackgroundColor,
   },
   modalText: {
@@ -932,5 +1046,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: "center",
     color: "white",
+  },
+  blurOverlay: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+    borderRadius: 15,
+    marginHorizontal: 20,
+  },
+  blurText: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginTop: 10,
+  },
+  blurSubtext: {
+    color: "white",
+    fontSize: 14,
+    textAlign: "center",
+    marginTop: 5,
+    opacity: 0.8,
   },
 });

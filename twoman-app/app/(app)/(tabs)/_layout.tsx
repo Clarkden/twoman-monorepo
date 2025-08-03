@@ -6,7 +6,7 @@ import apiFetch from "@/utils/fetch";
 import { FeatureFlag, Friendship, Match, Message, Profile } from "@/types/api";
 import { messageHandler } from "@/utils/websocket";
 import Toast from "react-native-toast-message";
-import { secondaryBackgroundColor } from "@/constants/globalStyles";
+import { mainBackgroundColor, secondaryBackgroundColor } from "@/constants/globalStyles";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
@@ -307,7 +307,7 @@ export default function TabLayout() {
     <View
       style={{
         flex: 1,
-        backgroundColor: secondaryBackgroundColor,
+        backgroundColor: mainBackgroundColor,
       }}
     >
       <Tabs
@@ -321,7 +321,11 @@ export default function TabLayout() {
             fontWeight: "bold",
           },
           headerShadowVisible: false,
+          headerStyle: {
+            backgroundColor: mainBackgroundColor,
+          },
           tabBarStyle: {
+            backgroundColor: mainBackgroundColor,
             borderTopWidth: 0,
           },
         }}

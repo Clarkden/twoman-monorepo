@@ -691,7 +691,7 @@ export default function ProfileScreen() {
           >
             <KeyboardAvoidingView
               style={{
-                backgroundColor: "#171717",
+                backgroundColor: mainBackgroundColor,
                 padding: 20,
                 width: "100%",
                 height: height * 0.55,
@@ -772,7 +772,7 @@ export default function ProfileScreen() {
                       onChangeText={(text) => handleChangeEditingItemText(text)}
                       autoFocus={true}
                       style={{
-                        backgroundColor: "#0a0a0a",
+                        backgroundColor: mainBackgroundColor,
                         padding: 10,
                         borderRadius: 10,
                         color: "white",
@@ -986,7 +986,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   imagePickerButton: {
-    backgroundColor: "#1b1a1c",
+                    backgroundColor: secondaryBackgroundColor,
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
@@ -1017,7 +1017,7 @@ const styles = StyleSheet.create({
   emptyImageContainer: {
     width: "100%",
     height: "100%",
-    backgroundColor: "#1b1a1c",
+                    backgroundColor: secondaryBackgroundColor,
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
