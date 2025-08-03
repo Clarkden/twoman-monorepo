@@ -14,7 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { LinearGradient } from "expo-linear-gradient";
-import { mainBackgroundColor, mainPurple } from "@/constants/globalStyles";
+import { mainBackgroundColor, mainPurple, secondaryBackgroundColor, accentGray } from "@/constants/globalStyles";
 import { StatusBar } from "expo-status-bar";
 import { BlurView } from "expo-blur";
 import { FeatureFlag, SessionData } from "@/types/api";
@@ -65,45 +65,68 @@ interface AuthModalProps {
 // Header Component
 function AuthHeader({ screenHeight }: AuthHeaderProps) {
   return (
-    <Text
-      style={{
-        color: "white",
-        fontSize: screenHeight > 800 ? 100 : 60,
-        fontWeight: "bold",
-      }}
-    >
-      Dating But{" "}
+    <View style={{
+      alignItems: "center",
+      marginBottom: screenHeight > 800 ? 20 : 15,
+      marginTop: screenHeight > 800 ? 50 : screenHeight > 700 ? 35 : 20,
+    }}>
       <Text
         style={{
-          color: mainPurple,
+          color: "white",
+          fontSize: screenHeight > 800 ? 80 : screenHeight > 700 ? 60 : 42,
+          fontWeight: "900",
+          textAlign: "center",
+          letterSpacing: -1,
         }}
       >
-        Fun
+        Dating But{" "}
+        <Text
+          style={{
+            color: mainPurple,
+          }}
+        >
+          Fun
+        </Text>
       </Text>
-    </Text>
+      <Text
+        style={{
+          color: accentGray,
+          fontSize: screenHeight > 800 ? 18 : screenHeight > 700 ? 16 : 14,
+          fontWeight: "500",
+          textAlign: "center",
+          marginTop: screenHeight > 800 ? 8 : 6,
+          letterSpacing: 0.5,
+        }}
+      >
+        Real connections, real friends, real fun
+      </Text>
+    </View>
   );
 }
 
 // Individual Feature Icon Component
 function FeatureIcon({ emoji, label, screenHeight }: FeatureIconProps) {
-  const iconSize = screenHeight > 800 ? 100 : 80;
-  const emojiSize = screenHeight > 800 ? 40 : 30;
+  const iconSize = screenHeight > 800 ? 100 : screenHeight > 700 ? 85 : 70;
+  const emojiSize = screenHeight > 800 ? 40 : screenHeight > 700 ? 34 : 28;
+  const gap = screenHeight > 800 ? 20 : screenHeight > 700 ? 16 : 12;
+  const labelSize = screenHeight > 800 ? 16 : screenHeight > 700 ? 15 : 14;
 
   return (
     <View
       style={{
         flexDirection: "column",
         alignItems: "center",
-        gap: 20,
+        gap: gap,
       }}
     >
       <View
         style={{
           width: iconSize,
           height: iconSize,
-          borderRadius: 80,
+          borderRadius: iconSize / 2,
+          backgroundColor: "rgba(163, 100, 245, 0.15)",
           borderWidth: 2,
-          borderColor: mainPurple,
+          borderColor: "rgba(163, 100, 245, 0.4)",
           alignItems: "center",
           justifyContent: "center",
         }}
@@ -116,7 +139,13 @@ function FeatureIcon({ emoji, label, screenHeight }: FeatureIconProps) {
           {emoji}
         </Text>
       </View>
-      <Text style={{ color: "white", fontWeight: "700" }}>{label}</Text>
+      <Text style={{ 
+        color: "white", 
+        fontWeight: "700",
+        fontSize: labelSize,
+      }}>
+        {label}
+      </Text>
     </View>
   );
 }
@@ -129,12 +158,12 @@ function FeatureIcons({ screenHeight }: FeatureIconsProps) {
         flexDirection: "row",
         justifyContent: "space-between",
         width: "100%",
-        marginTop: screenHeight > 800 ? 60 : 35,
+        marginTop: screenHeight > 800 ? 30 : screenHeight > 700 ? 25 : 20,
       }}
     >
-      <FeatureIcon emoji="🔍" label="Find" screenHeight={screenHeight} />
-      <FeatureIcon emoji="😈" label="Match" screenHeight={screenHeight} />
-      <FeatureIcon emoji="💬" label="Chat" screenHeight={screenHeight} />
+      <FeatureIcon emoji="🔍" label="Discover" screenHeight={screenHeight} />
+      <FeatureIcon emoji="💞" label="Match" screenHeight={screenHeight} />
+      <FeatureIcon emoji="💬" label="Connect" screenHeight={screenHeight} />
     </View>
   );
 }
@@ -149,65 +178,105 @@ function SignInSection({
   return (
     <View
       style={{
-        height: smsAuthEnabled ? 300 : 250,
         width: "100%",
-        padding: 30,
-        backgroundColor: "rgba(169,175,177, 0.2)",
-        borderTopLeftRadius: 50,
-        borderTopRightRadius: 50,
-        gap: 20,
+        padding: screenHeight > 800 ? 30 : screenHeight > 700 ? 25 : 20,
+        backgroundColor: "rgba(169, 175, 177, 0.2)",
+        borderTopLeftRadius: screenHeight > 800 ? 50 : 40,
+        borderTopRightRadius: screenHeight > 800 ? 50 : 40,
+        gap: screenHeight > 800 ? 20 : screenHeight > 700 ? 18 : 16,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: -8 },
+        shadowOpacity: 0.25,
+        shadowRadius: 20,
+        elevation: 20,
       }}
     >
-      <Text style={{ fontSize: 20, fontWeight: "bold", color: "white" }}>
-        Sign in
-      </Text>
+      <View style={{
+        alignItems: "center",
+        marginBottom: 8,
+      }}>
+        <Text style={{ 
+          fontSize: screenHeight > 800 ? 24 : screenHeight > 700 ? 22 : 20, 
+          fontWeight: "800", 
+          color: "white",
+          marginBottom: 4,
+        }}>
+          Get Started
+        </Text>
+        <Text style={{
+          color: accentGray,
+          fontSize: screenHeight > 800 ? 16 : screenHeight > 700 ? 15 : 14,
+          fontWeight: "500",
+        }}>
+          Sign in to start your dating journey
+        </Text>
+      </View>
 
       <AppleAuthentication.AppleAuthenticationButton
         buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
         buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
         cornerRadius={15}
-        style={[styles.button, { height: screenHeight > 800 ? 44 : 40 }]}
+        style={[styles.button, { 
+          height: screenHeight > 800 ? 52 : 48,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.15,
+          shadowRadius: 8,
+          elevation: 8,
+        }]}
         onPress={onAppleSignIn}
       />
 
       {smsAuthEnabled && (
         <TouchableOpacity
           style={{
-            borderRadius: 30,
-            backgroundColor: "white",
-            height: screenHeight > 800 ? 44 : 40,
+            borderRadius: 15,
+            backgroundColor: "rgba(255, 255, 255, 0.15)",
+            borderWidth: 1,
+            borderColor: "rgba(255, 255, 255, 0.3)",
+            height: screenHeight > 800 ? 52 : 48,
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "center",
-            gap: 5,
+            gap: 8,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
+            elevation: 8,
           }}
           onPress={onPhoneAuthPress}
+          activeOpacity={0.8}
         >
-          <LucidePhone color="black" fill="black" width={12} height={12} />
+          <LucidePhone color="white" width={16} height={16} />
           <Text
             style={{
               fontSize: screenHeight > 800 ? 17 : 15,
-              fontWeight: "500",
+              fontWeight: "600",
+              color: "white",
             }}
           >
-            Sign in with Phone Number
+            Sign in with Phone
           </Text>
         </TouchableOpacity>
       )}
 
       <Text
         style={{
-          color: "white",
+          color: accentGray,
           fontSize: 12,
-          padding: 10,
+          textAlign: "center",
+          lineHeight: 16,
+          marginTop: 8,
         }}
       >
         <Text>By signing in, you agree to our </Text>
         <Text
           onPress={() => Linking.openURL("https://twoman.dating/terms")}
           style={{
-            color: "lightgray",
+            color: "rgba(255, 255, 255, 0.8)",
             textDecorationLine: "underline",
+            fontWeight: "500",
           }}
         >
           Terms of Service
@@ -216,11 +285,12 @@ function SignInSection({
         <Text
           onPress={() => Linking.openURL("https://twoman.dating/privacy")}
           style={{
-            color: "lightgray",
+            color: "rgba(255, 255, 255, 0.8)",
             textDecorationLine: "underline",
+            fontWeight: "500",
           }}
         >
-          Privacy Policy.
+          Privacy Policy
         </Text>
       </Text>
     </View>
@@ -461,7 +531,7 @@ export default function Auth() {
       <AuthBackground />
 
       <View style={styles.container}>
-        <SafeAreaView>
+        <SafeAreaView style={{ flex: 1, justifyContent: "center" }}>
           <AuthHeader screenHeight={SCREEN_HEIGHT} />
           <FeatureIcons screenHeight={SCREEN_HEIGHT} />
         </SafeAreaView>

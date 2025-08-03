@@ -5,6 +5,8 @@ import {
   SafeAreaView,
   StyleSheet,
   Pressable,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import PhoneInput from "react-native-phone-number-input";
 import { useState, useRef, useEffect } from "react";
@@ -16,8 +18,7 @@ import {
   mainPurple,
   secondaryBackgroundColor,
 } from "@/constants/globalStyles";
-import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
+
 
 export default function PhoneAuthModal({
   phoneNumber,
@@ -43,48 +44,35 @@ export default function PhoneAuthModal({
   }, [formattedValue]);
 
   return (
-    <SafeAreaView>
-      <BlurView
-        intensity={0}
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: 0,
-          height: 400,
-          zIndex: 0,
-        }}
+    <View style={{ flex: 1, backgroundColor: mainBackgroundColor }}>
+      <StatusBar style="light" />
+      
+      <View style={styles.nativeModalHeader}>
+        <TouchableOpacity 
+          onPress={onClose}
+          style={styles.closeButton}
+          activeOpacity={0.7}
+        >
+          <LucideX color="white" size={24} />
+        </TouchableOpacity>
+        <Text style={styles.nativeModalTitle}>Phone Number</Text>
+        <View style={{ width: 24 }} />
+      </View>
+
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={0}
       >
-        <LinearGradient
-          colors={["#9141fa", "transparent"]}
-          style={{
-            height: 400,
-            width: "100%",
-            zIndex: -1,
-            opacity: 0.8,
-          }}
-        />
-      </BlurView>
-      <View
-        style={{
-          padding: 20,
-        }}
-      >
-        <StatusBar style="dark" />
-        <View style={styles.container}>
-          <Pressable onPress={onClose}>
-            <LucideX color="white" />
-          </Pressable>
-          <Text
-            style={{
-              color: "white",
-              fontSize: 20,
-              fontWeight: "bold",
-            }}
-          >
-            Enter Phone Number
-          </Text>
-          <SafeAreaView style={styles.wrapper}>
+        <View style={styles.contentContainer}>
+          <View style={styles.headerSection}>
+            <Text style={styles.mainTitle}>Enter Your Number</Text>
+            <Text style={styles.subtitle}>
+              We'll send you a verification code to confirm your phone number
+            </Text>
+          </View>
+
+          <View style={styles.inputSection}>
             <PhoneInput
               ref={phoneInput}
               defaultValue={value}
@@ -96,74 +84,185 @@ export default function PhoneAuthModal({
               onChangeFormattedText={(text) => {
                 setFormattedValue(text);
               }}
-              containerStyle={{
-                backgroundColor: "#000",
-                borderRadius: 25,
-                overflow: "hidden",
-                width: "100%",
-              }}
-              textContainerStyle={{
-                backgroundColor: "#000",
-              }}
-              codeTextStyle={{
-                color: "white",
-              }}
-              textInputStyle={{
-                color: "white",
-              }}
+              containerStyle={styles.phoneInputContainer}
+              textContainerStyle={styles.phoneTextContainer}
+              codeTextStyle={styles.phoneCodeText}
+              textInputStyle={styles.phoneTextInput}
+              placeholder="Phone number"
               textInputProps={{
-                placeholderTextColor: "gray",
+                placeholderTextColor: accentGray,
+                selectionColor: "white",
+                cursorColor: "white",
               }}
+              flagButtonStyle={styles.flagButton}
+              countryPickerButtonStyle={styles.countryPickerButton}
+              renderDropdownImage={<Text style={{ color: "white", fontSize: 16 }}>▼</Text>}
               withDarkTheme
               autoFocus
             />
-            <TouchableOpacity
-              onPress={onNext}
+          </View>
+
+          <View style={styles.disclaimerSection}>
+            <Text style={styles.disclaimerText}>
+              By continuing, you may receive SMS messages for verification and security purposes.
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.bottomButtonContainer}>
+          <TouchableOpacity
+            onPress={onNext}
+            style={[
+              styles.nextButton,
+              {
+                backgroundColor: valid ? mainPurple : secondaryBackgroundColor,
+                borderWidth: valid ? 0 : 1,
+                borderColor: valid ? "transparent" : "rgba(163, 100, 245, 0.3)",
+              },
+            ]}
+            disabled={!valid}
+            activeOpacity={0.8}
+          >
+            <Text
               style={[
-                styles.nextButton,
+                styles.nextButtonText,
                 {
-                  backgroundColor: !valid ? "transparent" : mainPurple,
-                  marginTop: 20,
+                  color: valid ? "white" : accentGray,
                 },
               ]}
-              disabled={!valid}
             >
-              <Text
-                style={[
-                  styles.nextButtonText,
-                  {
-                    color: !valid ? accentGray : "white",
-                  },
-                ]}
-              >
-                Next
-              </Text>
-            </TouchableOpacity>
-          </SafeAreaView>
+              Send Code
+            </Text>
+          </TouchableOpacity>
         </View>
-      </View>
-    </SafeAreaView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  button: {},
-  container: {
-    gap: 20,
+  nativeModalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    paddingTop: 60, // Account for status bar
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.1)",
   },
-  wrapper: {},
-  message: {},
-  nextButton: {
-    backgroundColor: mainPurple,
-    padding: 10,
-    borderRadius: 25,
-    width: "100%",
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: secondaryBackgroundColor,
     alignItems: "center",
     justifyContent: "center",
   },
-  nextButtonText: {
+  nativeModalTitle: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  contentContainer: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+  },
+  headerSection: {
+    alignItems: "center",
+    marginTop: 20,
+    marginBottom: 40,
+  },
+  mainTitle: {
+    color: "white",
+    fontSize: 28,
+    fontWeight: "800",
+    textAlign: "center",
+    marginBottom: 12,
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    color: accentGray,
+    fontSize: 16,
+    fontWeight: "500",
+    textAlign: "center",
+    lineHeight: 22,
+    maxWidth: 320,
+  },
+  inputSection: {
+    marginBottom: 30,
+  },
+  phoneInputContainer: {
+    backgroundColor: secondaryBackgroundColor,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    overflow: "hidden",
+    width: "100%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  phoneTextContainer: {
+    backgroundColor: secondaryBackgroundColor,
+    borderLeftWidth: 1,
+    borderLeftColor: "rgba(255, 255, 255, 0.1)",
+  },
+  phoneCodeText: {
     color: "white",
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: "600",
+  },
+  phoneTextInput: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  flagButton: {
+    backgroundColor: "transparent",
+  },
+  countryPickerButton: {
+    backgroundColor: "transparent",
+  },
+  bottomButtonContainer: {
+    padding: 24,
+    paddingBottom: 34, // Extra padding for safe area
+    backgroundColor: mainBackgroundColor,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.1)",
+  },
+  nextButton: {
+    paddingVertical: 18,
+    borderRadius: 16,
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: mainPurple,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  nextButtonText: {
+    fontSize: 17,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
+  disclaimerSection: {
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "flex-end",
+    paddingBottom: 20,
+  },
+  disclaimerText: {
+    color: accentGray,
+    fontSize: 12,
+    textAlign: "center",
+    lineHeight: 16,
+    maxWidth: 300,
   },
 });
