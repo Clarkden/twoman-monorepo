@@ -8,9 +8,7 @@ import {
 import useWebSocket from "@/hooks/useWebsocket";
 import { useSession } from "@/stores/auth";
 import { Friendship, Profile } from "@/types/api";
-import {
-  SocketProfileResponseData
-} from "@/types/socket";
+import { SocketProfileResponseData } from "@/types/socket";
 import apiFetch from "@/utils/fetch";
 import { messageHandler } from "@/utils/websocket";
 import {
@@ -82,37 +80,59 @@ async function presentPaywall(): Promise<boolean> {
   }
 }
 
-function HeartAnimation({ visible, onAnimationComplete }: { visible: boolean, onAnimationComplete: () => void }) {
+function HeartAnimation({
+  visible,
+  onAnimationComplete,
+}: {
+  visible: boolean;
+  onAnimationComplete: () => void;
+}) {
   // Separate animated values for background and icon
   const backgroundOpacity = useSharedValue(0);
   const iconOpacity = useSharedValue(0);
   const iconScale = useSharedValue(0.5);
-  
+
   useEffect(() => {
     if (visible) {
       // Background just fades in
-      backgroundOpacity.value = withTiming(1, { duration: 200, easing: Easing.out(Easing.ease) });
-      
+      backgroundOpacity.value = withTiming(1, {
+        duration: 200,
+        easing: Easing.out(Easing.ease),
+      });
+
       // Icon fades in and scales
-      iconOpacity.value = withTiming(1, { duration: 200, easing: Easing.out(Easing.ease) });
+      iconOpacity.value = withTiming(1, {
+        duration: 200,
+        easing: Easing.out(Easing.ease),
+      });
       iconScale.value = withSequence(
-        withTiming(1.2, { duration: 400, easing: Easing.bezier(0.25, 0.1, 0.25, 1) }),
-        withTiming(1, { duration: 300, easing: Easing.bezier(0.25, 0.1, 0.25, 1) })
+        withTiming(1.2, {
+          duration: 400,
+          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+        }),
+        withTiming(1, {
+          duration: 300,
+          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+        }),
       );
-      
+
       setTimeout(() => {
         // Background and icon fade out
-        backgroundOpacity.value = withTiming(0, { 
-          duration: 400, 
-          easing: Easing.out(Easing.ease) 
+        backgroundOpacity.value = withTiming(0, {
+          duration: 400,
+          easing: Easing.out(Easing.ease),
         });
-        
-        iconOpacity.value = withTiming(0, { 
-          duration: 400, 
-          easing: Easing.out(Easing.ease) 
-        }, () => {
-          runOnJS(onAnimationComplete)();
-        });
+
+        iconOpacity.value = withTiming(
+          0,
+          {
+            duration: 400,
+            easing: Easing.out(Easing.ease),
+          },
+          () => {
+            runOnJS(onAnimationComplete)();
+          },
+        );
       }, 1200);
     } else {
       backgroundOpacity.value = 0;
@@ -120,26 +140,26 @@ function HeartAnimation({ visible, onAnimationComplete }: { visible: boolean, on
       iconScale.value = 0.5;
     }
   }, [visible]);
-  
+
   const backgroundStyle = useAnimatedStyle(() => {
     return {
       opacity: backgroundOpacity.value,
     };
   });
-  
+
   const iconStyle = useAnimatedStyle(() => {
     return {
       opacity: iconOpacity.value,
       transform: [{ scale: iconScale.value }],
     };
   });
-  
+
   if (!visible) return null;
-  
+
   return (
-    <View 
+    <View
       style={{
-        position: 'absolute',
+        position: "absolute",
         top: 0,
         left: 0,
         right: 0,
@@ -147,31 +167,31 @@ function HeartAnimation({ visible, onAnimationComplete }: { visible: boolean, on
         zIndex: 9999,
       }}
     >
-      <Animated.View 
+      <Animated.View
         style={[
           {
-            position: 'absolute',
+            position: "absolute",
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: '#000000',
+            backgroundColor: "#000000",
           },
-          backgroundStyle
+          backgroundStyle,
         ]}
       />
       <Animated.View
         style={[
           {
-            position: 'absolute',
+            position: "absolute",
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            justifyContent: 'center',
-            alignItems: 'center',
+            justifyContent: "center",
+            alignItems: "center",
           },
-          iconStyle
+          iconStyle,
         ]}
       >
         <Heart size={150} color="#5df067" />
@@ -180,42 +200,64 @@ function HeartAnimation({ visible, onAnimationComplete }: { visible: boolean, on
   );
 }
 
-function XAnimation({ visible, onAnimationComplete }: { visible: boolean, onAnimationComplete: () => void }) {
+function XAnimation({
+  visible,
+  onAnimationComplete,
+}: {
+  visible: boolean;
+  onAnimationComplete: () => void;
+}) {
   // Separate animated values for background and icon
   const backgroundOpacity = useSharedValue(0);
   const iconOpacity = useSharedValue(0);
   const rotation = useSharedValue(0);
-  
+
   useEffect(() => {
     if (visible) {
       console.log("X animation started");
-      
+
       // Background just fades in
-      backgroundOpacity.value = withTiming(1, { duration: 200, easing: Easing.out(Easing.ease) });
-      
+      backgroundOpacity.value = withTiming(1, {
+        duration: 200,
+        easing: Easing.out(Easing.ease),
+      });
+
       // Icon fades in and rotates
-      iconOpacity.value = withTiming(1, { duration: 200, easing: Easing.out(Easing.ease) });
+      iconOpacity.value = withTiming(1, {
+        duration: 200,
+        easing: Easing.out(Easing.ease),
+      });
       rotation.value = withSequence(
-        withTiming(45, { duration: 400, easing: Easing.bezier(0.25, 0.1, 0.25, 1) }),
-        withTiming(0, { duration: 300, easing: Easing.bezier(0.25, 0.1, 0.25, 1) })
+        withTiming(45, {
+          duration: 400,
+          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+        }),
+        withTiming(0, {
+          duration: 300,
+          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+        }),
       );
-      
+
       setTimeout(() => {
         console.log("X animation finishing");
-        
+
         // Background and icon fade out
-        backgroundOpacity.value = withTiming(0, { 
-          duration: 400, 
-          easing: Easing.out(Easing.ease) 
+        backgroundOpacity.value = withTiming(0, {
+          duration: 400,
+          easing: Easing.out(Easing.ease),
         });
-        
-        iconOpacity.value = withTiming(0, { 
-          duration: 400, 
-          easing: Easing.out(Easing.ease) 
-        }, () => {
-          console.log("X animation complete callback triggered");
-          runOnJS(onAnimationComplete)();
-        });
+
+        iconOpacity.value = withTiming(
+          0,
+          {
+            duration: 400,
+            easing: Easing.out(Easing.ease),
+          },
+          () => {
+            console.log("X animation complete callback triggered");
+            runOnJS(onAnimationComplete)();
+          },
+        );
       }, 1200);
     } else {
       backgroundOpacity.value = 0;
@@ -223,26 +265,26 @@ function XAnimation({ visible, onAnimationComplete }: { visible: boolean, onAnim
       rotation.value = 0;
     }
   }, [visible]);
-  
+
   const backgroundStyle = useAnimatedStyle(() => {
     return {
       opacity: backgroundOpacity.value,
     };
   });
-  
+
   const iconStyle = useAnimatedStyle(() => {
     return {
       opacity: iconOpacity.value,
       transform: [{ rotateZ: `${rotation.value}deg` }],
     };
   });
-  
+
   if (!visible) return null;
-  
+
   return (
-    <View 
+    <View
       style={{
-        position: 'absolute',
+        position: "absolute",
         top: 0,
         left: 0,
         right: 0,
@@ -250,31 +292,31 @@ function XAnimation({ visible, onAnimationComplete }: { visible: boolean, onAnim
         zIndex: 9999,
       }}
     >
-      <Animated.View 
+      <Animated.View
         style={[
           {
-            position: 'absolute',
+            position: "absolute",
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: '#000000',
+            backgroundColor: "#000000",
           },
-          backgroundStyle
+          backgroundStyle,
         ]}
       />
       <Animated.View
         style={[
           {
-            position: 'absolute',
+            position: "absolute",
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            justifyContent: 'center',
-            alignItems: 'center',
+            justifyContent: "center",
+            alignItems: "center",
           },
-          iconStyle
+          iconStyle,
         ]}
       >
         <X size={150} color="#f05d5d" />
@@ -299,8 +341,8 @@ function FriendshipPager({
     setFriends(
       friends.filter(
         (friendship) =>
-          friendship.ProfileID !== userId && friendship.FriendID !== userId
-      )
+          friendship.ProfileID !== userId && friendship.FriendID !== userId,
+      ),
     );
   };
 
@@ -512,7 +554,7 @@ function SelectFriendMenu({
                         handleAccept(
                           userId === friendship.Friend.user_id
                             ? friendship.Profile.user_id
-                            : friendship.Friend.user_id
+                            : friendship.Friend.user_id,
                         );
                         setMenuVisible(false);
                       }}
@@ -603,37 +645,43 @@ function SelectFriendMenu({
   );
 }
 
-function AnimatedProfileCard({ profile, onBlock }: { profile: Profile, onBlock: () => void }) {
+function AnimatedProfileCard({
+  profile,
+  onBlock,
+}: {
+  profile: Profile;
+  onBlock: () => void;
+}) {
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(20);
-  
+
   useEffect(() => {
     // Trigger animation when profile changes
     if (profile) {
       // Start from invisible and slightly lower position
       opacity.value = 0;
       translateY.value = 20;
-      
+
       // Animate to visible and normal position
-      opacity.value = withTiming(1, { 
-        duration: 200, 
-        easing: Easing.out(Easing.ease) 
+      opacity.value = withTiming(1, {
+        duration: 200,
+        easing: Easing.out(Easing.ease),
       });
-      
-      translateY.value = withTiming(0, { 
-        duration: 200, 
-        easing: Easing.out(Easing.ease) 
+
+      translateY.value = withTiming(0, {
+        duration: 200,
+        easing: Easing.out(Easing.ease),
       });
     }
   }, [profile]);
-  
+
   const animatedStyle = useAnimatedStyle(() => {
     return {
       opacity: opacity.value,
-      transform: [{ translateY: translateY.value }]
+      transform: [{ translateY: translateY.value }],
     };
   });
-  
+
   return (
     <Animated.View style={animatedStyle}>
       <ProfileCard profile={profile} onBlock={onBlock} />
@@ -653,7 +701,7 @@ export default function TabOneScreen() {
     useState<boolean>(false);
   const [showLikeModal, setShowLikeModal] = useState(false);
   const [currentUserFriends, setCurrentUserFriends] = useState<Friendship[]>(
-    []
+    [],
   );
   const [selectFriendMenuVisible, setSelectFriendMenuVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -664,7 +712,7 @@ export default function TabOneScreen() {
   const [pendingProfileRequest, setPendingProfileRequest] = useState(false);
   const [hideProfileUI, setHideProfileUI] = useState(false);
   const [pendingAction, setPendingAction] = useState<{
-    type: 'like' | 'dislike';
+    type: "like" | "dislike";
     friendId?: number;
   } | null>(null);
 
@@ -684,10 +732,10 @@ export default function TabOneScreen() {
     console.log("Animation complete handler called");
     setAnimationInProgress(false);
     animationInProgressRef.current = false;
-    
+
     // Clear hideProfileUI flag when animation completes
     setHideProfileUI(false);
-    
+
     // Rest of the existing logic
     if (nextProfileRef.current) {
       console.log("Using pre-fetched profile");
@@ -705,21 +753,21 @@ export default function TabOneScreen() {
 
   const handleAccept = (friendId?: number) => {
     console.log("Accept button pressed");
-    
+
     if (showLikeModal) {
       // If modal is open, close it first and store the pending action
       console.log("Like modal is open, closing before animation");
       setShowLikeModal(false);
-      setPendingAction({ type: 'like', friendId });
+      setPendingAction({ type: "like", friendId });
       return;
     }
-    
+
     // If modal is closed, proceed normally
     setHideProfileUI(true);
     setShowHeartAnimation(true);
     setAnimationInProgress(true);
     animationInProgressRef.current = true;
-    
+
     sendMessage({
       type: "profile",
       data: {
@@ -733,21 +781,21 @@ export default function TabOneScreen() {
 
   const handleDecline = () => {
     console.log("Decline button pressed");
-    
+
     if (showLikeModal) {
       // If modal is open, close it first and store the pending action
       console.log("Like modal is open, closing before animation");
       setShowLikeModal(false);
-      setPendingAction({ type: 'dislike' });
+      setPendingAction({ type: "dislike" });
       return;
     }
-    
+
     // If modal is closed, proceed normally
     setHideProfileUI(true);
     setShowXAnimation(true);
     setAnimationInProgress(true);
     animationInProgressRef.current = true;
-    
+
     sendMessage({
       type: "profile",
       data: {
@@ -793,7 +841,7 @@ export default function TabOneScreen() {
 
     try {
       const response = await apiFetch<Friendship[]>(
-        `/profile/${profile.user_id}/friends`
+        `/profile/${profile.user_id}/friends`,
       );
 
       if (response.code !== 200) {
@@ -811,7 +859,7 @@ export default function TabOneScreen() {
   const fetchCurrentUserFriends = async () => {
     try {
       const response = await apiFetch<Friendship[]>(
-        `/profile/${userId}/friends`
+        `/profile/${userId}/friends`,
       );
 
       if (response.code !== 200) {
@@ -855,15 +903,18 @@ export default function TabOneScreen() {
       setShowLikeModal(false);
 
       if (data.success) {
-        console.log("Profile response successful, animation in progress:", animationInProgressRef.current);
-        
+        console.log(
+          "Profile response successful, animation in progress:",
+          animationInProgressRef.current,
+        );
+
         // Start fetching new profile immediately regardless of animation state
         if (!fetchInProgressRef.current) {
           fetchInProgressRef.current = true;
           console.log("Starting profile fetch immediately");
-          
+
           // Begin fetching but don't update UI yet
-          fetchNextProfile().then(newProfile => {
+          fetchNextProfile().then((newProfile) => {
             fetchInProgressRef.current = false;
             if (animationInProgressRef.current) {
               // Store for later if animation is still running
@@ -876,12 +927,12 @@ export default function TabOneScreen() {
               setLoading(false);
             }
           });
-          
+
           // Only set profile to null if animation is not running
           if (!animationInProgressRef.current) {
             setProfile(null);
           }
-          
+
           // Still set the pending flag in case fetch takes longer than animation
           if (animationInProgressRef.current) {
             setPendingProfileRequest(true);
@@ -918,12 +969,12 @@ export default function TabOneScreen() {
     console.log("Fetching next profile in background");
     try {
       const response = await apiFetch<Profile>("/profile/discover");
-      
+
       if (!response.success) {
         console.log("Error fetching profile:", response);
         return null;
       }
-      
+
       console.log("Successfully fetched next profile");
       return response.data;
     } catch (error) {
@@ -938,21 +989,23 @@ export default function TabOneScreen() {
       // Add a small delay to ensure modal closing animation completes
       const timer = setTimeout(() => {
         console.log("Processing pending action:", pendingAction.type);
-        
-        if (pendingAction.type === 'like') {
+
+        if (pendingAction.type === "like") {
           // Process like action
           setHideProfileUI(true);
           setShowHeartAnimation(true);
           setAnimationInProgress(true);
           animationInProgressRef.current = true;
-          
+
           sendMessage({
             type: "profile",
             data: {
               decision: "like",
               target_profile: profile?.user_id as number,
               is_duo: !!pendingAction.friendId,
-              ...(pendingAction.friendId && { friend_profile: pendingAction.friendId }),
+              ...(pendingAction.friendId && {
+                friend_profile: pendingAction.friendId,
+              }),
             },
           });
         } else {
@@ -961,7 +1014,7 @@ export default function TabOneScreen() {
           setShowXAnimation(true);
           setAnimationInProgress(true);
           animationInProgressRef.current = true;
-          
+
           sendMessage({
             type: "profile",
             data: {
@@ -970,11 +1023,11 @@ export default function TabOneScreen() {
             },
           });
         }
-        
+
         // Clear pending action
         setPendingAction(null);
       }, 300); // Delay to allow modal animation to complete
-      
+
       return () => clearTimeout(timer);
     }
   }, [showLikeModal, pendingAction, profile]);
@@ -1030,21 +1083,21 @@ export default function TabOneScreen() {
   return (
     <>
       <StatusBar style="light" />
-      <HeartAnimation 
-        visible={showHeartAnimation} 
+      <HeartAnimation
+        visible={showHeartAnimation}
         onAnimationComplete={() => {
           console.log("Heart animation complete");
           setShowHeartAnimation(false);
           handleAnimationComplete();
-        }} 
+        }}
       />
-      <XAnimation 
-        visible={showXAnimation} 
+      <XAnimation
+        visible={showXAnimation}
         onAnimationComplete={() => {
           console.log("X animation complete");
           setShowXAnimation(false);
           handleAnimationComplete();
-        }} 
+        }}
       />
       <Modal
         visible={showLikeModal}
@@ -1156,14 +1209,16 @@ export default function TabOneScreen() {
                   style={styles.likeModalDuoButton}
                   onPress={() => setSelectFriendMenuVisible(true)}
                 >
-                  <Text style={styles.likeModalButtonText}>Invite a friend</Text>
+                  <Text style={styles.likeModalButtonText}>
+                    Invite a friend
+                  </Text>
                 </TouchableOpacity>
               )}
             </View>
           </View>
         </SafeAreaView>
       </Modal>
-      {(!animationInProgress && profile && !hideProfileUI) && (
+      {!animationInProgress && profile && !hideProfileUI && (
         <>
           <ScrollView
             style={{
@@ -1175,7 +1230,10 @@ export default function TabOneScreen() {
             <AnimatedProfileCard profile={profile} onBlock={handleBlock} />
           </ScrollView>
 
-          <TouchableOpacity style={styles.declineButton} onPress={handleDecline}>
+          <TouchableOpacity
+            style={styles.declineButton}
+            onPress={handleDecline}
+          >
             <X size={24} color="black" />
           </TouchableOpacity>
           <TouchableOpacity

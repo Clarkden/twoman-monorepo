@@ -1,7 +1,7 @@
 import apiFetch from "./fetch";
 
 export const updatePushToken = async (
-  pushToken: string
+  pushToken: string,
 ): Promise<{ success: boolean }> => {
   try {
     const response = await apiFetch("/user/push-token", {

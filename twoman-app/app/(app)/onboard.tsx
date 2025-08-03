@@ -177,7 +177,7 @@ export default function OnBoardScreen() {
           slideAnimation.value = 0;
           nextScreenOpacity.value = 0;
         }
-      }
+      },
     );
   };
 
@@ -235,7 +235,7 @@ export default function OnBoardScreen() {
   const retryUpload = async (
     file: ImagePickerAsset,
     maxRetries = 3,
-    delay = 1000
+    delay = 1000,
   ) => {
     if (!session) return "";
 
@@ -270,7 +270,7 @@ export default function OnBoardScreen() {
               Alert.alert("Failed to upload image: ", error);
               console.error(`Failed to upload ${key}:`, error);
               imageUrls[key] = null;
-            })
+            }),
         );
       } else {
         imageUrls[key] = null;

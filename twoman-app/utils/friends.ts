@@ -1,7 +1,7 @@
 import apiFetch from "@/utils/fetch";
 
 export async function SendFriendRequest(
-  username: string
+  username: string,
 ): Promise<{ success: boolean; message: string }> {
   try {
     const response = await apiFetch(`/profile/${username}/friend`, {

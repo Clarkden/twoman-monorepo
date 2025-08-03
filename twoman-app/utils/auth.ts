@@ -63,7 +63,7 @@ export const RefreshSession = async () => {
       hasSession: !!currentSession,
       hasRefreshToken: !!currentSession?.refresh_token,
       refreshTokenLength: currentSession?.refresh_token?.length,
-      userId: currentSession?.user_id
+      userId: currentSession?.user_id,
     });
 
     const response = await apiFetch<SessionData>("/auth/refresh", {
@@ -73,11 +73,11 @@ export const RefreshSession = async () => {
       }),
       headers: { "Content-Type": "application/json" },
     });
-    
+
     console.log("DEBUG: Refresh response:", {
       success: response.success,
       hasData: !!response.data,
-      error: response.success ? null : response
+      error: response.success ? null : response,
     });
 
     if (response.success) {
@@ -87,7 +87,9 @@ export const RefreshSession = async () => {
       console.log("DEBUG: Session refresh successful, new session saved");
       return true;
     } else {
-      console.log("DEBUG: Session refresh failed - server returned unsuccessful response");
+      console.log(
+        "DEBUG: Session refresh failed - server returned unsuccessful response",
+      );
     }
   } catch (error) {
     console.error("Failed to refresh session:", error);

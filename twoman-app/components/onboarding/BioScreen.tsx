@@ -2,16 +2,16 @@ import { OnboardScreenProps } from "@/app/(app)/onboard";
 import { globalStyles, mainPurple } from "@/constants/globalStyles";
 import { useEffect, useState } from "react";
 import {
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    View,
-    Keyboard,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from "react-native";
 
 export default function BioPicker({
@@ -37,21 +37,25 @@ export default function BioPicker({
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={{ flex: 1 }} 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
     >
       <TouchableWithoutFeedback onPress={dismissKeyboard}>
-        <ScrollView 
-          style={{ flex: 1 }} 
+        <ScrollView
+          style={{ flex: 1 }}
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.container}>
             <View style={{ width: "100%" }}>
               <View
-                style={{ width: "100%", alignItems: "flex-end", marginBottom: 10 }}
+                style={{
+                  width: "100%",
+                  alignItems: "flex-end",
+                  marginBottom: 10,
+                }}
               >
                 <Text
                   style={{

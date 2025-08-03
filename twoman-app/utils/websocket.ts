@@ -11,7 +11,7 @@ class MessageHandler {
   unsubscribe(messageType: string, callback: Function) {
     if (this.subscriptions[messageType]) {
       this.subscriptions[messageType] = this.subscriptions[messageType].filter(
-        (cb) => cb !== callback
+        (cb) => cb !== callback,
       );
     }
   }

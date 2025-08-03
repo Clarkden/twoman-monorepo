@@ -21,7 +21,7 @@ export default function PreferencesScreen() {
 
   const [profile, setProfile] = useState<Profile | null>(storedProfile);
   const [debouncedProfile] = useDebounce(profile, 500);
- const userId = useSession((state) => state.session?.user_id);
+  const userId = useSession((state) => state.session?.user_id);
   const navigation = useNavigation();
 
   const handleGetProfile = async () => {

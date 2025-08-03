@@ -12,7 +12,7 @@
       "enum": [
         "authorization",
         "chat",
-        "match", 
+        "match",
         "profile",
         "ping",
         "connection_success",
@@ -21,7 +21,7 @@
       ]
     },
     "v": {
-      "type": "string", 
+      "type": "string",
       "description": "Message schema version",
       "pattern": "^[0-9]+$",
       "default": "1"

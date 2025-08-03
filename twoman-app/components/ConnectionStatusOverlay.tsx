@@ -17,9 +17,10 @@ export const ConnectionStatusOverlay: React.FC = () => {
       <View style={styles.content}>
         <Text style={styles.title}>Connection Lost</Text>
         <Text style={styles.message}>
-          Unable to connect to servers. Please check your internet connection and try again.
+          Unable to connect to servers. Please check your internet connection
+          and try again.
         </Text>
-        
+
         {connectionStatus === "connecting" ? (
           <View style={styles.connectingContainer}>
             <LoadingIndicator size={24} />

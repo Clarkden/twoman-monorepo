@@ -16,7 +16,7 @@ import { globalStyles, mainPurple } from "../../constants/globalStyles";
 
 const debounce = <F extends (...args: any[]) => void>(
   func: F,
-  delay: number
+  delay: number,
 ): ((...args: Parameters<F>) => void) => {
   let timer: NodeJS.Timeout;
   return (...args: Parameters<F>) => {
@@ -49,7 +49,7 @@ export default function NamePicker({
 
   const debouncedValidation = useCallback(
     debounce(handleValidateUsername, 500),
-    []
+    [],
   );
 
   useEffect(() => {
@@ -81,14 +81,14 @@ export default function NamePicker({
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={{ flex: 1 }} 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
     >
       <TouchableWithoutFeedback onPress={dismissKeyboard}>
-        <ScrollView 
-          style={{ flex: 1 }} 
+        <ScrollView
+          style={{ flex: 1 }}
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
         >
@@ -118,7 +118,9 @@ export default function NamePicker({
                       Username is not available
                     </Text>
                   ) : (
-                    <Text style={{ color: "white" }}>Username is available</Text>
+                    <Text style={{ color: "white" }}>
+                      Username is available
+                    </Text>
                   )}
                 </>
               )}
@@ -163,7 +165,7 @@ export default function NamePicker({
 }
 
 const validateUsername = async (
-  username: string
+  username: string,
 ): Promise<{ valid: boolean }> => {
   try {
     const response = await apiFetch(`/profile/username?username=${username}`);

@@ -333,7 +333,7 @@ export default function SettingsScreen() {
                         style: "destructive",
                         onPress: handleDeleteUser,
                       },
-                    ]
+                    ],
                   );
                 }}
               >

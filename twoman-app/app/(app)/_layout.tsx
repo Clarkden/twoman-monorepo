@@ -74,7 +74,7 @@ export default function RootLayout() {
     return () => {
       notificationListener.current &&
         Notifications.removeNotificationSubscription(
-          notificationListener.current
+          notificationListener.current,
         );
       responseListener.current &&
         Notifications.removeNotificationSubscription(responseListener.current);

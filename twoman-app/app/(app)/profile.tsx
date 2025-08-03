@@ -450,7 +450,7 @@ export default function ProfileScreen() {
 
       const result = await updateLocation(
         location.coords.latitude,
-        location.coords.longitude
+        location.coords.longitude,
       );
 
       if (!result.success) {
@@ -495,14 +495,14 @@ export default function ProfileScreen() {
       "image4",
     ];
 
-    return imageFields.some(
-      (field) => {
-        const value = profile[field];
-        return typeof value === "string" && 
-               value.length > 0 && 
-               value.startsWith("file://");
-      }
-    );
+    return imageFields.some((field) => {
+      const value = profile[field];
+      return (
+        typeof value === "string" &&
+        value.length > 0 &&
+        value.startsWith("file://")
+      );
+    });
   }
 
   const fetchProfile = async () => {
@@ -1129,4 +1129,3 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
-

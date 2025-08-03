@@ -26,8 +26,8 @@ export const useAppleInfo = create(
     {
       name: "apple-info-storage",
       storage: createJSONStorage(() => AsyncStorage),
-    }
-  )
+    },
+  ),
 );
 
 type SessionStore = {
@@ -54,8 +54,8 @@ export const useSession = create(
     {
       name: "session-storage",
       storage: createJSONStorage(() => AsyncStorage),
-    }
-  )
+    },
+  ),
 );
 
 export async function setStorageItemAsync(key: string, value: string | null) {

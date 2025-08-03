@@ -86,13 +86,13 @@ export const globalStyles = StyleSheet.create({
   onboardingNextButtonContainer: {
     width: "100%",
     justifyContent: "flex-end",
-  alignItems: "flex-end",
+    alignItems: "flex-end",
   },
   onBoardingNextButtonText: {
     color: "white",
     fontWeight: "600",
   },
   onboardingInputColor: {
-    backgroundColor: "white"
-  }
+    backgroundColor: "white",
+  },
 });

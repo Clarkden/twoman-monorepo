@@ -31,7 +31,13 @@ import { messageHandler } from "@/utils/websocket";
 import { useSession } from "@/stores/auth";
 import * as Contacts from "expo-contacts";
 import { shareReferralLink } from "@/utils/deep-links";
-import { getReferralCode, getReferralStats, redeemReferralCode, canRedeemReferralCode, type ReferralStats } from "@/utils/referral";
+import {
+  getReferralCode,
+  getReferralStats,
+  redeemReferralCode,
+  canRedeemReferralCode,
+  type ReferralStats,
+} from "@/utils/referral";
 
 export default function FriendsScreen() {
   const [friends, setFriends] = useState<Friendship[]>([]);
@@ -49,7 +55,9 @@ export default function FriendsScreen() {
   const [contactsSearch, setContactsSearch] = useState("");
   const [loadingContacts, setLoadingContacts] = useState(false);
   const [referralCode, setReferralCode] = useState<string | null>(null);
-  const [referralStats, setReferralStats] = useState<ReferralStats | null>(null);
+  const [referralStats, setReferralStats] = useState<ReferralStats | null>(
+    null,
+  );
   const [loadingReferralStats, setLoadingReferralStats] = useState(true);
   const navigation = useNavigation();
 
@@ -399,7 +407,7 @@ export default function FriendsScreen() {
           <>
             {/* Referral Section - Conditional Rendering */}
             {!loadingReferralStats && referralStats && (
-              <ReferralSection 
+              <ReferralSection
                 stats={referralStats}
                 onContactsPress={requestContactsPermission}
                 onCodeRedeem={fetchReferralData}
@@ -824,7 +832,10 @@ function ReferralSection({
 
   const handleRedeemCode = async () => {
     if (!codeInput.trim() || codeInput.length !== 8) {
-      Alert.alert("Invalid Code", "Please enter a valid 8-character referral code");
+      Alert.alert(
+        "Invalid Code",
+        "Please enter a valid 8-character referral code",
+      );
       return;
     }
 
@@ -900,12 +911,10 @@ function ReferralSection({
       >
         <View style={styles.contactsButtonContent}>
           <View style={styles.contactsButtonTextContainer}>
-            <Text style={styles.contactsButtonText}>
-              Invite your friends!
-            </Text>
+            <Text style={styles.contactsButtonText}>Invite your friends!</Text>
             <Text style={styles.contactsButtonSubtext}>
-              Get 3 friends to join and get 2 Man Pro free for a month.
-              They get 1 week Pro for free!
+              Get 3 friends to join and get 2 Man Pro free for a month. They get
+              1 week Pro for free!
             </Text>
           </View>
         </View>

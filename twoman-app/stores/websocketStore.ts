@@ -88,7 +88,7 @@ export const useWebSocketStore = create<WebSocketStore>((set, get) => ({
       hasSessionToken: !!session?.session_token,
       hasRefreshToken: !!session?.refresh_token,
       sessionTokenLength: session?.session_token?.length,
-      refreshTokenLength: session?.refresh_token?.length
+      refreshTokenLength: session?.refresh_token?.length,
     });
 
     // If no session or user, skip
@@ -117,21 +117,28 @@ export const useWebSocketStore = create<WebSocketStore>((set, get) => ({
     console.log("DEBUG: Testing session token with regular API call first...");
     fetch(`${process.env.EXPO_PUBLIC_API_URL}/user/profile`, {
       headers: {
-        'Authorization': `Bearer ${session.session_token}`,
-        'Content-Type': 'application/json'
-      }
+        Authorization: `Bearer ${session.session_token}`,
+        "Content-Type": "application/json",
+      },
     })
-    .then(response => {
-      console.log("DEBUG: Session token test response status:", response.status);
-      if (response.status === 200) {
-        console.log("DEBUG: Session token works for HTTP requests - WebSocket server issue");
-      } else {
-        console.log("DEBUG: Session token doesn't work for HTTP requests either - general session issue");
-      }
-    })
-    .catch(error => {
-      console.log("DEBUG: Session token test failed with error:", error);
-    });
+      .then((response) => {
+        console.log(
+          "DEBUG: Session token test response status:",
+          response.status,
+        );
+        if (response.status === 200) {
+          console.log(
+            "DEBUG: Session token works for HTTP requests - WebSocket server issue",
+          );
+        } else {
+          console.log(
+            "DEBUG: Session token doesn't work for HTTP requests either - general session issue",
+          );
+        }
+      })
+      .catch((error) => {
+        console.log("DEBUG: Session token test failed with error:", error);
+      });
 
     set({ connectionStatus: "connecting" });
     console.log("Attempting to connect WebSocket...");
@@ -143,12 +150,14 @@ export const useWebSocketStore = create<WebSocketStore>((set, get) => ({
 
       socket.onopen = () => {
         console.log("WebSocket connection opened");
-        
+
         // DEBUG: Log the session data being sent
         console.log("DEBUG: Session data:", {
-          session_token: session.session_token ? `${session.session_token.substring(0, 20)}...` : 'null',
+          session_token: session.session_token
+            ? `${session.session_token.substring(0, 20)}...`
+            : "null",
           user_id: session.user_id,
-          version: CLIENT_VERSION
+          version: CLIENT_VERSION,
         });
 
         // Try to send validated authorization message first
@@ -160,7 +169,7 @@ export const useWebSocketStore = create<WebSocketStore>((set, get) => ({
           console.log("DEBUG: Sending validated auth message:", {
             type: validatedAuth.type,
             hasSession: !!validatedAuth.payload?.session,
-            sessionLength: validatedAuth.payload?.session?.length
+            sessionLength: validatedAuth.payload?.session?.length,
           });
           socket.send(JSON.stringify(validatedAuth));
         } catch (error) {
@@ -179,7 +188,7 @@ export const useWebSocketStore = create<WebSocketStore>((set, get) => ({
           console.log("DEBUG: Sending legacy auth message:", {
             type: authorization.type,
             hasSession: !!authorization.data.session,
-            sessionLength: authorization.data.session?.length
+            sessionLength: authorization.data.session?.length,
           });
           socket.send(JSON.stringify(authorization));
         }
@@ -235,7 +244,7 @@ export const useWebSocketStore = create<WebSocketStore>((set, get) => ({
           // Forward validated messages to handler
           messageHandler.dispatch(message.type, message.payload || message);
           return;
-                 }
+        }
 
         // Handle legacy format
         if (message.type === "connection_failed") {
@@ -257,7 +266,9 @@ export const useWebSocketStore = create<WebSocketStore>((set, get) => ({
                 socket.close();
                 get().connect();
               } else {
-                console.log("Session refresh failed. Will attempt reconnect after backoff...");
+                console.log(
+                  "Session refresh failed. Will attempt reconnect after backoff...",
+                );
                 // Instead of immediately logging out, attempt reconnect which will try again
                 socket.close(); // This will trigger onclose -> backoffReconnect
                 // Only log out after max attempts are exhausted (handled by backoffReconnect)
@@ -303,7 +314,7 @@ export const useWebSocketStore = create<WebSocketStore>((set, get) => ({
           // Forward to a handler that dispatches by type
           messageHandler.dispatch(message.type, message.data);
         }
-             };
+      };
 
       socket.onerror = (error) => {
         console.error("WebSocket error:", error);
@@ -431,7 +442,9 @@ export const useWebSocketStore = create<WebSocketStore>((set, get) => ({
     const { session } = useSession.getState();
     const userId = session?.user_id;
 
-    console.log(`[backoffReconnect] Attempt ${reconnectAttempts + 1}/${MAX_RECONNECT_ATTEMPTS}, scheduled: ${reconnectScheduled}, refreshing: ${isRefreshing}, status: ${connectionStatus}`);
+    console.log(
+      `[backoffReconnect] Attempt ${reconnectAttempts + 1}/${MAX_RECONNECT_ATTEMPTS}, scheduled: ${reconnectScheduled}, refreshing: ${isRefreshing}, status: ${connectionStatus}`,
+    );
 
     if (!session || !userId) {
       console.log("No session or user. Stopping reconnection attempts.");
@@ -457,7 +470,7 @@ export const useWebSocketStore = create<WebSocketStore>((set, get) => ({
     if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
       console.warn("Max websocket reconnection attempts exhausted.");
       set({ retriesExhausted: true });
-      
+
       // If we've exhausted retries, it likely means persistent auth issues
       // Log out the user so they can re-authenticate
       console.log("Logging out user due to persistent connection failures.");
@@ -478,12 +491,16 @@ export const useWebSocketStore = create<WebSocketStore>((set, get) => ({
         reconnectScheduled: true,
       });
       setTimeout(() => {
-        console.log(`[backoffReconnect] Executing scheduled reconnection attempt #${get().reconnectAttempts}`);
+        console.log(
+          `[backoffReconnect] Executing scheduled reconnection attempt #${get().reconnectAttempts}`,
+        );
         set({ reconnectScheduled: false });
         get().connect();
       }, backoffTime);
     } else {
-      console.log("[backoffReconnect] Reconnection already scheduled, skipping.");
+      console.log(
+        "[backoffReconnect] Reconnection already scheduled, skipping.",
+      );
     }
   },
 
@@ -539,10 +556,10 @@ export const useWebSocketStore = create<WebSocketStore>((set, get) => ({
   // Manual retry method for UI to trigger
   manualRetry: () => {
     console.log("Manual retry triggered by user");
-    set({ 
-      reconnectAttempts: 0, 
-      retriesExhausted: false, 
-      reconnectScheduled: false 
+    set({
+      reconnectAttempts: 0,
+      retriesExhausted: false,
+      reconnectScheduled: false,
     });
     get().connect();
   },

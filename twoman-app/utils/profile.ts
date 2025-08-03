@@ -3,7 +3,7 @@ import apiFetch from "./fetch";
 import profileStore from "@/stores/profile";
 
 export const getProfile = async (
-  profileId: number | string
+  profileId: number | string,
 ): Promise<Profile | null> => {
   try {
     const response = await apiFetch<Profile>("/profile/" + profileId);
@@ -21,7 +21,7 @@ export const getProfile = async (
 };
 
 export const updateProfile = async (
-  profile: Profile
+  profile: Profile,
 ): Promise<{
   success: boolean;
 }> => {
@@ -45,7 +45,7 @@ export const updateProfile = async (
 
 export const updateLocation = async (
   lat: number,
-  lon: number
+  lon: number,
 ): Promise<{ success: boolean }> => {
   try {
     const response = await apiFetch("/profile/location", {

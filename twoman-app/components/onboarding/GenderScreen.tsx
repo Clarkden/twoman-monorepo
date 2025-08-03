@@ -1,16 +1,14 @@
 import { Gender, OnboardScreenProps } from "@/app/(app)/onboard";
 import { MaterialIcons } from "@expo/vector-icons";
 import {
-    Dimensions,
-    Pressable,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import {
-    globalStyles
-} from "../../constants/globalStyles";
+import { globalStyles } from "../../constants/globalStyles";
 
 const SCREEN_WIDTH = Dimensions.get("screen").width;
 
@@ -27,7 +25,8 @@ export default function GenderPicker({
           style={[
             styles.genderButton,
             {
-              backgroundColor: value === "male" ? "#6499f5" : "rgba(38, 38, 38, 0.2)",
+              backgroundColor:
+                value === "male" ? "#6499f5" : "rgba(38, 38, 38, 0.2)",
             },
           ]}
         >
@@ -42,7 +41,8 @@ export default function GenderPicker({
           style={[
             styles.genderButton,
             {
-              backgroundColor: value === "female" ? "#e964f5" : "rgba(38, 38, 38, 0.2)",
+              backgroundColor:
+                value === "female" ? "#e964f5" : "rgba(38, 38, 38, 0.2)",
             },
           ]}
         >
@@ -66,7 +66,7 @@ export default function GenderPicker({
         >
           <Text
             style={[
-                globalStyles.onBoardingNextButtonText,
+              globalStyles.onBoardingNextButtonText,
               { color: value === null ? "lightgray" : "white" },
             ]}
           >

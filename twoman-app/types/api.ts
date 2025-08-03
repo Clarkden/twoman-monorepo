@@ -36,7 +36,6 @@ export interface Match {
   last_message_at: string;
 }
 
-
 export interface User {
   ID: number;
   CreatedAt: string;

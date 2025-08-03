@@ -18,10 +18,10 @@ const profileStore = create<ProfileState>()(
       {
         name: "userStore",
         storage: createJSONStorage(() => AsyncStorage),
-      }
+      },
     ),
-    { name: "userStore" }
-  )
+    { name: "userStore" },
+  ),
 );
 
 export default profileStore;

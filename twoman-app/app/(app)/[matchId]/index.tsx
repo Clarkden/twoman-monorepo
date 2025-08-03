@@ -93,7 +93,7 @@ export default function ChatMatchId() {
     profile4_name: string,
     profile4_user_id: number,
     is_duo: number,
-    userId: number
+    userId: number,
   ): string {
     if (is_duo === 1) {
       return "Group";
@@ -113,7 +113,7 @@ export default function ChatMatchId() {
     setIsFetchingMore(true);
     try {
       const response = await apiFetch<Message[]>(
-        `/chat/${matchId}?limit=${messageFetchLimit}&offset=${messageFetchOffset}`
+        `/chat/${matchId}?limit=${messageFetchLimit}&offset=${messageFetchOffset}`,
       );
       if (response.code !== 200) {
         console.log(response.error);
@@ -134,7 +134,7 @@ export default function ChatMatchId() {
   async function getMatchChats() {
     try {
       const response = await apiFetch<Message[]>(
-        `/chat/${matchId}?limit=${messageFetchLimit}&offset=${messageFetchOffset}`
+        `/chat/${matchId}?limit=${messageFetchLimit}&offset=${messageFetchOffset}`,
       );
       if (response.code !== 200) {
         console.log(response.error);
@@ -189,7 +189,7 @@ export default function ChatMatchId() {
       profile4_name as string,
       Number(profile4_user_id),
       Number(is_duo),
-      userId
+      userId,
     );
 
     navigation.setOptions({
@@ -245,7 +245,7 @@ export default function ChatMatchId() {
     } else {
       const timeDelta = Math.abs(
         new Date(item.CreatedAt).getTime() -
-          new Date(olderMessage.CreatedAt).getTime()
+          new Date(olderMessage.CreatedAt).getTime(),
       );
       shouldShowTimestamp = timeDelta > 59 * 60 * 1000;
     }

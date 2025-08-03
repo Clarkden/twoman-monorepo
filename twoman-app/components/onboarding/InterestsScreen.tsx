@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { MultiSelect } from "react-native-element-dropdown";
 import {
-    borderColor,
-    mainPurple,
-    secondaryBackgroundColor,
+  borderColor,
+  mainPurple,
+  secondaryBackgroundColor,
 } from "../../constants/globalStyles";
 
 interface InterestItem {

@@ -12,11 +12,11 @@ interface CustomRequestInit extends Omit<RequestInit, "method" | "body"> {
 
 const apiFetch = async <T = unknown>(
   url: string,
-  options: CustomRequestInit = {}
+  options: CustomRequestInit = {},
 ): Promise<ApiResponse<T>> => {
   const { method = "GET", headers = {}, body, ...otherOptions } = options;
-``
-  const session = useSession.getState().session
+  ``;
+  const session = useSession.getState().session;
 
   const defaultHeaders: HeadersInit = {
     "X-Client-Version": CLIENT_VERSION || "",
@@ -38,7 +38,6 @@ const apiFetch = async <T = unknown>(
       processedBody = body as BodyInit;
     }
   }
-
 
   const requestOptions: RequestInit = {
     method,

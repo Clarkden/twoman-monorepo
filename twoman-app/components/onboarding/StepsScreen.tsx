@@ -1,6 +1,4 @@
-import {
-  globalStyles
-} from "@/constants/globalStyles";
+import { globalStyles } from "@/constants/globalStyles";
 import { MoveRight } from "lucide-react-native";
 import { useState } from "react";
 import {
@@ -61,8 +59,8 @@ export default function Steps({ onNext }: { onNext: () => void }) {
               {step === 0
                 ? "Create a profile for yourself"
                 : step === 1
-                ? "Add your friends"
-                : "Start making matches"}
+                  ? "Add your friends"
+                  : "Start making matches"}
             </Text>
           </View>
 
@@ -72,8 +70,8 @@ export default function Steps({ onNext }: { onNext: () => void }) {
                 step === 0
                   ? onboarding1
                   : step === 1
-                  ? onboarding2
-                  : onboarding3
+                    ? onboarding2
+                    : onboarding3
               }
               style={styles.image}
             />

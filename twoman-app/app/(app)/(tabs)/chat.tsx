@@ -38,7 +38,7 @@ function getScreenTitle(
   profile4_name: string,
   profile4_user_id: number,
   is_duo: number,
-  userId: number
+  userId: number,
 ): string {
   if (is_duo === 1) {
     const profiles = [
@@ -90,8 +90,8 @@ export default function Chat() {
 
     setMatches((prevMatches) =>
       prevMatches.map((match) =>
-        match.ID === matchId ? { ...match, hasUnreadMessages: false } : match
-      )
+        match.ID === matchId ? { ...match, hasUnreadMessages: false } : match,
+      ),
     );
   };
 
@@ -107,7 +107,7 @@ export default function Chat() {
     const handleMatchMessage = (data: Match) => {
       setMatches((prevMatches) => {
         const matchIndex = prevMatches.findIndex(
-          (match) => match.ID === data.ID
+          (match) => match.ID === data.ID,
         );
 
         if (matchIndex !== -1) {
@@ -127,7 +127,7 @@ export default function Chat() {
 
           newMatches.sort(
             (a, b) =>
-              new Date(b.UpdatedAt).getTime() - new Date(a.UpdatedAt).getTime()
+              new Date(b.UpdatedAt).getTime() - new Date(a.UpdatedAt).getTime(),
           );
 
           return newMatches;
@@ -140,7 +140,7 @@ export default function Chat() {
 
           newMatches.sort(
             (a, b) =>
-              new Date(b.UpdatedAt).getTime() - new Date(a.UpdatedAt).getTime()
+              new Date(b.UpdatedAt).getTime() - new Date(a.UpdatedAt).getTime(),
           );
 
           return newMatches;
@@ -151,7 +151,7 @@ export default function Chat() {
     const handleChatMessage = (data: Message) => {
       setMatches((prevMatches) => {
         const matchIndex = prevMatches.findIndex(
-          (match) => match.ID === data.match_id
+          (match) => match.ID === data.match_id,
         );
 
         if (matchIndex !== -1) {
@@ -164,7 +164,7 @@ export default function Chat() {
 
           newMatches.sort(
             (a, b) =>
-              new Date(b.UpdatedAt).getTime() - new Date(a.UpdatedAt).getTime()
+              new Date(b.UpdatedAt).getTime() - new Date(a.UpdatedAt).getTime(),
           );
 
           return newMatches;
@@ -184,7 +184,7 @@ export default function Chat() {
 
     const handleMatchRemovedMessage = (data: Match) => {
       setMatches((prevMatches) =>
-        prevMatches.filter((match) => match.ID !== data.ID)
+        prevMatches.filter((match) => match.ID !== data.ID),
       );
     };
 
@@ -245,7 +245,7 @@ const getMatchProfiles = (match: Match, userId: number): Profile[] => {
     match.profile4,
   ];
   return profiles.filter(
-    (profile) => profile && profile.user_id !== userId
+    (profile) => profile && profile.user_id !== userId,
   ) as Profile[];
 };
 
@@ -344,7 +344,7 @@ function ChatGroup({
                 match.profile4?.name || "",
                 match.profile4?.user_id || 0,
                 1,
-                userId
+                userId,
               )}
             </Text>
             <View style={styles.chatGroupProfilePictureDuo}>

@@ -1,6 +1,6 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {create} from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 
 interface LastSeenState {
   lastSeenRecords: Record<number, string>;
@@ -21,8 +21,8 @@ export const useLastSeenStore = create(
       },
     }),
     {
-      name: 'lastSeenRecords', 
+      name: "lastSeenRecords",
       storage: createJSONStorage(() => AsyncStorage),
-    }
-  )
+    },
+  ),
 );

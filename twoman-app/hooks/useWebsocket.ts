@@ -38,7 +38,9 @@ export default function useWebSocket() {
         console.log("[useWebSocket] No session, not connecting");
       }
     } else {
-      console.log(`[useWebSocket] Connection status is: ${connectionStatus}, not attempting to connect`);
+      console.log(
+        `[useWebSocket] Connection status is: ${connectionStatus}, not attempting to connect`,
+      );
     }
   }, [session, connect, disconnect, connectionStatus]);
 

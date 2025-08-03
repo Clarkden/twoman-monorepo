@@ -1,16 +1,13 @@
 import { MoveRight } from "lucide-react-native";
 import {
-    Dimensions,
-    Image,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import {
-    globalStyles,
-    mainPurple
-} from "../../constants/globalStyles";
+import { globalStyles, mainPurple } from "../../constants/globalStyles";
 
 export default function WelcomeScreen({ onNext }: { onNext: () => void }) {
   const glossyTextMessageImage = require("../../assets/images/onboarding/chat-phone-glossy-plastic.png");
@@ -35,9 +32,7 @@ export default function WelcomeScreen({ onNext }: { onNext: () => void }) {
           resizeMode="contain"
         />
       </View>
-      <View
-        style={globalStyles.onboardingNextButtonContainer}
-      >
+      <View style={globalStyles.onboardingNextButtonContainer}>
         <TouchableOpacity
           onPress={onNext}
           style={globalStyles.onboardingNextButton}

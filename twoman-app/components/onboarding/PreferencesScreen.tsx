@@ -12,7 +12,7 @@ import {
 import {
   borderColor,
   globalStyles,
-  mainPurple
+  mainPurple,
 } from "../../constants/globalStyles";
 
 export default function PreferencesPicker({
@@ -37,7 +37,10 @@ export default function PreferencesPicker({
                 style={[
                   styles.genderButton,
                   {
-                    backgroundColor: value.gender === "male" ? "#6499f5" : "rgba(38, 38, 38, 0.2)",
+                    backgroundColor:
+                      value.gender === "male"
+                        ? "#6499f5"
+                        : "rgba(38, 38, 38, 0.2)",
                   },
                 ]}
               >
@@ -57,7 +60,10 @@ export default function PreferencesPicker({
                 style={[
                   styles.genderButton,
                   {
-                    backgroundColor: value.gender === "female" ? "#e964f5" : "rgba(38, 38, 38, 0.2)",
+                    backgroundColor:
+                      value.gender === "female"
+                        ? "#e964f5"
+                        : "rgba(38, 38, 38, 0.2)",
                   },
                 ]}
               >
@@ -163,7 +169,7 @@ export default function PreferencesPicker({
           <TouchableOpacity
             onPress={onNext}
             style={[
-             globalStyles.onboardingNextButton,
+              globalStyles.onboardingNextButton,
               {
                 backgroundColor: !value.gender ? "transparent" : "black",
               },
@@ -171,7 +177,8 @@ export default function PreferencesPicker({
             disabled={!value.gender}
           >
             <Text
-              style={[globalStyles.onBoardingNextButtonText,
+              style={[
+                globalStyles.onBoardingNextButtonText,
                 {
                   color: !value.gender ? "lightgray" : "white",
                 },

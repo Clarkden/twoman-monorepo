@@ -40,7 +40,12 @@ export interface ConnectionFailedMessage {
   /**
    * Error code
    */
-  code: 'UNAUTHORIZED' | 'INVALID_MESSAGE_TYPE' | 'INVALID_AUTH_DATA' | 'INVALID_AUTH_TOKEN' | 'INVALID_SESSION';
+  code:
+    | "UNAUTHORIZED"
+    | "INVALID_MESSAGE_TYPE"
+    | "INVALID_AUTH_DATA"
+    | "INVALID_AUTH_TOKEN"
+    | "INVALID_SESSION";
 }
 
 /**
@@ -61,14 +66,14 @@ export interface WebSocketMessageEnvelope {
    * The message type/subject
    */
   type:
-    | 'authorization'
-    | 'chat'
-    | 'match'
-    | 'profile'
-    | 'ping'
-    | 'connection_success'
-    | 'connection_failed'
-    | 'profile_response';
+    | "authorization"
+    | "chat"
+    | "match"
+    | "profile"
+    | "ping"
+    | "connection_success"
+    | "connection_failed"
+    | "profile_response";
   /**
    * Message schema version
    */
@@ -92,7 +97,7 @@ export interface MatchActionMessage {
   /**
    * The match action to perform
    */
-  action: 'accept' | 'reject' | 'update_target' | 'friend_match' | 'unmatch';
+  action: "accept" | "reject" | "update_target" | "friend_match" | "unmatch";
   /**
    * ID of the match
    */
@@ -115,7 +120,7 @@ export interface ProfileDecisionMessage {
   /**
    * The profile decision
    */
-  decision: 'like' | 'pass' | 'super_like';
+  decision: "like" | "pass" | "super_like";
   /**
    * Whether this is a duo decision
    */
@@ -144,7 +149,6 @@ export interface ProfileResponseMessage {
   success: boolean;
 }
 
-
 // Envelope structure
 export interface WebSocketEnvelope {
   type: string;
@@ -157,7 +161,7 @@ export interface WebSocketResponse {
   type: string;
   v: string;
   correlationId: string;
-  kind: 'REQUEST' | 'RESPONSE' | 'EVENT' | 'ERROR';
+  kind: "REQUEST" | "RESPONSE" | "EVENT" | "ERROR";
   payload?: any;
   error?: {
     code: string;

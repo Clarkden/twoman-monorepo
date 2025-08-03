@@ -18,13 +18,13 @@ const fetchImageFromUri = async (uri: string): Promise<Blob | null> => {
 
 export const uploadFile = async (
   file: ImagePickerAsset,
-  session: string
+  session: string,
 ): Promise<UploadFileResponse | null> => {
   try {
     const processedImage = await ImageManipulator.manipulateAsync(
       file.uri,
       [{ resize: { width: 500, height: 500 } }],
-      { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG }
+      { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG },
     );
 
     if (!processedImage) {
@@ -48,7 +48,7 @@ export const uploadFile = async (
         },
         uploadType: FileSystem.FileSystemUploadType.MULTIPART,
         fieldName: "file",
-      }
+      },
     );
 
     const data = JSON.parse(result.body) as ApiResponse;
@@ -57,7 +57,7 @@ export const uploadFile = async (
       Alert.alert("Error uploading file: " + data.error);
       console.error(
         "Error uploading file: " + data.error,
-        " Status: " + data.code
+        " Status: " + data.code,
       );
       return null;
     }

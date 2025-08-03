@@ -59,13 +59,13 @@ export default function LocationPicker({
       appState.current = nextAppState;
       setAppStateVisible(appState.current);
     },
-    [checkLocationPermission]
+    [checkLocationPermission],
   );
 
   useEffect(() => {
     const subscription = AppState.addEventListener(
       "change",
-      handleAppStateChange
+      handleAppStateChange,
     );
     return () => {
       subscription.remove();
@@ -79,7 +79,7 @@ export default function LocationPicker({
       const granted = await requestLocationPermission();
       if (!granted) {
         setErrorMsg(
-          "Location permission denied. Please enable it in settings."
+          "Location permission denied. Please enable it in settings.",
         );
         return;
       }

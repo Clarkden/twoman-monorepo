@@ -30,10 +30,10 @@ import { useState } from "react";
 import { FontAwesome } from "@expo/vector-icons";
 import apiFetch from "@/utils/fetch";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
-import Animated, { 
-  useAnimatedStyle, 
-  useSharedValue, 
-  withTiming 
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from "react-native-reanimated";
 
 const { width } = Dimensions.get("window");
@@ -48,7 +48,7 @@ export default function ProfileCard({
   showOptionButton?: boolean;
 }) {
   const [profileOptionsVisible, setProfileOptionsVisible] = useState(false);
-  
+
   const ZoomableImage = ({ imageUri }: { imageUri: string }) => {
     const scale = useSharedValue(1);
     const focalX = useSharedValue(0);
@@ -67,8 +67,8 @@ export default function ProfileCard({
     const animatedImageStyle = useAnimatedStyle(() => {
       return {
         transform: [
-          { translateX: (1 - scale.value) * (focalX.value - width/2) },
-          { translateY: (1 - scale.value) * (focalY.value - (width-20)/2) },
+          { translateX: (1 - scale.value) * (focalX.value - width / 2) },
+          { translateY: (1 - scale.value) * (focalY.value - (width - 20) / 2) },
           { scale: scale.value },
         ],
       };
@@ -83,23 +83,23 @@ export default function ProfileCard({
 
     return (
       <GestureDetector gesture={pinchGesture}>
-        <Animated.View 
+        <Animated.View
           style={[
-            { 
-              width: "100%", 
-              height: width - 20, 
+            {
+              width: "100%",
+              height: width - 20,
               marginBottom: 20,
             },
-            animatedContainerStyle
+            animatedContainerStyle,
           ]}
         >
-          <Animated.Image 
-            source={{ uri: imageUri }} 
+          <Animated.Image
+            source={{ uri: imageUri }}
             style={[
-              styles.profileImage, 
+              styles.profileImage,
               animatedImageStyle,
-              { marginBottom: 0 }
-            ]} 
+              { marginBottom: 0 },
+            ]}
           />
         </Animated.View>
       </GestureDetector>
@@ -122,7 +122,7 @@ export default function ProfileCard({
 
       Alert.alert(
         "Profile Blocked",
-        "You will no longer see this profile in your matches."
+        "You will no longer see this profile in your matches.",
       );
 
       onBlock();
@@ -150,7 +150,7 @@ export default function ProfileCard({
 
       Alert.alert(
         "Profile Reported",
-        "We will review this profile and take appropriate action. Thank you for your report."
+        "We will review this profile and take appropriate action. Thank you for your report.",
       );
     } catch (error) {
       console.log(error);
@@ -214,7 +214,7 @@ export default function ProfileCard({
                       text: "Report",
                       onPress: (reason) => handleReportProfile(reason),
                     },
-                  ]
+                  ],
                 );
               }}
             >
@@ -236,7 +236,7 @@ export default function ProfileCard({
                       text: "Block",
                       onPress: handleBlockProfile,
                     },
-                  ]
+                  ],
                 );
               }}
             >
