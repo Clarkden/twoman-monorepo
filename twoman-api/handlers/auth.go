@@ -306,6 +306,8 @@ func (h Handler) HandlePhoneAuth() http.Handler {
 			}
 
 			if userRecord == nil || userRecord.ID == 0 {
+				// Use liveDB for creating new users
+				db = h.liveDB
 				userRecord, err = user.CreateUserWithPhoneNumber(req.PhoneNumber, false, db)
 
 				if err != nil {
