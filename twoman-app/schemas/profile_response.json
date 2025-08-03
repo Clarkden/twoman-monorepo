@@ -1,0 +1,20 @@
+{
+  "$id": "https://schema.twoman.dev/ws/profile_response.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Profile Response Message",
+  "description": "WebSocket profile response payload",
+  "type": "object",
+  "required": ["message", "success"],
+  "properties": {
+    "message": {
+      "type": "string",
+      "description": "Response message",
+      "minLength": 1
+    },
+    "success": {
+      "type": "boolean",
+      "description": "Whether the operation was successful"
+    }
+  },
+  "additionalProperties": false
+}

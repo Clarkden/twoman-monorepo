@@ -1,0 +1,26 @@
+{
+  "$id": "https://schema.twoman.dev/ws/match.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Match Action Message",
+  "description": "WebSocket match action payload",
+  "type": "object",
+  "required": ["action", "match_id"],
+  "properties": {
+    "action": {
+      "type": "string",
+      "description": "The match action to perform",
+      "enum": ["accept", "reject", "update_target", "friend_match", "unmatch"]
+    },
+    "match_id": {
+      "type": "integer",
+      "description": "ID of the match",
+      "minimum": 1
+    },
+    "target_profile": {
+      "type": "integer",
+      "description": "Target profile ID (optional, used for specific actions)",
+      "minimum": 1
+    }
+  },
+  "additionalProperties": false
+}

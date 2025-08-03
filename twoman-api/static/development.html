@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Two Man Dev</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+
+  <body>
+    <script type="module">
+      import { h, render } from "https://esm.sh/preact";
+      import htm from "https://esm.sh/htm";
+      import {
+        useState,
+        useCallback,
+        useEffect,
+        useRef,
+      } from "https://esm.sh/preact/hooks";
+      import { createContext, useContext } from "https://esm.sh/preact/compat";
+
+      const html = htm.bind(h);
+
+      const ProfileContext = createContext();
+
+      let socket;
+      let currentSession = null;
+
+      function useProfiles() {
+        const [profiles, setProfiles] = useState([]);
+
+        useEffect(() => {
+          const fetchProfiles = async () => {
+            try {
+              const response = await fetch("/dev/users");
+              if (response.ok) {
+                const data = await response.json();
+                setProfiles(data.data);
+              }
+            } catch (error) {
+              console.log(error);
+            }
+          };
+
+          fetchProfiles();
+        }, []);
+
+        return profiles;
+      }
+
+      function useSelectedProfile() {
+        const [selectedProfile, setSelectedProfile] = useState(null);
+
+        const selectProfile = useCallback(async (profile) => {
+          await deleteDevSession(currentSession);
+          await createDevSession(profile);
+          setSelectedProfile(profile);
+          socketInit();
+        }, []);
+
+        return [selectedProfile, selectProfile];
+      }
+
+      function useSelectedMatch(selectedProfile) {
+        const [selectedMatch, setSelectedMatch] = useState(null);
+
+        const selectMatch = useCallback((match) => {
+          setSelectedMatch(match);
+        }, []);
+
+        useEffect(() => {
+          setSelectedMatch(null);
+        }, [selectedProfile]);
+
+        return [selectedMatch, selectMatch];
+      }
+
+      async function createDevSession(profile) {
+        try {
+          const response = await fetch("/dev/session/create", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ user_id: profile.user_id }),
+          });
+          if (response.ok) {
+            const data = await response.json();
+            currentSession = data.data.session;
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      }
+
+      async function deleteDevSession(session) {
+        try {
+          const response = await fetch("/dev/session/delete", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ session }),
+          });
+          if (response.ok) {
+            socket.close();
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      }
+
+      class MessageHandler {
+        constructor() {
+          this.subscriptions = {};
+        }
+
+        subscribe(messageType, callback) {
+          if (!this.subscriptions[messageType]) {
+            this.subscriptions[messageType] = [];
+          }
+          this.subscriptions[messageType].push(callback);
+        }
+
+        unsubscribe(messageType, callback) {
+          if (this.subscriptions[messageType]) {
+            this.subscriptions[messageType] = this.subscriptions[
+              messageType
+            ].filter((cb) => cb !== callback);
+          }
+        }
+
+        dispatch(messageType, data) {
+          if (this.subscriptions[messageType]) {
+            this.subscriptions[messageType].forEach((callback) =>
+              callback(data)
+            );
+          }
+        }
+      }
+
+      export const messageHandler = new MessageHandler();
+
+      function socketInit() {
+        if (socket) {
+          socket.close();
+        }
+
+        socket = new WebSocket("ws://localhost:8080/ws");
+
+        socket.onopen = () => {
+          console.log("WebSocket connection established");
+          const authMessage = {
+            type: "authorization",
+            data: {
+              session: currentSession,
+              version: "1.0",
+            },
+          };
+          socket.send(JSON.stringify(authMessage));
+        };
+
+        socket.onmessage = (event) => {
+          const message = JSON.parse(event.data);
+          console.log("WebSocket message received:", message);
+          messageHandler.dispatch(message.type, message.data);
+        };
+
+        socket.onclose = () => {
+          console.log("WebSocket connection closed");
+        };
+
+        socket.onerror = (error) => {
+          console.error("WebSocket error:", error);
+        };
+      }
+
+      function useMatches(profileId) {
+        const [matches, setMatches] = useState([]);
+
+        useEffect(() => {
+          const fetchMatches = async () => {
+            try {
+              const response = await fetch(`/v1/match`, {
+                headers: {
+                  Authorization: `Bearer ${currentSession}`,
+                },
+              });
+              if (response.ok) {
+                const data = await response.json();
+                setMatches(data.data);
+              }
+            } catch (error) {
+              console.log(error);
+            }
+          };
+
+          if (profileId && currentSession) {
+            fetchMatches();
+          } else {
+            setMatches([]);
+          }
+        }, [profileId, currentSession]);
+
+        return [matches, setMatches];
+      }
+
+      function useChat(matchId) {
+        const [messages, setMessages] = useState([]);
+        const [offset, setOffset] = useState(0);
+        const [moreMessages, setMoreMessages] = useState(true);
+
+        useEffect(() => {
+          const fetchMessages = async () => {
+            if (!moreMessages) {
+              return;
+            }
+
+            try {
+              const response = await fetch(
+                `/v1/chat/${matchId}?limit=15&offset=${offset}`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${currentSession}`,
+                  },
+                }
+              );
+              if (response.ok) {
+                const data = await response.json();
+                console.log(data);
+                setMessages((prevMessages) => [...prevMessages, ...data.data]);
+                if (data.data.length > 0) {
+                  setOffset((prevOffset) => prevOffset + data.data.length);
+                }
+                if (data.data.length < 15) {
+                  setMoreMessages(false);
+                }
+              }
+            } catch (error) {
+              console.log(error);
+            }
+          };
+
+          if (matchId && currentSession) {
+            setMessages([]);
+            setOffset(0);
+            setMoreMessages(true);
+            fetchMessages();
+          } else {
+            setMessages([]);
+            setOffset(0);
+            setMoreMessages(true);
+          }
+        }, [matchId, currentSession]);
+
+        return [messages, setMessages];
+      }
+
+      function App() {
+        const profiles = useProfiles();
+        const [selectedProfile, selectProfile] = useSelectedProfile();
+
+        return html`
+          <${ProfileContext.Provider}
+            value=${{ selectedProfile, selectProfile }}
+          >
+            <div
+              class="p-5 grid grid-cols-1 sm:grid-cols-4 md:grid-cols-5 h-screen gap-10"
+            >
+              <${Sidebar} profiles=${profiles} />
+              <${Main} />
+            </div>
+          <//>
+        `;
+      }
+
+      function Sidebar({ profiles }) {
+        const { selectProfile } = useContext(ProfileContext);
+
+        return html`
+          <div class="col-span-1 overflow-y-scroll">
+            <h1 class="text-2xl font-bold mb-2">Profiles</h1>
+            <ul class="flex flex-col gap-2">
+              ${profiles.map(
+                (profile) => html`
+                  <li>
+                    <button
+                      onClick=${() => selectProfile(profile)}
+                      class="p-2 bg-gray-200 rounded-lg w-full"
+                    >
+                      ${profile.name}
+                    </button>
+                  </li>
+                `
+              )}
+            </ul>
+          </div>
+        `;
+      }
+
+      function ProfileDetails({ profile }) {
+        const [editingProfile, setEditingProfile] = useState(false);
+
+        return html`
+          <div class="mt-4 mb-4">
+            <h1 class="text-2xl font-bold">Profile</h1>
+            <div class="flex flex-crow gap-4">
+              <img
+                src=${profile.image1}
+                alt="Profile Image"
+                class="w-32 h-32 rounded-full object-cover"
+              />
+              <div class="flex flex-col gap-2">
+                <h2 class="text-lg font-medium">${profile.name}</h2>
+                <p>${profile.bio}</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function Matches({ selectMatch }) {
+        const { selectedProfile } = useContext(ProfileContext);
+        const [matches, setMatches] = useMatches(selectedProfile?.user_id);
+
+        const matchName = (match) => {
+          let matchProfiles = [];
+
+          if (!match.is_duo) {
+            if (match.profile1.user_id === selectedProfile.user_id) {
+              matchProfiles = [match.profile3];
+            } else {
+              matchProfiles = [match.profile1];
+            }
+          } else {
+            if (match.profile1.user_id === selectedProfile.user_id) {
+              matchProfiles = [
+                match.profile2,
+                match.profile3,
+                match.profile4,
+              ].filter(Boolean);
+            } else if (match.profile2.user_id === selectedProfile.user_id) {
+              matchProfiles = [
+                match.profile1,
+                match.profile3,
+                match.profile4,
+              ].filter(Boolean);
+            } else if (match.profile3.user_id === selectedProfile.user_id) {
+              matchProfiles = [
+                match.profile1,
+                match.profile2,
+                match.profile4,
+              ].filter(Boolean);
+            } else {
+              matchProfiles = [
+                match.profile1,
+                match.profile2,
+                match.profile3,
+              ].filter(Boolean);
+            }
+          }
+
+          return matchProfiles.map((profile) => profile.name).join(", ");
+        };
+
+        useEffect(() => {
+          const handleMatchMessage = (data) => {
+            if (data.status === "pending") {
+              return;
+            }
+
+            if (data.status === "rejected") {
+              const newMatches = matches.filter(
+                (match) => match.ID !== data.ID
+              );
+              setMatches(newMatches);
+              return;
+            }
+
+            const matchIndex = matches.findIndex(
+              (match) => match.ID === data.ID
+            );
+
+            if (matchIndex !== -1) {
+              const updatedMatch = { ...matches[matchIndex] };
+              updatedMatch.last_message = data.last_message;
+              updatedMatch.last_message_at = data.last_message_at;
+              const newMatches = [...matches];
+              newMatches[matchIndex] = updatedMatch;
+
+              // Sort the matches so that the one with the most recent message is at the top
+              newMatches.sort(
+                (a, b) =>
+                  new Date(b.last_message_at).getTime() -
+                  new Date(a.last_message_at).getTime()
+              );
+
+              setMatches(newMatches);
+            } else {
+              setMatches([...matches, data]);
+            }
+          };
+
+          messageHandler.subscribe("match", handleMatchMessage);
+
+          return () => {
+            messageHandler.unsubscribe("match", handleMatchMessage);
+          };
+        }, []);
+
+        return html`
+          <div class="mt-4 mb-4">
+            <h1 class="text-2xl font-bold mb-2">Matches</h1>
+            <ul class="flex flex-col gap-2">
+              ${matches.map(
+                (match) => html`
+                  <li>
+                    <button
+                      onClick=${() => selectMatch(match)}
+                      class="p-2 bg-gray-200 rounded-lg w-full text-start"
+                    >
+                      ${matchName(match)}
+                    </button>
+                  </li>
+                `
+              )}
+            </ul>
+          </div>
+        `;
+      }
+
+      function DiscoverProfile() {
+        const [selectedProfile, selectProfile] = useSelectedProfile();
+        const [discoveredProfile, setDiscoveredProfile] = useState(null);
+        const [friends, setFriends] = useState([]);
+        const [selectedFriend, setSelectedFriend] = useState(null);
+        const [selectFriendMenu, setSelectFriendMenu] = useState(false);
+        const [userId, setUserId] = useState(null);
+
+        const discoverProfile = async () => {
+          try {
+            const response = await fetch("/v1/profile/discover", {
+              headers: {
+                Authorization: `Bearer ${currentSession}`,
+              },
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              setDiscoveredProfile(data.data);
+            }
+          } catch (error) {
+            console.log(error);
+          }
+        };
+
+        const fetchFriends = async () => {
+          try {
+            const response = await fetch("/v1/friendship", {
+              headers: {
+                Authorization: `Bearer ${currentSession}`,
+              },
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              setFriends(data.data);
+            }
+          } catch (error) {
+            console.log(error);
+          }
+        };
+
+        const soloLikeProfile = () => {
+          socket.send(
+            JSON.stringify({
+              type: "profile",
+              data: {
+                decision: "like",
+                is_duo: false,
+                target_profile: discoveredProfile.user_id,
+              },
+            })
+          );
+
+          setDiscoveredProfile(null);
+        };
+
+        const duoLikeProfile = () => {
+          if (!selectedFriend) {
+            alert("Please select a friend to duo like with");
+            return;
+          }
+
+          socket.send(
+            JSON.stringify({
+              type: "profile",
+              data: {
+                decision: "like",
+                is_duo: true,
+                target_profile: discoveredProfile.user_id,
+                friend_profile: selectedFriend.user_id,
+              },
+            })
+          );
+
+          setDiscoveredProfile(null);
+        };
+
+        const dislikeProfile = () => {
+          socket.send(
+            JSON.stringify({
+              type: "profile",
+              data: {
+                decision: "dislike",
+                target_profile: discoveredProfile.user_id,
+              },
+            })
+          );
+
+          setDiscoveredProfile(null);
+        };
+
+        const fetchUserSelf = async () => {
+          try {
+            const response = await fetch("/v1/profile/me", {
+              headers: {
+                Authorization: `Bearer ${currentSession}`,
+              },
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              setUserId(data.data.user_id);
+            }
+          } catch (error) {
+            console.log(error);
+          }
+        };
+
+        useEffect(() => {
+          if (selectFriendMenu) {
+            fetchFriends();
+          }
+        }, [selectFriendMenu]);
+
+        useEffect(() => {
+          fetchUserSelf();
+        }, []);
+
+        useEffect(() => {
+          if (selectedFriend) {
+            duoLikeProfile();
+            setSelectedFriend(null);
+            setDiscoveredProfile(null);
+            setSelectFriendMenu(false);
+          }
+        }, [selectedFriend]);
+
+        return html`
+          <div class="mt-4 mb-4">
+            <h1 class="text-2xl font-bold mb-2">Discover Profile</h1>
+            ${discoveredProfile
+              ? html`
+                  <div class="flex flex-row gap-4 mb-4">
+                    <img
+                      src=${discoveredProfile.image1}
+                      alt="Profile Image"
+                      class="w-32 h-32 rounded-full object-cover"
+                    />
+                    <div class="flex flex-col gap-2">
+                      <h2 class="text-lg font-medium">
+                        ${discoveredProfile.name}
+                      </h2>
+                      <p>${discoveredProfile.bio}</p>
+                    </div>
+                  </div>
+                  <div class="flex gap-2">
+                    <button
+                      onClick=${soloLikeProfile}
+                      class="p-2 bg-green-500 text-white rounded-lg"
+                    >
+                      Like
+                    </button>
+                    <button
+                      onClick=${() => setSelectFriendMenu(true)}
+                      class="p-2 bg-green-500 text-white rounded-lg"
+                    >
+                      Duo Like
+                    </button>
+                    <button
+                      onClick=${dislikeProfile}
+                      class="p-2 bg-red-500 text-white rounded-lg"
+                    >
+                      Dislike
+                    </button>
+                  </div>
+                  ${selectFriendMenu
+                    ? html`
+                        <div class="mt-4">
+                          <h1 class="text-2xl font-bold mb-2">Select Friend</h1>
+                          <ul class="flex flex-col gap-2">
+                            ${friends.map(
+                              (friendship) => html`
+                                <li>
+                                  <button
+                                    onClick=${() => {
+                                      if (
+                                        friendship.Profile.user_id === userId
+                                      ) {
+                                        setSelectedFriend(friendship.Friend);
+                                      } else {
+                                        setSelectedFriend(friendship.Profile);
+                                      }
+                                    }}
+                                    class="p-2 bg-gray-200 rounded-lg w-full"
+                                  >
+                                    ${friendship.Profile.user_id === userId
+                                      ? friendship.Friend.username
+                                      : friendship.Profile.username}
+                                  </button>
+                                </li>
+                              `
+                            )}
+                          </ul>
+                        </div>
+                      `
+                    : ""}
+                `
+              : html`
+                  <p class="text-sm font-medium">No profile discovered</p>
+                  <button
+                    onClick=${discoverProfile}
+                    class="p-2 bg-blue-500 text-white rounded-lg mt-2"
+                  >
+                    Discover
+                  </button>
+                `}
+          </div>
+        `;
+      }
+
+      function TargetMatch({ match, rejectMatch, updateMatchTarget }) {
+        const [showFriends, setShowFriends] = useState(false);
+        const [matchProfileFriends, setMatchProfileFriends] = useState([]);
+
+        const handleUpdateMatchTarget = (id) => {
+          console.log(match);
+          updateMatchTarget(match, id);
+          console.log("Target updated");
+        };
+
+        useEffect(() => {
+          const fetchProfileFriends = async () => {
+            try {
+              const response = await fetch(
+                `/v1/profile/${match.profile3.user_id}/friends`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${currentSession}`,
+                  },
+                }
+              );
+
+              if (response.ok) {
+                const data = await response.json();
+                setMatchProfileFriends(data.data);
+              }
+            } catch (error) {
+              console.log(error);
+            }
+          };
+
+          if (showFriends) {
+            fetchProfileFriends();
+          }
+        }, [showFriends]);
+
+        return html`
+          ${showFriends
+            ? html`
+                ${matchProfileFriends.length > 0
+                  ? html`
+                      <ul class="flex flex-col md:flex-row gap-2">
+                        ${matchProfileFriends.map(
+                          (friend) => html`
+                                                    <li>
+                                                        <button onClick=${() =>
+                                                          handleUpdateMatchTarget(
+                                                            match.profile3_id ===
+                                                              friend.Friend
+                                                                .user_id
+                                                              ? friend.Profile
+                                                                  .user_id
+                                                              : friend.Friend
+                                                                  .user_id
+                                                          )}
+                                                                class="flex flex-row gap-4 mb-4 hover:bg-gray-200 p-4 rounded">
+                                                            <img
+                                                                    src=${
+                                                                      match.profile3_id ===
+                                                                      friend
+                                                                        .Friend
+                                                                        .user_id
+                                                                        ? friend
+                                                                            .Profile
+                                                                            .image1
+                                                                        : friend
+                                                                            .Friend
+                                                                            .image1
+                                                                    }
+                                                                    alt="Profile Image"
+                                                                    class="w-32 h-32 rounded-full object-cover"
+                                                            />
+                                                            <div class="flex flex-col gap-2">
+                                                                <h2 class="text-lg font-medium">
+                                                                    ${
+                                                                      match.profile3_id ===
+                                                                      friend
+                                                                        .Friend
+                                                                        .user_id
+                                                                        ? friend
+                                                                            .Profile
+                                                                            .name
+                                                                        : friend
+                                                                            .Friend
+                                                                            .name
+                                                                    }
+                                                                </h2>
+                                                                <p>
+                                                                    ${
+                                                                      match.profile3_id ===
+                                                                      friend
+                                                                        .Friend
+                                                                        .user_id
+                                                                        ? friend
+                                                                            .Profile
+                                                                            .nio
+                                                                        : friend
+                                                                            .Friend
+                                                                            .bio
+                                                                    }
+                                                                </p>
+                                                        </button>
+                                                        </div>
+                                                    </li>
+                                                `
+                        )}
+                      </ul>
+                      <button
+                        onClick=${() => setShowFriends(false)}
+                        class="p-2 bg-blue-500 text-white rounded-lg mt-2"
+                      >
+                        Back
+                      </button>
+                    `
+                  : html`<p class="text-sm font-medium">No friends found</p>`}
+              `
+            : html` <li>
+                <div class="flex flex-row gap-4 mb-4">
+                  <img
+                    src=${match.profile1.image1}
+                    alt="Profile Image"
+                    class="w-32 h-32 rounded-full object-cover"
+                  />
+                  <div class="flex flex-col gap-2">
+                    <h2 class="text-lg font-medium">${match.profile1.name}</h2>
+                    <p>${match.profile1.bio}</p>
+                  </div>
+                </div>
+                <div class="flex flex-row gap-4 mb-4">
+                  <img
+                    src=${match.profile3.image1}
+                    alt="Profile Image"
+                    class="w-32 h-32 rounded-full object-cover"
+                  />
+                  <div class="flex flex-col gap-2">
+                    <h2 class="text-lg font-medium">${match.profile3.name}</h2>
+                    <p>${match.profile3.bio}</p>
+                  </div>
+                </div>
+
+                <div class="flex gap-2">
+                  <button
+                    onClick=${() => setShowFriends(true)}
+                    class="p-2 bg-green-500 text-white rounded-lg"
+                  >
+                    Select Friend
+                  </button>
+                  <button
+                    onClick=${() => rejectMatch(match)}
+                    class="p-2 bg-red-500 text-white rounded-lg"
+                  >
+                    Reject
+                  </button>
+                </div>
+              </li>`}
+        `;
+      }
+
+      function PendingMatches() {
+        const { selectedProfile } = useContext(ProfileContext);
+        const [pendingMatches, setPendingMatches] = useState([]);
+        const [pendingTarget, setPendingTarget] = useState([]);
+        const [pendingTargetProfileFriends, setPendingTargetProfileFriends] =
+          useState([]);
+
+        const acceptMatch = (match) => {
+          socket.send(
+            JSON.stringify({
+              type: "match",
+              data: {
+                action: "accept",
+                match_id: match.ID,
+              },
+            })
+          );
+          setPendingMatches(
+            pendingMatches.filter(
+              (pendingMatch) => pendingMatch.ID !== match.ID
+            )
+          );
+        };
+
+        const rejectMatch = (match) => {
+          socket.send(
+            JSON.stringify({
+              type: "match",
+              data: {
+                action: "reject",
+                match_id: match.ID,
+              },
+            })
+          );
+          setPendingMatches(
+            pendingMatches.filter(
+              (pendingMatch) => pendingMatch.ID !== match.ID
+            )
+          );
+        };
+
+        const updateTargetProfile = (match, id) => {
+          console.log("Updating target profile id to " + id);
+          socket.send(
+            JSON.stringify({
+              type: "match",
+              data: {
+                action: "update_target",
+                match_id: match.ID,
+                target_profile: id,
+              },
+            })
+          );
+
+          setPendingTarget(
+            pendingTarget.filter((pendingMatch) => pendingMatch.ID !== match.ID)
+          );
+        };
+
+        const fetchProfileFriends = (profileId) => {
+          const fetchFriends = async () => {
+            try {
+              const response = await fetch(`/v1/profile/${profileId}/friends`, {
+                headers: {
+                  Authorization: `Bearer ${currentSession}`,
+                },
+              });
+
+              if (response.ok) {
+                const data = await response.json();
+                setPendingTargetProfileFriends(data.data);
+              }
+            } catch (error) {
+              console.log(error);
+            }
+          };
+
+          fetchFriends();
+        };
+
+        useEffect(() => {
+          const fetchPendingMatches = async () => {
+            try {
+              const response = await fetch(`/v1/match/pending`, {
+                headers: {
+                  Authorization: `Bearer ${currentSession}`,
+                },
+              });
+              if (response.ok) {
+                const data = await response.json();
+                setPendingMatches(data.data);
+              }
+            } catch (error) {
+              console.log(error);
+            }
+          };
+
+          const fetchPendingTarget = async () => {
+            try {
+              const response = await fetch(`/v1/match/pending/target`, {
+                headers: {
+                  Authorization: `Bearer ${currentSession}`,
+                },
+              });
+
+              if (response.ok) {
+                const data = await response.json();
+                setPendingTarget(data.data);
+              }
+            } catch (error) {
+              console.log(error);
+            }
+          };
+
+          if (selectedProfile && currentSession) {
+            fetchPendingMatches();
+            fetchPendingTarget();
+          } else {
+            setPendingMatches([]);
+            setPendingTarget([]);
+          }
+        }, [selectedProfile, currentSession]);
+
+        useEffect(() => {
+          const handleMatchUpdate = (data) => {
+            const matchIndex = pendingMatches.findIndex(
+              (match) => match.ID === data.ID
+            );
+
+            if (matchIndex !== -1) {
+              // Match exists in the list
+              if (data.status !== "pending") {
+                // Remove the match if it's not in the "pending" status
+                const updatedMatches = [...pendingMatches];
+                updatedMatches.splice(matchIndex, 1);
+                setPendingMatches(updatedMatches);
+              }
+            } else {
+              // Match doesn't exist in the list
+              if (data.status === "pending") {
+                // Add the match to the list if it's in the "pending" status
+                setPendingMatches([...pendingMatches, data]);
+              }
+            }
+          };
+
+          messageHandler.subscribe("match", handleMatchUpdate);
+
+          return () => {
+            messageHandler.unsubscribe("match", handleMatchUpdate);
+          };
+        }, []);
+
+        return html`
+          <div class="mt-4 mb-4">
+            <h1 class="text-2xl font-bold mb-2">Pending Target</h1>
+            <ul class="flex flex-col gap-2">
+              ${pendingTarget.map(
+                (match) =>
+                  html` <${TargetMatch}
+                    match=${match}
+                    rejectMatch=${rejectMatch}
+                    updateMatchTarget=${updateTargetProfile}
+                  />`
+              )}
+            </ul>
+          </div>
+          <div class="mt-4 mb-4">
+            <h1 class="text-2xl font-bold mb-2">Pending Matches</h1>
+            <ul class="flex flex-col gap-2">
+              ${pendingMatches.map(
+                (match) => html`
+                  <li class="p-4 border rounded-lg">
+                    <div class="flex flex-row gap-4  mb-4">
+                      <div class="flex flex-row gap-4">
+                        <img
+                          src=${match.profile1.image1}
+                          alt="Profile Image"
+                          class="w-32 h-32 rounded-full object-cover"
+                        />
+                        <div class="flex flex-col gap-2">
+                          <h2 class="text-lg font-medium">
+                            ${match.profile1.name}
+                          </h2>
+                          <p>${match.profile1.bio}</p>
+                        </div>
+                      </div>
+                      ${match.is_duo
+                        ? html`
+                                                    <div class="flex flex-row gap-4">
+                                                        <img
+                                                                src=${
+                                                                  match.profile2
+                                                                    .image1
+                                                                }
+                                                                alt="Profile Image"
+                                                                class="w-32 h-32 rounded-full object-cover"
+                                                        />
+                                                        <div class="flex flex-col gap-2">
+                                                            <h2 class="text-lg font-medium">
+                                                                ${
+                                                                  match.profile2
+                                                                    .name
+                                                                }
+                                                            </h2>
+                                                            <p>${
+                                                              match.profile2.bio
+                                                            }</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="flex flex-col gap-4 p-2 rounded-lg bg-gray-200">
+                                                        <h2 class="text-lg">Status</Status>
+                                                            <p>${
+                                                              match.profile3
+                                                                .name
+                                                            } | ${
+                            match.profile3_accepted
+                              ? match.profile3_accepted
+                                ? "Accepted"
+                                : "Rejected"
+                              : "Pending"
+                          }</p>
+                                                            <p>${
+                                                              match.profile4
+                                                                .name
+                                                            } | ${
+                            match.profile4_accepted
+                              ? match.profile4_accepted
+                                ? "Accepted"
+                                : "Rejected"
+                              : "Pending"
+                          }</p>
+                                                    </div>
+                                                `
+                        : ""}
+                    </div>
+                    <div class="flex gap-2">
+                      <button
+                        onClick=${() => acceptMatch(match)}
+                        class="p-2 bg-green-500 text-white rounded-lg"
+                      >
+                        Accept
+                      </button>
+                      <button
+                        onClick=${() => rejectMatch(match)}
+                        class="p-2 bg-red-500 text-white rounded-lg"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  </li>
+                `
+              )}
+            </ul>
+          </div>
+        `;
+      }
+
+      function Chat({ match }) {
+        const [messages, setMessages] = useChat(match.ID);
+        const [inputText, setInputText] = useState("");
+        const messagesEndRef = useRef(null);
+        const { selectedProfile } = useContext(ProfileContext);
+
+        const handleSubmit = (e) => {
+          e.preventDefault();
+          if (inputText.trim() !== "") {
+            socket.send(
+              JSON.stringify({
+                type: "chat",
+                data: {
+                  match_id: match.ID,
+                  message: inputText,
+                },
+              })
+            );
+            setInputText("");
+          }
+        };
+
+        useEffect(() => {
+          const handleChatMessage = (data) => {
+            let profile;
+
+            if (data.profile_id === match.profile1_id) {
+              profile = match.profile1;
+            } else if (data.profile_id === match.profile2_id) {
+              profile = match.profile2;
+            } else if (data.profile_id === match.profile3_id) {
+              profile = match.profile3;
+            } else if (data.profile_id === match.profile4_id) {
+              profile = match.profile4;
+            }
+
+            let message = data;
+            message.Profile = profile;
+
+            setMessages((prevMessages) => [message, ...prevMessages]);
+          };
+
+          messageHandler.subscribe("chat", handleChatMessage);
+
+          return () => {
+            messageHandler.unsubscribe("chat", handleChatMessage);
+          };
+        }, []);
+
+        const getChatNames = () => {
+          let matchProfiles = [];
+
+          if (!match.is_duo) {
+            if (match.profile1.user_id === selectedProfile.user_id) {
+              matchProfiles = [match.profile3];
+            } else {
+              matchProfiles = [match.profile1];
+            }
+          } else {
+            if (match.profile1.user_id === selectedProfile.user_id) {
+              matchProfiles = [
+                match.profile2,
+                match.profile3,
+                match.profile4,
+              ].filter(Boolean);
+            } else if (match.profile2.user_id === selectedProfile.user_id) {
+              matchProfiles = [
+                match.profile1,
+                match.profile3,
+                match.profile4,
+              ].filter(Boolean);
+            } else if (match.profile3.user_id === selectedProfile.user_id) {
+              matchProfiles = [
+                match.profile1,
+                match.profile2,
+                match.profile4,
+              ].filter(Boolean);
+            } else {
+              matchProfiles = [
+                match.profile1,
+                match.profile2,
+                match.profile3,
+              ].filter(Boolean);
+            }
+          }
+
+          return matchProfiles.map((profile) => profile.name).join(", ");
+        };
+
+        useEffect(() => {
+          messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }, [messages]);
+
+        return html`
+          <div class="mt-4 mb-4">
+            <h1 class="text-2xl font-bold mb-2">Chat</h1>
+            <p class="text-sm font-medium">
+              Chatting with ${getChatNames(match)}
+            </p>
+            <ul
+              class="flex flex-col gap-2 max-h-96 overflow-y-auto border rounded-lg p-2 border-gray-300"
+            >
+              ${[...messages].reverse().map(
+                (message) => html`
+                  <li class="p-2 bg-gray-200 rounded-lg">
+                    <p class="font-bold">${message.Profile?.name}</p>
+                    <p>${message.message}</p>
+                  </li>
+                `
+              )}
+              <div ref=${messagesEndRef}></div>
+            </ul>
+            <form onSubmit=${handleSubmit} class="flex gap-2 mt-2">
+              <input
+                type="text"
+                value=${inputText}
+                onInput=${(e) => setInputText(e.target.value)}
+                class="p-2 border border-gray-300 rounded-lg w-full"
+                placeholder="Type a message"
+              />
+              <button
+                type="submit"
+                class="p-2 bg-blue-500 text-white rounded-lg"
+              >
+                Send
+              </button>
+            </form>
+          </div>
+        `;
+      }
+
+      function Friends({ profile }) {
+        const [friends, setFriends] = useState([]);
+        const [friendRequests, setFriendRequests] = useState([]);
+
+        const fetchFriends = async () => {
+          try {
+            const response = await fetch(
+              `/v1/profile/${profile.user_id}/friends`,
+              {
+                headers: {
+                  Authorization: `Bearer ${currentSession}`,
+                },
+              }
+            );
+
+            if (response.ok) {
+              const data = await response.json();
+              setFriends(data.data);
+            }
+          } catch (error) {
+            console.log(error);
+          }
+        };
+
+        const fetchFriendRequests = async () => {
+          try {
+            const response = await fetch("/v1/friendship/requests", {
+              headers: {
+                Authorization: `Bearer ${currentSession}`,
+              },
+            });
+
+            if (!response.ok) {
+              console.log(response.error);
+              return;
+            }
+
+            const data = await response.json()
+
+            console.log(data)
+
+            setFriendRequests(data.data);
+          } catch (error) {
+            console.log(error);
+          }
+        };
+
+        const sendFriendRequest = async (friendUsername) => {
+          try {
+            const response = await fetch("/v1/friendship/" + friendUsername, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${currentSession}`,
+              },
+            });
+
+            if (response.ok) {
+              fetchFriends();
+            }
+          } catch (error) {
+            console.log(error);
+          }
+        };
+
+        const handleAcceptFriendRequest = async (profile) => {
+          let friendship = null;
+
+          for (let i = 0; i < friendRequests.length; i++) {
+            if (friendRequests[i].Profile.user_id === profile.user_id) {
+              friendship = friendRequests[i];
+              break;
+            }
+          }
+
+          console.log(friendRequests)
+
+          if (!friendship) {
+            console.log("Friendship not found");
+            return;
+          }
+
+          try {
+            const response = await fetch(
+              `/v1/friendship/${friendship.ID}/accept`,
+              {
+                method: "PATCH",
+                headers: {
+                  Authorization: `Bearer ${currentSession}`,
+                },
+              }
+            );
+
+            if (!response.success) {
+              console.log(response);
+              return;
+            }
+
+            setFriendRequests(
+              friendRequests.filter((request) => request.ID !== friendship.ID)
+            );
+            setSelectedFriendRequestProfile(null);
+            fetchFriends();
+            fetchFriendRequests();
+          } catch (error) {
+            console.log(error);
+          }
+        };
+
+        useEffect(() => {
+            if(!profile) {
+                return;
+            }
+
+          fetchFriends();
+          fetchFriendRequests();
+        }, [profile]);
+
+        return html`
+          <div class="mt-4 mb-4">
+            <h1 class="text-2xl font-bold mb-2">Friends</h1>
+            <form onSubmit=${(e) => e.preventDefault()}>
+              <input
+                type="text"
+                id="friendUsername"
+                class="p-2 border border-gray-300 rounded-lg w-full mb-3"
+                placeholder="Enter friend's username"
+              />
+              <button
+                onClick=${() =>
+                  sendFriendRequest(
+                    document.getElementById("friendUsername").value
+                  )}
+                class="p-2 bg-blue-500 text-white rounded-lg mb-3"
+              >
+                Add Friend
+              </button>
+            </form>
+            <div class="my-5 flex flex-col gap-3">
+              <h2 class="text-lg font-medium">
+                Friend Requests
+                (${(friendRequests && friendRequests.length) || 0})
+              </h2>
+              <ul class="flex flex-col gap-2">
+                ${friendRequests &&
+                friendRequests.map(
+                  (friendRequest) => html`
+                    <li>
+                      <button
+                        onClick=${() =>
+                          handleAcceptFriendRequest(friendRequest.Profile)}
+                        class="p-2 bg-gray-200 rounded-lg w-full"
+                      >
+                        ${friendRequest.Profile.username}
+                      </button>
+                    </li>
+                  `
+                )}
+              </ul>
+            </div>
+            <ul class="flex flex-col gap-2">
+              ${friends.map(
+                (friend) => html`
+                  <li>
+                    <button class="p-2 bg-gray-200 rounded-lg w-full">
+                      ${friend.Profile.user_id === profile.user_id
+                        ? friend.Friend.username
+                        : friend.Profile.username}
+                    </button>
+                  </li>
+                `
+              )}
+            </ul>
+          </div>
+        `;
+      }
+
+      function Main() {
+        const { selectedProfile } = useContext(ProfileContext);
+        const [selectedMatch, selectMatch] = useSelectedMatch(selectedProfile);
+
+        return html`
+          <div class="col-span-3 sm:col-span-3 md:col-span-4">
+            ${selectedProfile
+              ? html`
+                  <${ProfileDetails} profile=${selectedProfile} />
+                  <${DiscoverProfile} />
+                  <${Matches} selectMatch=${selectMatch} />
+                  <${PendingMatches} />
+                  <${Friends} profile=${selectedProfile} />
+                  ${selectedMatch
+                    ? html` <${Chat} match=${selectedMatch} />`
+                    : html`<p class="text-2xl font-bold">Select a match</p>`}
+                `
+              : html`<p class="text-2xl font-bold">Select a profile</p>`}
+          </div>
+        `;
+      }
+
+      render(html` <${App} />`, document.body);
+    </script>
+  </body>
+</html>

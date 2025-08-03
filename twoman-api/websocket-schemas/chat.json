@@ -1,0 +1,22 @@
+{
+  "$id": "https://schema.twoman.dev/ws/chat.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Chat Message",
+  "description": "WebSocket chat message payload",
+  "type": "object",
+  "required": ["message", "match_id"],
+  "properties": {
+    "message": {
+      "type": "string",
+      "description": "The chat message content",
+      "minLength": 1,
+      "maxLength": 1000
+    },
+    "match_id": {
+      "type": "integer",
+      "description": "ID of the match this message belongs to",
+      "minimum": 1
+    }
+  },
+  "additionalProperties": false
+}

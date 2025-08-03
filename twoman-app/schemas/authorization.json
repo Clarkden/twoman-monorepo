@@ -1,0 +1,21 @@
+{
+  "$id": "https://schema.twoman.dev/ws/authorization.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authorization Message",
+  "description": "WebSocket authorization payload",
+  "type": "object",
+  "required": ["session", "version"],
+  "properties": {
+    "session": {
+      "type": "string",
+      "description": "Session token for authentication",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "description": "Client version",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,16 @@
+{
+  "$id": "https://schema.twoman.dev/ws/connection_success.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Connection Success Message",
+  "description": "WebSocket connection success payload",
+  "type": "object",
+  "required": ["message"],
+  "properties": {
+    "message": {
+      "type": "string",
+      "description": "Success message",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false
+}

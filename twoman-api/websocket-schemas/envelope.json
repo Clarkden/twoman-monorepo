@@ -1,0 +1,40 @@
+{
+  "$id": "https://schema.twoman.dev/ws/envelope.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "WebSocket Message Envelope",
+  "description": "Envelope for all WebSocket messages",
+  "type": "object",
+  "required": ["type", "v", "correlationId", "payload"],
+  "properties": {
+    "type": {
+      "type": "string",
+      "description": "The message type/subject",
+      "enum": [
+        "authorization",
+        "chat",
+        "match", 
+        "profile",
+        "ping",
+        "connection_success",
+        "connection_failed",
+        "profile_response"
+      ]
+    },
+    "v": {
+      "type": "string", 
+      "description": "Message schema version",
+      "pattern": "^[0-9]+$",
+      "default": "1"
+    },
+    "correlationId": {
+      "type": "string",
+      "description": "Unique identifier to correlate request/response pairs",
+      "minLength": 1
+    },
+    "payload": {
+      "type": "object",
+      "description": "The actual message data, validated against the specific schema for this type"
+    }
+  },
+  "additionalProperties": false
+}

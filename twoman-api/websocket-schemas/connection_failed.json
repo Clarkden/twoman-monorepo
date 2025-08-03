@@ -1,0 +1,27 @@
+{
+  "$id": "https://schema.twoman.dev/ws/connection_failed.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Connection Failed Message",
+  "description": "WebSocket connection failed payload",
+  "type": "object",
+  "required": ["message", "code"],
+  "properties": {
+    "message": {
+      "type": "string",
+      "description": "Error message",
+      "minLength": 1
+    },
+    "code": {
+      "type": "string",
+      "description": "Error code",
+      "enum": [
+        "UNAUTHORIZED",
+        "INVALID_MESSAGE_TYPE",
+        "INVALID_AUTH_DATA",
+        "INVALID_AUTH_TOKEN",
+        "INVALID_SESSION"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

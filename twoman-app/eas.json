@@ -1,0 +1,60 @@
+{
+  "cli": {
+    "version": ">= 7.3.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development-simulator": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true,
+        "image": "macos-sequoia-15.3-xcode-16.2"
+      }
+    },
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development",
+      "ios": {
+        "image": "macos-sequoia-15.3-xcode-16.2"
+      }
+    },
+    "staging": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_BASE_API_URL": "staging.twoman.dating",
+        "EXPO_PUBLIC_HTTP_PROTOCOL": "https",
+        "EXPO_PUBLIC_WS_PROTOCOL": "wss",
+        "EXPO_PUBLIC_API_VERSION": "v1",
+        "EXPO_PUBLIC_CLIENT_VERSION": "1.0.3",
+        "EXPO_PUBLIC_APPS_FLYER_DEV_KEY": "pzATwUtnFguqUMwfTFCLjT",
+        "EXPO_PUBLIC_APPS_FLYER_IS_DEBUG": "false"
+      },
+      "channel": "staging",
+      "ios": {
+        "image": "macos-sequoia-15.3-xcode-16.2"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_BASE_API_URL": "api.twoman.dating",
+        "EXPO_PUBLIC_HTTP_PROTOCOL": "https",
+        "EXPO_PUBLIC_WS_PROTOCOL": "wss",
+        "EXPO_PUBLIC_API_VERSION": "v1",
+        "EXPO_PUBLIC_CLIENT_VERSION": "1.0.3",
+        "EXPO_PUBLIC_APPS_FLYER_DEV_KEY": "pzATwUtnFguqUMwfTFCLjT",
+        "EXPO_PUBLIC_APPS_FLYER_IS_DEBUG": "false"
+      },
+      "channel": "production",
+      "ios": {
+        "image": "macos-sequoia-15.3-xcode-16.2"
+      },
+      "distribution": "store"
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "$id": "https://schema.twoman.dev/ws/ping.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Ping Message",
+  "description": "WebSocket ping payload",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}
