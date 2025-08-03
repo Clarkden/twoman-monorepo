@@ -159,7 +159,7 @@ export default function SettingsScreen() {
                   right: 0,
                   top: 0,
                   height: 99,
-                  borderRadius: 10,
+                  borderRadius: 12,
                 }}
               />
               <View>

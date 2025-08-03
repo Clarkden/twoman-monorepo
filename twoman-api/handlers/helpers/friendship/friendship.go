@@ -89,6 +89,53 @@ func AcceptFriendRequest(friendshipId uint, friendId uint, db *gorm.DB) (*schema
 	return friendship, nil
 }
 
+// CreateAcceptedFriendship creates a friendship that's automatically accepted (for referrals)
+func CreateAcceptedFriendship(userID1 uint, userID2 uint, db *gorm.DB) (*schemas.Friendship, error) {
+	if userID1 == userID2 {
+		return nil, errors.New("cannot create friendship with yourself")
+	}
+
+	// Check if friendship already exists
+	var existingFriendship schemas.Friendship
+	err := db.Where("(profile_id = ? AND friend_id = ?) OR (friend_id = ? AND profile_id = ?)",
+		userID1, userID2, userID1, userID2).First(&existingFriendship).Error
+
+	if err == nil {
+		// Friendship already exists
+		if !existingFriendship.Accepted {
+			// Accept the existing friendship
+			existingFriendship.Accepted = true
+			if err := db.Save(&existingFriendship).Error; err != nil {
+				return nil, err
+			}
+		}
+		return &existingFriendship, nil
+	}
+
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	// Create new accepted friendship
+	newFriendship := schemas.Friendship{
+		ProfileID: userID1,
+		FriendID:  userID2,
+		Accepted:  true, // Auto-accept for referrals
+	}
+
+	if err := db.Create(&newFriendship).Error; err != nil {
+		return nil, err
+	}
+
+	// Load the friendship with relations
+	var friendship schemas.Friendship
+	if err := db.Preload("Profile").Preload("Friend").Where("id = ?", newFriendship.ID).First(&friendship).Error; err != nil {
+		return nil, err
+	}
+
+	return &friendship, nil
+}
+
 func GetAllFriends(userId uint, db *gorm.DB) ([]*schemas.Friendship, error) {
 	var friends []*schemas.Friendship
 

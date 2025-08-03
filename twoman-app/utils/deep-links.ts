@@ -141,14 +141,12 @@ export async function shareReferralLink(
   try {
     const referralLink = generateShareableReferralLink(referralCode);
 
-    const message = userName
-      ? `Hey! Join me on 2 Man using my referral code ${referralCode}. Download the app and use this link: ${referralLink}`
-      : `Join 2 Man and get 1 month Pro free! Use my referral code ${referralCode} or this link: ${referralLink}`;
+    const message = `Here's my 2 Man referral code: ${referralCode}. Redeem this to get 1 week of 2 Man Pro for free! Download the app: ${referralLink}`;
 
     await Share.share({
       message: message,
       url: referralLink, // iOS only
-      title: "Join 2 Man - Get 1 Month Pro Free!",
+      title: "Get 1 Week of 2 Man Pro Free!",
     });
   } catch (error) {
     console.error("Error sharing referral link:", error);

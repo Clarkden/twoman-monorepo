@@ -283,18 +283,18 @@ func GetPendingMatches(profileId uint, db *gorm.DB) ([]schemas.Matches, error) {
 
 	err := db.
 		Where(`
-            ( status = 'pending' 
-              AND profile3_id = ? 
+            ( status = 'pending'
+              AND profile3_id = ?
               AND profile3_accepted = false
               AND (
-                   is_duo = false 
+                   is_duo = false
                    OR (is_duo = true AND profile4_id IS NOT NULL)
               )
-            ) 
-            OR 
+            )
+            OR
             (
-              status = 'pending' 
-              AND profile4_id = ? 
+              status = 'pending'
+              AND profile4_id = ?
               AND profile4_accepted = false
             )`,
 			profileId,

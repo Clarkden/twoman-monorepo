@@ -3,8 +3,10 @@ package referral
 import (
 	"crypto/rand"
 	"errors"
+	"log"
 	"math/big"
 	"time"
+	"twoman/handlers/helpers/friendship"
 	"twoman/schemas"
 	"twoman/types"
 	"twoman/utils"
@@ -129,12 +131,19 @@ func RedeemReferralCode(referralCode string, referredUserID uint, db *gorm.DB) (
 		ReferrerID:   refCode.UserID,
 		ReferredID:   referredUserID,
 		ReferralCode: referralCode,
-		Status:       schemas.ReferralStatusPending,
+		Status:       schemas.ReferralStatusCompleted, // Mark as completed immediately
 		RedeemedAt:   &now,
+		CompletedAt:  &now, // Set completed time immediately
 	}
 
 	if err := db.Create(&referral).Error; err != nil {
 		return nil, err
+	}
+
+	// Create friendship between referrer and referred user automatically
+	_, err = friendship.CreateAcceptedFriendship(refCode.UserID, referredUserID, db)
+	if err != nil {
+		log.Printf("Failed to create friendship between referrer and referred user: %v", err)
 	}
 
 	return &referral, nil
@@ -168,7 +177,7 @@ func CompleteReferral(referredUserID uint, db *gorm.DB) error {
 func CheckAndCreateReferrerReward(referrerID uint, db *gorm.DB) error {
 	// Count completed referrals
 	var completedCount int64
-	err := db.Model(&schemas.Referral{}).Where("referrer_id = ? AND status = ?", 
+	err := db.Model(&schemas.Referral{}).Where("referrer_id = ? AND status = ?",
 		referrerID, schemas.ReferralStatusCompleted).Count(&completedCount).Error
 	if err != nil {
 		return err
@@ -177,9 +186,9 @@ func CheckAndCreateReferrerReward(referrerID uint, db *gorm.DB) error {
 	// Check if user reached the threshold and doesn't already have a reward
 	if completedCount >= ReferralRewardThreshold {
 		var existingReward schemas.ReferralReward
-		err = db.Where("user_id = ? AND reward_type = ?", 
+		err = db.Where("user_id = ? AND reward_type = ?",
 			referrerID, schemas.RewardTypeReferrer).First(&existingReward).Error
-		
+
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// Create reward
 			reward := schemas.ReferralReward{
@@ -189,7 +198,7 @@ func CheckAndCreateReferrerReward(referrerID uint, db *gorm.DB) error {
 				EligibleAt:    time.Now(),
 				ReferralCount: int(completedCount),
 			}
-			
+
 			if err := db.Create(&reward).Error; err != nil {
 				return err
 			}
@@ -205,9 +214,9 @@ func CheckAndCreateReferrerReward(referrerID uint, db *gorm.DB) error {
 func CreateFriendReward(referredUserID uint, db *gorm.DB) (*schemas.ReferralReward, error) {
 	// Check if friend already has a reward
 	var existingReward schemas.ReferralReward
-	err := db.Where("user_id = ? AND reward_type = ?", 
+	err := db.Where("user_id = ? AND reward_type = ?",
 		referredUserID, schemas.RewardTypeFriend).First(&existingReward).Error
-	
+
 	if err == nil {
 		return &existingReward, nil // Already has reward
 	}
@@ -232,21 +241,20 @@ func CreateFriendReward(referredUserID uint, db *gorm.DB) (*schemas.ReferralRewa
 
 // GetReferralStats returns referral statistics for a user
 func GetReferralStats(userID uint, db *gorm.DB) (*types.ReferralStats, error) {
-	// Get referral code
-	var referralCode schemas.ReferralCode
-	err := db.Where("user_id = ?", userID).First(&referralCode).Error
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	// Get or create referral code
+	referralCodeRecord, err := CreateReferralCodeForUser(userID, db)
+	if err != nil {
 		return nil, err
 	}
 
 	// Count completed referrals
 	var completedCount int64
-	db.Model(&schemas.Referral{}).Where("referrer_id = ? AND status = ?", 
+	db.Model(&schemas.Referral{}).Where("referrer_id = ? AND status = ?",
 		userID, schemas.ReferralStatusCompleted).Count(&completedCount)
 
 	// Count pending referrals
 	var pendingCount int64
-	db.Model(&schemas.Referral{}).Where("referrer_id = ? AND status = ?", 
+	db.Model(&schemas.Referral{}).Where("referrer_id = ? AND status = ?",
 		userID, schemas.ReferralStatusPending).Count(&pendingCount)
 
 	// Check for available rewards
@@ -267,11 +275,10 @@ func GetReferralStats(userID uint, db *gorm.DB) (*types.ReferralStats, error) {
 		AvailableRewards: len(availableRewards),
 		RewardThreshold:  ReferralRewardThreshold,
 		WasReferred:      wasReferred,
+		CanRedeemCode:    !wasReferred, // Can redeem code if they weren't referred by someone
 	}
 
-	if err == nil {
-		stats.ReferralCode = referralCode.Code
-	}
+	stats.ReferralCode = referralCodeRecord.Code
 
 	return stats, nil
 }

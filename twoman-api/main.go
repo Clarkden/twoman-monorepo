@@ -288,6 +288,9 @@ func MigrateDB(db *gorm.DB) error {
 		&schemas.Admin{},
 		&schemas.AdminFlags{},
 		&schemas.AdminDemoNumbers{},
+		&schemas.Referral{},
+		&schemas.ReferralCode{},
+		&schemas.ReferralReward{},
 	)
 
 	if err != nil {

@@ -11,10 +11,12 @@ import {
   View,
   Alert,
   Share,
+  Animated,
 } from "react-native";
 import {
   accentGray,
   mainBackgroundColor,
+  mainPurple,
   secondaryBackgroundColor,
 } from "@/constants/globalStyles";
 import { useEffect, useState } from "react";
@@ -23,6 +25,7 @@ import { UserPlus2, Users, Share as ShareIcon } from "lucide-react-native";
 import apiFetch from "@/utils/fetch";
 import ProfileCard from "@/components/ProfileCard";
 import LoadingIndicator from "@/components/LoadingIndicator";
+import ReferralSuccessModal from "@/components/ReferralSuccessModal";
 import { FontAwesome } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
 import profileStore from "@/stores/profile";
@@ -35,9 +38,9 @@ import {
   getReferralCode,
   getReferralStats,
   redeemReferralCode,
-  canRedeemReferralCode,
   type ReferralStats,
 } from "@/utils/referral";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function FriendsScreen() {
   const [friends, setFriends] = useState<Friendship[]>([]);
@@ -829,6 +832,30 @@ function ReferralSection({
 }) {
   const [codeInput, setCodeInput] = useState("");
   const [redeeming, setRedeeming] = useState(false);
+  const [showRedeemModal, setShowRedeemModal] = useState(false);
+  const [redeemStep, setRedeemStep] = useState<"input" | "success" | "error">(
+    "input",
+  );
+  const [referrerName, setReferrerName] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const slideAnim = useState(new Animated.Value(300))[0]; // Start off-screen
+
+  // Animate modal in/out
+  useEffect(() => {
+    if (showRedeemModal) {
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(slideAnim, {
+        toValue: 300,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [showRedeemModal, slideAnim]);
 
   const handleRedeemCode = async () => {
     if (!codeInput.trim() || codeInput.length !== 8) {
@@ -841,86 +868,265 @@ function ReferralSection({
 
     setRedeeming(true);
     try {
-      await redeemReferralCode(codeInput.toUpperCase());
-      Toast.show({
-        type: "success",
-        text1: "Code redeemed!",
-        text2: "You now have 1 week of 2 Man Pro free!",
-      });
+      const result = await redeemReferralCode(codeInput.toUpperCase());
       setCodeInput("");
+      setRedeemStep("success");
       onCodeRedeem(); // Refresh the stats
     } catch (error) {
       console.error("Error redeeming code:", error);
-      Toast.show({
-        type: "error",
-        text1: "Failed to redeem",
-        text2: error instanceof Error ? error.message : "Invalid referral code",
-      });
+      setErrorMessage(
+        error instanceof Error ? error.message : "Invalid referral code",
+      );
+      setRedeemStep("error");
     } finally {
       setRedeeming(false);
     }
   };
 
-  if (canRedeemReferralCode(stats)) {
-    // Show referral code input for new users
-    return (
-      <View style={styles.inviteFriendsSection}>
-        <View style={styles.referralCodeCard}>
-          <Text style={styles.referralCodeTitle}>Have a referral code?</Text>
-          <Text style={styles.referralCodeSubtitle}>
-            Enter your friend's code to get 1 week of 2 Man Pro free!
-          </Text>
-          <View style={styles.codeInputContainer}>
-            <TextInput
-              value={codeInput}
-              onChangeText={(text) => setCodeInput(text.toUpperCase())}
-              style={styles.codeInput}
-              placeholder="Enter code"
-              placeholderTextColor="#666"
-              maxLength={8}
-              autoCapitalize="characters"
-              autoCorrect={false}
-            />
-            <TouchableOpacity
-              style={[
-                styles.redeemButton,
-                (!codeInput.trim() || redeeming) && styles.redeemButtonDisabled,
-              ]}
-              onPress={handleRedeemCode}
-              disabled={!codeInput.trim() || redeeming}
-            >
-              {redeeming ? (
-                <LoadingIndicator size={16} />
-              ) : (
-                <Text style={styles.redeemButtonText}>Redeem</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    );
-  }
-
-  // Show invite section for existing users
   return (
-    <View style={styles.inviteFriendsSection}>
-      <TouchableOpacity
-        style={styles.contactsButton}
-        onPress={onContactsPress}
-        activeOpacity={0.8}
-      >
-        <View style={styles.contactsButtonContent}>
-          <View style={styles.contactsButtonTextContainer}>
-            <Text style={styles.contactsButtonText}>Invite your friends!</Text>
-            <Text style={styles.contactsButtonSubtext}>
-              Get 3 friends to join and get 2 Man Pro free for a month. They get
-              1 week Pro for free!
-            </Text>
+    <>
+      <View style={styles.inviteFriendsSection}>
+        {/* Always show invite friends button */}
+        {/* Show referral code button for users who can redeem codes */}
+        {stats.can_redeem_code && (
+          <TouchableOpacity
+            onPress={() => setShowRedeemModal(true)}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={[mainPurple, "#7a14ff"]}
+              style={{
+                borderRadius: 10,
+                padding: 16,
+                marginBottom: 10,
+              }}
+            >
+              <View style={styles.referralCodeButtonContent}>
+                <Text style={styles.referralCodeButtonText}>
+                  Have a referral code?
+                </Text>
+                <Text style={styles.referralCodeButtonSubtext}>
+                  Get 1 week of 2 Man Pro free!
+                </Text>
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+        )}
+
+        <TouchableOpacity
+          style={styles.contactsButton}
+          onPress={onContactsPress}
+          activeOpacity={0.8}
+        >
+          <View style={styles.contactsButtonContent}>
+            <View style={styles.contactsButtonTextContainer}>
+              <Text style={styles.contactsButtonText}>
+                Invite your friends!
+              </Text>
+              <Text style={styles.contactsButtonSubtext}>
+                Get 3 friends to join and get 2 Man Pro free for a month. They
+                get 1 week Pro for free!
+              </Text>
+            </View>
           </View>
-        </View>
-        <ShareIcon size={16} color="white" />
-      </TouchableOpacity>
-    </View>
+          <ShareIcon size={16} color="white" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Redeem Code Modal - only show if user can redeem codes */}
+      {stats.can_redeem_code && (
+        <Modal
+          visible={showRedeemModal}
+          transparent
+          animationType="fade"
+          presentationStyle="overFullScreen"
+          onRequestClose={() => {
+            setShowRedeemModal(false);
+            setRedeemStep("input");
+            setCodeInput("");
+            setErrorMessage("");
+          }}
+        >
+          <View style={styles.fullScreenModalOverlay}>
+            <Animated.View
+              style={[
+                styles.animatedBottomSheetContainer,
+                {
+                  transform: [{ translateY: slideAnim }],
+                },
+              ]}
+            >
+              {redeemStep === "input" ? (
+                <>
+                  <View style={styles.nativeModalHeader}>
+                    <Text style={styles.nativeModalTitle}>
+                      Enter Referral Code
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setShowRedeemModal(false);
+                        setRedeemStep("input");
+                      }}
+                      style={styles.nativeModalCloseButton}
+                    >
+                      <Text style={styles.nativeModalCloseButtonText}>✕</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <Text style={styles.nativeModalSubtitle}>
+                    Enter your friend's code to get 1 week of 2 Man Pro free!
+                  </Text>
+
+                  <TextInput
+                    value={codeInput}
+                    onChangeText={(text) => setCodeInput(text.toUpperCase())}
+                    style={styles.nativeModalCodeInput}
+                    placeholder="Enter 8-character code"
+                    placeholderTextColor="#666"
+                    maxLength={8}
+                    autoCapitalize="characters"
+                    autoCorrect={false}
+                    autoFocus
+                  />
+
+                  <TouchableOpacity
+                    style={[
+                      styles.nativeModalRedeemButton,
+                      (!codeInput.trim() || redeeming) &&
+                        styles.nativeModalRedeemButtonDisabled,
+                    ]}
+                    onPress={handleRedeemCode}
+                    disabled={!codeInput.trim() || redeeming}
+                  >
+                    {redeeming ? (
+                      <LoadingIndicator size={16} />
+                    ) : (
+                      <Text style={styles.nativeModalRedeemButtonText}>
+                        Redeem Code
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                </>
+              ) : redeemStep === "success" ? (
+                <>
+                  {/* Handle bar */}
+                  <View style={styles.nativeModalHandle} />
+
+                  <TouchableOpacity
+                    style={styles.nativeModalCloseButton}
+                    onPress={() => {
+                      setShowRedeemModal(false);
+                      setRedeemStep("input");
+                    }}
+                  >
+                    <Text style={styles.nativeModalCloseButtonText}>✕</Text>
+                  </TouchableOpacity>
+
+                  <View style={styles.successContent}>
+                    {/* TODO: Replace with Lottie animation */}
+                    <View style={styles.successAnimationPlaceholder}>
+                      <Users size={60} color="#4CAF50" />
+                    </View>
+
+                    <Text style={styles.successTitle}>Welcome to 2 Man!</Text>
+
+                    <Text style={styles.successSubtitle}>
+                      Referral code redeemed successfully!
+                    </Text>
+
+                    <View style={styles.successBenefitsContainer}>
+                      <View style={styles.successBenefitItem}>
+                        <Users size={20} color="#4CAF50" />
+                        <Text style={styles.successBenefitText}>
+                          You got 1 week of Pro free!
+                        </Text>
+                      </View>
+
+                      <View style={styles.successBenefitItem}>
+                        <Users size={20} color="#4CAF50" />
+                        <Text style={styles.successBenefitText}>
+                          {referrerName
+                            ? `You're now friends with ${referrerName}!`
+                            : "You're now friends with your referrer!"}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <TouchableOpacity
+                      style={styles.successContinueButton}
+                      onPress={() => {
+                        setShowRedeemModal(false);
+                        setRedeemStep("input");
+                        setCodeInput("");
+                        setErrorMessage("");
+                      }}
+                    >
+                      <Text style={styles.successContinueButtonText}>
+                        Let's Go!
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              ) : redeemStep === "error" ? (
+                <>
+                  {/* Handle bar */}
+                  <View style={styles.nativeModalHandle} />
+
+                  <TouchableOpacity
+                    style={styles.nativeModalCloseButton}
+                    onPress={() => {
+                      setShowRedeemModal(false);
+                      setRedeemStep("input");
+                      setCodeInput("");
+                      setErrorMessage("");
+                    }}
+                  >
+                    <Text style={styles.nativeModalCloseButtonText}>✕</Text>
+                  </TouchableOpacity>
+
+                  <View style={styles.errorContent}>
+                    {/* Error Icon */}
+                    <View style={styles.errorAnimationPlaceholder}>
+                      <Text style={styles.errorIcon}>⚠️</Text>
+                    </View>
+
+                    <Text style={styles.errorTitle}>Oops!</Text>
+
+                    <Text style={styles.errorSubtitle}>{errorMessage}</Text>
+
+                    <View style={styles.errorButtonsContainer}>
+                      <TouchableOpacity
+                        style={styles.errorTryAgainButton}
+                        onPress={() => {
+                          setRedeemStep("input");
+                          setErrorMessage("");
+                        }}
+                      >
+                        <Text style={styles.errorTryAgainButtonText}>
+                          Try Again
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.errorCancelButton}
+                        onPress={() => {
+                          setShowRedeemModal(false);
+                          setRedeemStep("input");
+                          setCodeInput("");
+                          setErrorMessage("");
+                        }}
+                      >
+                        <Text style={styles.errorCancelButtonText}>Cancel</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </>
+              ) : null}
+            </Animated.View>
+          </View>
+        </Modal>
+      )}
+    </>
   );
 }
 
@@ -1321,57 +1527,275 @@ const styles = StyleSheet.create({
     color: accentGray,
     fontSize: 14,
   },
-  referralCodeCard: {
-    backgroundColor: secondaryBackgroundColor,
-    borderRadius: 12,
-    padding: 18,
-    marginBottom: 5,
+  referralCodeButtonContent: {
+    alignItems: "flex-start",
   },
-  referralCodeTitle: {
+  referralCodeButtonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "600",
-    marginBottom: 8,
+    marginBottom: 4,
   },
-  referralCodeSubtitle: {
+  referralCodeButtonSubtext: {
     color: "#CCCCCC",
     fontSize: 14,
-    marginBottom: 16,
-    lineHeight: 20,
   },
-  codeInputContainer: {
-    flexDirection: "row",
-    gap: 12,
-    alignItems: "center",
-  },
-  codeInput: {
+  fullScreenModalOverlay: {
     flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+  },
+  animatedBottomSheetContainer: {
+    backgroundColor: secondaryBackgroundColor,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 8,
+    paddingBottom: 34, // Safe area for home indicator
+    paddingHorizontal: 24,
+    minHeight: 300,
+  },
+  modalCodeInput: {
     backgroundColor: "#2a2a2c",
     color: "white",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 8,
-    fontSize: 16,
-    fontWeight: "600",
-    letterSpacing: 1,
-    textAlign: "center",
-  },
-  redeemButton: {
-    backgroundColor: "#FF6B6B",
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderRadius: 8,
-    minWidth: 80,
+    fontSize: 18,
+    fontWeight: "600",
+    letterSpacing: 2,
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  modalRedeemButton: {
+    backgroundColor: "#FF6B6B",
+    paddingVertical: 14,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
   },
-  redeemButtonDisabled: {
+  modalRedeemButtonDisabled: {
     backgroundColor: "#666666",
     opacity: 0.6,
   },
-  redeemButtonText: {
+  modalRedeemButtonText: {
     color: "white",
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "600",
+  },
+  // Native modal handle bar
+  nativeModalHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    borderRadius: 2,
+    alignSelf: "center",
+    marginBottom: 16,
+  },
+  // Native modal header
+  nativeModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginVertical: 16,
+  },
+  nativeModalTitle: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "600",
+    flex: 1,
+    textAlign: "center",
+  },
+  nativeModalCloseButton: {
+    position: "absolute",
+    right: 0,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  nativeModalCloseButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  nativeModalSubtitle: {
+    color: "#CCCCCC",
+    fontSize: 16,
+    marginBottom: 24,
+    lineHeight: 22,
+    textAlign: "center",
+  },
+  nativeModalCodeInput: {
+    backgroundColor: "#2a2a2c",
+    color: "white",
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderRadius: 12,
+    fontSize: 18,
+    fontWeight: "600",
+    textAlign: "center",
+    marginBottom: 24,
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  nativeModalRedeemButton: {
+    backgroundColor: mainPurple,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: mainPurple,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  nativeModalRedeemButtonDisabled: {
+    backgroundColor: "#666666",
+    opacity: 0.6,
+    shadowOpacity: 0,
+  },
+  nativeModalRedeemButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  // Success/Error modal styles
+  successContent: {
+    alignItems: "center",
+    paddingTop: 20,
+  },
+  successAnimationPlaceholder: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "rgba(76, 175, 80, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  successTitle: {
+    color: "white",
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  successSubtitle: {
+    color: "#CCCCCC",
+    fontSize: 16,
+    marginBottom: 24,
+    textAlign: "center",
+  },
+  successBenefitsContainer: {
+    width: "100%",
+    marginBottom: 32,
+  },
+  successBenefitItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(76, 175, 80, 0.1)",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  successBenefitText: {
+    color: "white",
+    fontSize: 16,
+    marginLeft: 12,
+    flex: 1,
+  },
+  successContinueButton: {
+    backgroundColor: "#4CAF50",
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+    minWidth: 200,
+    alignItems: "center",
+    shadowColor: "#4CAF50",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  successContinueButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  errorContent: {
+    alignItems: "center",
+    paddingTop: 20,
+  },
+  errorAnimationPlaceholder: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "rgba(255, 107, 107, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  errorIcon: {
+    fontSize: 40,
+  },
+  errorTitle: {
+    color: "white",
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  errorSubtitle: {
+    color: "#CCCCCC",
+    fontSize: 16,
+    marginBottom: 32,
+    textAlign: "center",
+    lineHeight: 22,
+  },
+  errorButtonsContainer: {
+    flexDirection: "row",
+    gap: 12,
+    width: "100%",
+  },
+  errorTryAgainButton: {
+    flex: 1,
+    backgroundColor: "#FF6B6B",
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    shadowColor: "#FF6B6B",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  errorTryAgainButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  errorCancelButton: {
+    flex: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+  },
+  errorCancelButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "500",
   },
 });

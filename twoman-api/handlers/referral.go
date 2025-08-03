@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 	"twoman/globals"
+	"twoman/handlers/helpers/matches"
 	"twoman/handlers/helpers/referral"
 	"twoman/handlers/helpers/subscription"
 	"twoman/handlers/response"
@@ -97,6 +98,13 @@ func (h Handler) HandleRedeemReferralCode() http.Handler {
 			if err != nil {
 				log.Println("Error creating friend reward:", err)
 				sentry.CaptureException(err)
+				// Don't fail the request for this
+			}
+
+			// Create friend match so they can chat
+			_, err = matches.CreateFriendMatch(referralRecord.ReferrerID, session.UserID, h.DB(r))
+			if err != nil {
+				log.Printf("Error creating friend match for referral: %v", err)
 				// Don't fail the request for this
 			}
 
@@ -197,7 +205,7 @@ func (h Handler) HandleClaimReferralReward() http.Handler {
 
 			// Get the reward
 			var reward schemas.ReferralReward
-			err = h.DB(r).Where("id = ? AND user_id = ? AND status = ?", 
+			err = h.DB(r).Where("id = ? AND user_id = ? AND status = ?",
 				uint(rewardId), session.UserID, schemas.RewardStatusEligible).First(&reward).Error
 			if err != nil {
 				log.Println("Error getting reward:", err)
@@ -265,7 +273,7 @@ func (h Handler) HandleGetAvailableRewards() http.Handler {
 		switch clientVersion {
 		default:
 			var rewards []schemas.ReferralReward
-			err := h.DB(r).Where("user_id = ? AND status = ?", 
+			err := h.DB(r).Where("user_id = ? AND status = ?",
 				session.UserID, schemas.RewardStatusEligible).Find(&rewards).Error
 			if err != nil {
 				log.Println("Error getting rewards:", err)

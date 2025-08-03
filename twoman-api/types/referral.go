@@ -9,6 +9,7 @@ type ReferralStats struct {
 	AvailableRewards int    `json:"available_rewards"` // Number of unclaimed rewards
 	RewardThreshold  int    `json:"reward_threshold"`  // Total referrals needed for reward
 	WasReferred      bool   `json:"was_referred"`      // Whether this user was referred by someone
+	CanRedeemCode    bool   `json:"can_redeem_code"`   // Whether this user can redeem a referral code
 }
 
 // ReferralCodeRequest represents a request to redeem a referral code
