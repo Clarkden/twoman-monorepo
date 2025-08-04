@@ -1,0 +1,30 @@
+name: "deploy"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'twoman-api/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create API subtree and push to dokku
+        run: |
+          # Setup SSH
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H api.twoman.dating >> ~/.ssh/known_hosts
+          
+          # Push only the API directory using git subtree
+          git subtree push --prefix=twoman-api ssh://dokku@api.twoman.dating/api.twoman.dating main || \
+          git push ssh://dokku@api.twoman.dating/api.twoman.dating `git subtree split --prefix=twoman-api main`:main --force
