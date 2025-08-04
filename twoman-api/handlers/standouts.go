@@ -11,6 +11,10 @@ import (
 	"twoman/types"
 )
 
+const (
+	MAX_STANDOUTS_LIMIT = 5
+)
+
 // HandleGetUserStarBalance returns the current star balance for authenticated user
 func (h Handler) HandleGetUserStarBalance() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -33,9 +37,7 @@ func (h Handler) HandleGetDuoStandouts() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session := r.Context().Value(globals.SessionMiddlewareKey).(*types.Session)
 
-		limit := 5
-
-		duoStandouts, err := standouts.GetDuoStandouts(session.UserID, limit, h.DB(r))
+		duoStandouts, err := standouts.GetDuoStandouts(session.UserID, MAX_STANDOUTS_LIMIT, h.DB(r))
 		if err != nil {
 			response.InternalServerError(w, err, "Failed to get duo standouts")
 			return
