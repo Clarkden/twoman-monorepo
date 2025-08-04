@@ -22,3 +22,4 @@ jobs:
           branch: main
           git_remote_url: "ssh://dokku@api.twoman.dating/api.twoman.dating"
           ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          git_push_flags: '--force'
