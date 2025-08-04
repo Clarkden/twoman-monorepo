@@ -50,9 +50,19 @@ import {
 } from "@/utils/subscription";
 
 async function presentPaywall(): Promise<boolean> {
-  console.log("Starting presentPaywall function");
+  console.log("Starting presentPaywall function for settings");
   try {
-    const paywallResult: PAYWALL_RESULT = await RevenueCatUI.presentPaywall();
+    // Get offerings to present "2 Man Pro" offering specifically
+    const offerings = await Purchases.getOfferings();
+    const proOffering = offerings.all["2 Man Pro"] || offerings.current;
+
+    console.log(
+      "Presenting Pro paywall with offering:",
+      proOffering?.identifier || "current",
+    );
+    const paywallResult: PAYWALL_RESULT = proOffering
+      ? await RevenueCatUI.presentPaywall({ offering: proOffering })
+      : await RevenueCatUI.presentPaywall();
     console.log("Paywall result received:", paywallResult);
 
     switch (paywallResult) {

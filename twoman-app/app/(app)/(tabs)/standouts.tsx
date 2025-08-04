@@ -6,15 +6,18 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
-  RefreshControl,
   ActivityIndicator,
 } from "react-native";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
+import Purchases from "react-native-purchases";
 import { FontAwesome } from "@expo/vector-icons";
 import DuoStandoutCard from "../../../components/DuoStandoutCard";
 import SoloStandoutCard from "../../../components/SoloStandoutCard";
 import SelectFriendMenu from "../../../components/SelectFriendMenu";
-import { SoloStarAnimation, DuoStarAnimation } from "../../../components/StarAnimations";
+import {
+  SoloStarAnimation,
+  DuoStarAnimation,
+} from "../../../components/StarAnimations";
 import apiFetch from "../../../utils/fetch";
 import {
   mainBackgroundColor,
@@ -24,6 +27,14 @@ import {
 import { Profile, Friendship } from "../../../types/api";
 import { useSession } from "../../../stores/auth";
 import useWebSocket from "../../../hooks/useWebsocket";
+import {
+  useStarBalance,
+  useStarBalanceLoading,
+  useFetchStarBalance,
+  useRefreshStarBalance,
+  useDeductStars,
+} from "../../../stores/subscription";
+import { AppState } from "react-native";
 
 interface DuoStandout {
   id: number;
@@ -48,25 +59,34 @@ interface StarsBalance {
 export default function StandoutsScreen() {
   const [duoStandouts, setDuoStandouts] = useState<DuoStandout[]>([]);
   const [soloStandouts, setSoloStandouts] = useState<SoloStandout[]>([]);
-  const [starsBalance, setStarsBalance] = useState<number>(0);
+  // Use centralized star balance from store
+  const starsBalance = useStarBalance();
+  const starBalanceLoading = useStarBalanceLoading();
+  const fetchStarBalance = useFetchStarBalance();
+  const refreshStarBalance = useRefreshStarBalance();
+  const deductStars = useDeductStars();
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+
   const [sendingLike, setSendingLike] = useState<string | null>(null);
   const [friends, setFriends] = useState<Friendship[]>([]);
   const [showFriendMenu, setShowFriendMenu] = useState(false);
-  const [pendingDuoStandout, setPendingDuoStandout] = useState<{ profile1Id: number; profile2Id: number; starsCost: number } | null>(null);
+  const [pendingDuoStandout, setPendingDuoStandout] = useState<{
+    profile1Id: number;
+    profile2Id: number;
+    starsCost: number;
+  } | null>(null);
   const [showSoloStarAnimation, setShowSoloStarAnimation] = useState(false);
   const [showDuoStarAnimation, setShowDuoStarAnimation] = useState(false);
   const [paywallVisible, setPaywallVisible] = useState(false);
   const userId = useSession((state) => state.session?.user_id);
   const { sendMessage } = useWebSocket();
+  // lastRefreshTime removed - refresh logic now handled globally in (app)/_layout.tsx
 
   const fetchStandouts = async () => {
     try {
-      const [duoResponse, soloResponse, starsResponse, friendsResponse] = await Promise.all([
+      const [duoResponse, soloResponse, friendsResponse] = await Promise.all([
         apiFetch("/standouts/duo"),
         apiFetch("/standouts/solo"),
-        apiFetch("/stars/balance"),
         apiFetch("/friends"),
       ]);
 
@@ -78,19 +98,17 @@ export default function StandoutsScreen() {
         setSoloStandouts((soloResponse.data as any)?.solo_standouts || []);
       }
 
-      if (starsResponse.success) {
-        setStarsBalance((starsResponse.data as any)?.balance || 0);
-      }
-
       if (friendsResponse.success) {
         setFriends((friendsResponse.data as any)?.friends || []);
       }
+
+      // Fetch star balance from store
+      await fetchStarBalance();
     } catch (error) {
       console.error("Error fetching standouts:", error);
       Alert.alert("Error", "Failed to load standouts. Please try again.");
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
@@ -98,15 +116,22 @@ export default function StandoutsScreen() {
     fetchStandouts();
   }, []);
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchStandouts();
-  };
+  // Star balance refresh is now handled globally in (app)/_layout.tsx
 
   const presentPaywall = async (): Promise<boolean> => {
-    console.log("Starting presentPaywall function");
+    console.log("Starting presentPaywall function for standouts");
     try {
-      const paywallResult: PAYWALL_RESULT = await RevenueCatUI.presentPaywall();
+      // Get offerings to present "2 Man Pro" offering specifically
+      const offerings = await Purchases.getOfferings();
+      const proOffering = offerings.all["2 Man Pro"] || offerings.current;
+
+      console.log(
+        "Presenting Pro paywall with offering:",
+        proOffering?.identifier || "current",
+      );
+      const paywallResult: PAYWALL_RESULT = proOffering
+        ? await RevenueCatUI.presentPaywall({ offering: proOffering })
+        : await RevenueCatUI.presentPaywall();
       console.log("Paywall result received:", paywallResult);
 
       switch (paywallResult) {
@@ -135,10 +160,181 @@ export default function StandoutsScreen() {
     }
   };
 
+  const presentStarPaywall = async (): Promise<boolean> => {
+    // Present the star packages paywall (either "Stars" or "5 Stars" offering)
+    try {
+      console.log("Getting offerings for star paywall...");
+      const offerings = await Purchases.getOfferings();
+
+      // Try to find the "Stars" offering first, fallback to "5 Stars"
+      const starOffering = offerings.all["Stars"] || offerings.all["5 Stars"];
+
+      console.log("All available offerings:", Object.keys(offerings.all));
+      console.log("Current offering:", offerings.current?.identifier);
+
+      if (starOffering) {
+        console.log("✅ Found star offering:", starOffering.identifier);
+        console.log(
+          "📦 Available packages:",
+          starOffering.availablePackages.map(
+            (pkg) => `${pkg.identifier} (${pkg.product.identifier})`,
+          ),
+        );
+        console.log(
+          "💰 Package prices:",
+          starOffering.availablePackages.map(
+            (pkg) => `${pkg.identifier}: ${pkg.product.priceString}`,
+          ),
+        );
+
+        // TEMPORARY: Use direct purchase to bypass sandbox auth issues
+        const useDirectPurchase = false; // Set to false to use paywall UI instead
+
+        // TODO: Set back to false once sandbox account is fixed
+
+        if (useDirectPurchase) {
+          console.log(
+            "Using direct purchase method to avoid paywall configuration issues...",
+          );
+          try {
+            // Find the first available star package
+            const starPackage = starOffering.availablePackages[0];
+
+            if (starPackage) {
+              console.log(
+                "Attempting direct purchase of:",
+                starPackage.product.identifier,
+              );
+              const purchaseResult =
+                await Purchases.purchasePackage(starPackage);
+
+              if (purchaseResult.customerInfo.entitlements.active) {
+                await refreshStarBalance();
+                return true;
+              }
+            }
+            // If no star package found or purchase failed, fallback to regular paywall
+            return await presentPaywall();
+          } catch (directPurchaseError) {
+            console.error("Direct purchase failed:", directPurchaseError);
+            return await presentPaywall();
+          }
+        } else {
+          // Use normal paywall (once configuration is fixed)
+          try {
+            const paywallResult: PAYWALL_RESULT =
+              await RevenueCatUI.presentPaywall({
+                offering: starOffering,
+              });
+
+            switch (paywallResult) {
+              case PAYWALL_RESULT.PURCHASED:
+              case PAYWALL_RESULT.RESTORED:
+                // Refresh star balance immediately after purchase
+                await refreshStarBalance();
+                return true;
+              default:
+                return false;
+            }
+          } catch (paywallError) {
+            console.error("Star paywall presentation failed:", paywallError);
+            console.log(
+              "Error details:",
+              JSON.stringify(paywallError, null, 2),
+            );
+            console.log(
+              "Paywall error type:",
+              paywallError instanceof Error
+                ? paywallError.message
+                : String(paywallError),
+            );
+
+            // If it's a localization error, try to present without localization validation
+            const errorMessage =
+              paywallError instanceof Error
+                ? paywallError.message
+                : String(paywallError);
+            if (
+              errorMessage.includes("localization") ||
+              errorMessage.includes("NtbQt2381G")
+            ) {
+              console.log(
+                "Detected localization error, trying alternative approach...",
+              );
+              try {
+                // Try presenting with displayCloseButton: false to avoid problematic components
+                const altPaywallResult: PAYWALL_RESULT =
+                  await RevenueCatUI.presentPaywall({
+                    offering: starOffering,
+                    displayCloseButton: false,
+                  });
+
+                switch (altPaywallResult) {
+                  case PAYWALL_RESULT.PURCHASED:
+                  case PAYWALL_RESULT.RESTORED:
+                    await refreshStarBalance();
+                    return true;
+                  default:
+                    break;
+                }
+              } catch (altError) {
+                console.error("Alternative paywall also failed:", altError);
+              }
+            }
+
+            console.log("Falling back to direct product purchase...");
+
+            // Try direct product purchase as fallback
+            try {
+              // Find the first star product to purchase
+              const starPackage =
+                starOffering.availablePackages.find((pkg) =>
+                  pkg.product.identifier.includes("star"),
+                ) || starOffering.availablePackages[0];
+
+              if (starPackage) {
+                console.log(
+                  "Attempting direct purchase of:",
+                  starPackage.product.identifier,
+                );
+                const purchaseResult =
+                  await Purchases.purchasePackage(starPackage);
+
+                if (purchaseResult.customerInfo.entitlements.active) {
+                  await refreshStarBalance();
+                  return true;
+                }
+              }
+            } catch (directPurchaseError) {
+              console.error(
+                "Direct purchase also failed:",
+                directPurchaseError,
+              );
+            }
+
+            console.log(
+              "All star purchase methods failed, presenting regular paywall...",
+            );
+            return await presentPaywall();
+          }
+        }
+      } else {
+        console.log("❌ No star offering found!");
+        console.log("Available offerings:", Object.keys(offerings.all));
+        console.log("Looking for: 'Stars' or '5 Stars'");
+        console.log("Falling back to default paywall...");
+        return await presentPaywall();
+      }
+    } catch (error) {
+      console.error("Error getting offerings for star paywall:", error);
+      return await presentPaywall();
+    }
+  };
+
   const handleSendDuoLike = async (
     profile1Id: number,
     profile2Id: number,
-    starsCost: number
+    starsCost: number,
   ) => {
     // Always show friend selection menu first for duo likes
     setPendingDuoStandout({ profile1Id, profile2Id, starsCost });
@@ -153,28 +349,48 @@ export default function StandoutsScreen() {
 
     // Check if user has enough stars
     if (starsBalance < starsCost) {
+      console.log(
+        `⚠️ Insufficient stars: need ${starsCost}, have ${starsBalance}`,
+      );
       Alert.alert(
         "Insufficient Stars",
         `You need ${starsCost} star to send this like, but you only have ${starsBalance}. Would you like to purchase more stars?`,
         [
-          { text: "Cancel", style: "cancel", onPress: () => setPendingDuoStandout(null) },
+          {
+            text: "Cancel",
+            style: "cancel",
+            onPress: () => {
+              console.log("❌ User cancelled star purchase");
+              setPendingDuoStandout(null);
+            },
+          },
           {
             text: "Buy Stars",
             onPress: async () => {
-              if (paywallVisible) return;
+              console.log("💳 User tapped Buy Stars button");
+              if (paywallVisible) {
+                console.log("⚠️ Paywall already visible, skipping");
+                return;
+              }
               setPaywallVisible(true);
-              const paywallResult = await presentPaywall();
+              console.log("🚀 Presenting star paywall...");
+              const paywallResult = await presentStarPaywall();
               setPaywallVisible(false);
               if (paywallResult) {
                 // Refresh star balance after purchase
                 await fetchStandouts();
                 // Retry the operation
-                await sendDuoStandoutLike(friendId, profile1Id, profile2Id, starsCost);
+                await sendDuoStandoutLike(
+                  friendId,
+                  profile1Id,
+                  profile2Id,
+                  starsCost,
+                );
               }
               setPendingDuoStandout(null);
             },
           },
-        ]
+        ],
       );
       return;
     }
@@ -183,7 +399,12 @@ export default function StandoutsScreen() {
     setPendingDuoStandout(null);
   };
 
-  const sendDuoStandoutLike = async (friendId: number, profile1Id: number, profile2Id: number, starsCost: number) => {
+  const sendDuoStandoutLike = async (
+    friendId: number,
+    profile1Id: number,
+    profile2Id: number,
+    starsCost: number,
+  ) => {
     const likeKey = `duo-${profile1Id}-${profile2Id}`;
     setSendingLike(likeKey);
 
@@ -202,16 +423,14 @@ export default function StandoutsScreen() {
       });
 
       // Update local state optimistically
-      setStarsBalance((prev) => prev - starsCost);
+      deductStars(starsCost);
       setShowDuoStarAnimation(true);
       // Remove the duo from the list since they can't send another like
       setDuoStandouts((prev) =>
         prev.filter(
           (duo) =>
-            !(
-              duo.profile1_id === profile1Id && duo.profile2_id === profile2Id
-            )
-        )
+            !(duo.profile1_id === profile1Id && duo.profile2_id === profile2Id),
+        ),
       );
     } catch (error) {
       console.error("Error sending duo like:", error);
@@ -223,17 +442,29 @@ export default function StandoutsScreen() {
 
   const handleSendSoloLike = async (profileId: number, starsCost: number) => {
     if (starsBalance < starsCost) {
+      console.log(
+        `⚠️ Solo - Insufficient stars: need ${starsCost}, have ${starsBalance}`,
+      );
       Alert.alert(
         "Insufficient Stars",
         `You need ${starsCost} star to send this like, but you only have ${starsBalance}. Would you like to purchase more stars?`,
         [
-          { text: "Cancel", style: "cancel" },
+          {
+            text: "Cancel",
+            style: "cancel",
+            onPress: () => console.log("❌ User cancelled solo star purchase"),
+          },
           {
             text: "Buy Stars",
             onPress: async () => {
-              if (paywallVisible) return;
+              console.log("💳 User tapped Buy Stars (solo)");
+              if (paywallVisible) {
+                console.log("⚠️ Paywall already visible, skipping");
+                return;
+              }
               setPaywallVisible(true);
-              const paywallResult = await presentPaywall();
+              console.log("🚀 Presenting star paywall (solo)...");
+              const paywallResult = await presentStarPaywall();
               setPaywallVisible(false);
               if (paywallResult) {
                 // Refresh star balance after purchase
@@ -243,7 +474,7 @@ export default function StandoutsScreen() {
               }
             },
           },
-        ]
+        ],
       );
       return;
     }
@@ -269,15 +500,18 @@ export default function StandoutsScreen() {
       });
 
       // Update local state optimistically
-      setStarsBalance((prev) => prev - starsCost);
+      deductStars(starsCost);
       setShowSoloStarAnimation(true);
       // Remove the profile from the list since they can't send another like
       setSoloStandouts((prev) =>
-        prev.filter((solo) => solo.profile_id !== profileId)
+        prev.filter((solo) => solo.profile_id !== profileId),
       );
     } catch (error) {
       console.error("Error sending solo standout like:", error);
-      Alert.alert("Error", "Failed to send solo standout like. Please try again.");
+      Alert.alert(
+        "Error",
+        "Failed to send solo standout like. Please try again.",
+      );
     } finally {
       setSendingLike(null);
     }
@@ -295,9 +529,6 @@ export default function StandoutsScreen() {
   return (
     <View style={styles.container}>
       <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
@@ -367,8 +598,9 @@ export default function StandoutsScreen() {
         <View style={styles.infoSection}>
           <Text style={styles.infoTitle}>How Standouts Work</Text>
           <Text style={styles.infoText}>
-            • All standout likes cost 1 star{"\n"}• Your like appears at the top of their likes{"\n"}• Standouts
-            refresh weekly with new nearby profiles
+            • All standout likes cost 1 star{"\n"}• Your like appears at the top
+            of their likes{"\n"}• Standouts refresh weekly with new nearby
+            profiles
           </Text>
         </View>
       </ScrollView>
@@ -392,7 +624,7 @@ export default function StandoutsScreen() {
           setShowSoloStarAnimation(false);
           Alert.alert(
             "Success",
-            "Solo standout like sent! You'll appear at the top of their likes."
+            "Solo standout like sent! You'll appear at the top of their likes.",
           );
         }}
       />
@@ -403,7 +635,7 @@ export default function StandoutsScreen() {
           setShowDuoStarAnimation(false);
           Alert.alert(
             "Success",
-            "Duo standout like sent! You'll appear at the top of their likes."
+            "Duo standout like sent! You'll appear at the top of their likes.",
           );
         }}
       />

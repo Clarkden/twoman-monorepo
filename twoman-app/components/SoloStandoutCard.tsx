@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,12 +8,15 @@ import {
   ActivityIndicator,
   Image,
   Dimensions,
-} from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
-import { secondaryBackgroundColor, mainPurple } from '../constants/globalStyles';
-import { Profile } from '../types/api';
+} from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import {
+  secondaryBackgroundColor,
+  mainPurple,
+} from "../constants/globalStyles";
+import { Profile } from "../types/api";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 interface SoloStandoutCardProps {
   profile: Profile;
@@ -34,7 +37,12 @@ const SoloStandoutCard: React.FC<SoloStandoutCardProps> = ({
   const [imageIndex, setImageIndex] = useState(0);
 
   const getProfileImages = (profile: Profile) => {
-    return [profile.image1, profile.image2, profile.image3, profile.image4].filter(Boolean);
+    return [
+      profile.image1,
+      profile.image2,
+      profile.image3,
+      profile.image4,
+    ].filter(Boolean);
   };
 
   const profileImages = getProfileImages(profile);
@@ -53,8 +61,10 @@ const SoloStandoutCard: React.FC<SoloStandoutCardProps> = ({
       </View>
 
       {/* Image Carousel */}
-      <TouchableOpacity 
-        onPress={() => setImageIndex((prev) => (prev + 1) % profileImages.length)}
+      <TouchableOpacity
+        onPress={() =>
+          setImageIndex((prev) => (prev + 1) % profileImages.length)
+        }
         style={styles.imageContainer}
       >
         {profileImages[imageIndex] ? (
@@ -68,7 +78,7 @@ const SoloStandoutCard: React.FC<SoloStandoutCardProps> = ({
             <FontAwesome name="user" size={60} color="#7f7985" />
           </View>
         )}
-        
+
         {/* Image indicators */}
         {profileImages.length > 1 && (
           <View style={styles.imageIndicators}>
@@ -103,9 +113,7 @@ const SoloStandoutCard: React.FC<SoloStandoutCardProps> = ({
         ) : (
           <>
             <FontAwesome name="star" size={16} color="white" />
-            <Text style={styles.sendButtonText}>
-              Send Star
-            </Text>
+            <Text style={styles.sendButtonText}>Send Star</Text>
           </>
         )}
       </TouchableOpacity>
@@ -122,25 +130,25 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 20,
   },
   name: {
     fontSize: 22,
-    fontWeight: 'bold',
-    color: 'white',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "white",
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 14,
     color: mainPurple,
-    fontWeight: '600',
+    fontWeight: "600",
     marginTop: 4,
-    textAlign: 'center',
+    textAlign: "center",
   },
   imageContainer: {
-    position: 'relative',
-    alignSelf: 'center',
+    position: "relative",
+    alignSelf: "center",
     marginBottom: 16,
   },
   carouselImage: {
@@ -149,41 +157,41 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   placeholderImage: {
-    backgroundColor: '#7f7985',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#7f7985",
+    justifyContent: "center",
+    alignItems: "center",
   },
   imageIndicators: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 12,
     left: 0,
     right: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     gap: 6,
   },
   indicator: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    backgroundColor: "rgba(255, 255, 255, 0.4)",
   },
   activeIndicator: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
   },
   bioText: {
     fontSize: 15,
-    color: 'white',
+    color: "white",
     lineHeight: 22,
     opacity: 0.9,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 20,
   },
   sendButton: {
     backgroundColor: mainPurple,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 14,
     borderRadius: 12,
     gap: 8,
@@ -192,9 +200,9 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   sendButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
 

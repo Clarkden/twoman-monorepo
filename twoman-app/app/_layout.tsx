@@ -5,10 +5,11 @@ import React, { useEffect } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import Toast, { ToastConfigParams } from "react-native-toast-message";
 import { accentGray, secondaryBackgroundColor } from "@/constants/globalStyles";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, View, AppState } from "react-native";
 import appsFlyer from "react-native-appsflyer";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as Sentry from "@sentry/react-native";
+// Star balance management moved to (app)/_layout.tsx where RevenueCat is configured
 
 Sentry.init({
   dsn: "https://712986772afb4d1f15186c40cdf55a97@o4509483335942144.ingest.us.sentry.io/4509483342757888",
@@ -68,6 +69,8 @@ export default Sentry.wrap(function Root() {
     ...FontAwesome.font,
   });
 
+  // Star balance hooks moved to (app)/_layout.tsx
+
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
@@ -84,6 +87,8 @@ export default Sentry.wrap(function Root() {
       timeToWaitForATTUserAuthorization: 10, //for iOS 14.5
     });
   }, []);
+
+  // Star balance refresh logic moved to (app)/_layout.tsx where RevenueCat is configured
 
   if (!loaded) {
     return null;

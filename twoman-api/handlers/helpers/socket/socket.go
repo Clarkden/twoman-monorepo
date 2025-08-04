@@ -12,7 +12,7 @@ import (
 	"twoman/handlers/helpers/matches"
 	"twoman/handlers/helpers/notifications"
 	"twoman/handlers/helpers/profile"
-	"twoman/handlers/helpers/standouts"
+	"twoman/handlers/helpers/revenuecat"
 	"twoman/handlers/helpers/user"
 	"twoman/schemas"
 	"twoman/types"
@@ -467,7 +467,7 @@ func (s Handler) HandleProfile(socketMessage types.SocketMessage[types.SocketPro
 			// Handle standout likes differently - they don't count towards daily limits and require star payment
 			if profileData.IsStandout {
 				// Check if user has enough stars
-				balance, err := standouts.GetUserStarBalance(userId, db)
+				balance, err := revenuecat.GetUserStarBalance(userId, db)
 				if err != nil {
 					log.Println("Error getting user star balance:", err)
 					sendErrorResponse(userId, "Error processing standout like", rdb, db)
@@ -490,7 +490,7 @@ func (s Handler) HandleProfile(socketMessage types.SocketMessage[types.SocketPro
 				if profileData.IsDuo {
 					transactionDescription = "Sent duo standout like"
 				}
-				if err := standouts.UpdateUserStarBalance(userId, -starsCost, "standout_like", transactionDescription, db); err != nil {
+				if err := revenuecat.UpdateUserStarBalance(userId, -starsCost, "standout_like", transactionDescription, db); err != nil {
 					log.Println("Error updating star balance:", err)
 					sendErrorResponse(userId, "Error processing standout like", rdb, db)
 					sentry.CaptureException(err)

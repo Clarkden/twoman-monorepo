@@ -9,11 +9,15 @@ import { updatePushToken } from "@/utils/user";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
-import { Platform, TouchableOpacity } from "react-native";
+import { Platform, TouchableOpacity, AppState } from "react-native";
 import Purchases from "react-native-purchases";
 import { ConnectionStatusOverlay } from "@/components/ConnectionStatusOverlay";
 import { useSession } from "@/stores/auth";
-import { useSubscriptionStore } from "@/stores/subscription";
+import {
+  useSubscriptionStore,
+  useFetchStarBalance,
+  useRefreshStarBalance,
+} from "@/stores/subscription";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -43,6 +47,8 @@ export default function RootLayout() {
 
   // Get subscription store
   const { fetchSubscriptionStatus } = useSubscriptionStore();
+  const fetchStarBalance = useFetchStarBalance();
+  const refreshStarBalance = useRefreshStarBalance();
 
   useEffect(() => {
     Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
@@ -58,8 +64,39 @@ export default function RootLayout() {
         "User ID available in root layout, fetching subscription status...",
       );
       fetchSubscriptionStatus();
+
+      // Also fetch star balance now that RevenueCat is configured
+      fetchStarBalance();
     }
-  }, [userId, fetchSubscriptionStatus]);
+  }, [userId, fetchSubscriptionStatus, fetchStarBalance]);
+
+  // Global star balance refresh logic (after RevenueCat is configured)
+  useEffect(() => {
+    if (!userId) return;
+
+    // Set up periodic refresh every 2 minutes
+    const intervalId = setInterval(() => {
+      refreshStarBalance();
+    }, 120000); // 2 minutes
+
+    // Set up app state listener for foreground refresh
+    const handleAppStateChange = (nextAppState: string) => {
+      if (nextAppState === "active") {
+        console.log("App became active, refreshing star balance...");
+        refreshStarBalance();
+      }
+    };
+
+    const subscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange,
+    );
+
+    return () => {
+      clearInterval(intervalId);
+      subscription?.remove();
+    };
+  }, [userId, refreshStarBalance]);
 
   useEffect(() => {
     registerForPushNotificationsAsync().then((token) => {

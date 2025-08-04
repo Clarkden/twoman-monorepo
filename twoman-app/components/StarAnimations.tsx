@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
+import React, { useEffect } from "react";
+import { View, StyleSheet, Dimensions } from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -9,34 +9,37 @@ import Animated, {
   withSequence,
   withDelay,
   runOnJS,
-} from 'react-native-reanimated';
-import { mainPurple, goldYellow } from '../constants/globalStyles';
+} from "react-native-reanimated";
+import { mainPurple, goldYellow } from "../constants/globalStyles";
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
 
 interface StarAnimationProps {
   visible: boolean;
   onAnimationComplete: () => void;
 }
 
-export function SoloStarAnimation({ visible, onAnimationComplete }: StarAnimationProps) {
+export function SoloStarAnimation({
+  visible,
+  onAnimationComplete,
+}: StarAnimationProps) {
   const backgroundOpacity = useSharedValue(0);
   const starScale = useSharedValue(0);
   const starOpacity = useSharedValue(0);
   const starRotation = useSharedValue(0);
   const flashOpacity = useSharedValue(0);
-  
+
   // Particle effects
   const particle1Scale = useSharedValue(0);
   const particle1X = useSharedValue(0);
   const particle1Y = useSharedValue(0);
   const particle1Opacity = useSharedValue(0);
-  
+
   const particle2Scale = useSharedValue(0);
   const particle2X = useSharedValue(0);
   const particle2Y = useSharedValue(0);
   const particle2Opacity = useSharedValue(0);
-  
+
   const particle3Scale = useSharedValue(0);
   const particle3X = useSharedValue(0);
   const particle3Y = useSharedValue(0);
@@ -66,7 +69,7 @@ export function SoloStarAnimation({ visible, onAnimationComplete }: StarAnimatio
       // PHASE 1: Flash effect
       flashOpacity.value = withSequence(
         withTiming(1, { duration: 50, easing: Easing.out(Easing.quad) }),
-        withTiming(0, { duration: 150, easing: Easing.out(Easing.quad) })
+        withTiming(0, { duration: 150, easing: Easing.out(Easing.quad) }),
       );
 
       backgroundOpacity.value = withTiming(0.6, {
@@ -79,10 +82,13 @@ export function SoloStarAnimation({ visible, onAnimationComplete }: StarAnimatio
         duration: 200,
         easing: Easing.out(Easing.back(1.7)),
       });
-      
+
       starScale.value = withSequence(
-        withTiming(1.5, { duration: 300, easing: Easing.out(Easing.back(1.7)) }),
-        withTiming(1, { duration: 200, easing: Easing.out(Easing.quad) })
+        withTiming(1.5, {
+          duration: 300,
+          easing: Easing.out(Easing.back(1.7)),
+        }),
+        withTiming(1, { duration: 200, easing: Easing.out(Easing.quad) }),
       );
 
       starRotation.value = withTiming(360, {
@@ -95,38 +101,65 @@ export function SoloStarAnimation({ visible, onAnimationComplete }: StarAnimatio
         // Particle 1 - top right
         particle1Opacity.value = withSequence(
           withTiming(1, { duration: 100 }),
-          withDelay(400, withTiming(0, { duration: 300 }))
+          withDelay(400, withTiming(0, { duration: 300 })),
         );
         particle1Scale.value = withSequence(
-          withTiming(1, { duration: 200, easing: Easing.out(Easing.back(1.5)) }),
-          withTiming(0.5, { duration: 300, easing: Easing.out(Easing.quad) })
+          withTiming(1, {
+            duration: 200,
+            easing: Easing.out(Easing.back(1.5)),
+          }),
+          withTiming(0.5, { duration: 300, easing: Easing.out(Easing.quad) }),
         );
-        particle1X.value = withTiming(80, { duration: 500, easing: Easing.out(Easing.quad) });
-        particle1Y.value = withTiming(-60, { duration: 500, easing: Easing.out(Easing.quad) });
+        particle1X.value = withTiming(80, {
+          duration: 500,
+          easing: Easing.out(Easing.quad),
+        });
+        particle1Y.value = withTiming(-60, {
+          duration: 500,
+          easing: Easing.out(Easing.quad),
+        });
 
         // Particle 2 - left
         particle2Opacity.value = withSequence(
           withTiming(1, { duration: 100 }),
-          withDelay(350, withTiming(0, { duration: 300 }))
+          withDelay(350, withTiming(0, { duration: 300 })),
         );
         particle2Scale.value = withSequence(
-          withTiming(1, { duration: 180, easing: Easing.out(Easing.back(1.5)) }),
-          withTiming(0.5, { duration: 320, easing: Easing.out(Easing.quad) })
+          withTiming(1, {
+            duration: 180,
+            easing: Easing.out(Easing.back(1.5)),
+          }),
+          withTiming(0.5, { duration: 320, easing: Easing.out(Easing.quad) }),
         );
-        particle2X.value = withTiming(-70, { duration: 500, easing: Easing.out(Easing.quad) });
-        particle2Y.value = withTiming(20, { duration: 500, easing: Easing.out(Easing.quad) });
+        particle2X.value = withTiming(-70, {
+          duration: 500,
+          easing: Easing.out(Easing.quad),
+        });
+        particle2Y.value = withTiming(20, {
+          duration: 500,
+          easing: Easing.out(Easing.quad),
+        });
 
         // Particle 3 - bottom
         particle3Opacity.value = withSequence(
           withTiming(1, { duration: 100 }),
-          withDelay(400, withTiming(0, { duration: 300 }))
+          withDelay(400, withTiming(0, { duration: 300 })),
         );
         particle3Scale.value = withSequence(
-          withTiming(1, { duration: 220, easing: Easing.out(Easing.back(1.5)) }),
-          withTiming(0.5, { duration: 280, easing: Easing.out(Easing.quad) })
+          withTiming(1, {
+            duration: 220,
+            easing: Easing.out(Easing.back(1.5)),
+          }),
+          withTiming(0.5, { duration: 280, easing: Easing.out(Easing.quad) }),
         );
-        particle3X.value = withTiming(20, { duration: 500, easing: Easing.out(Easing.quad) });
-        particle3Y.value = withTiming(80, { duration: 500, easing: Easing.out(Easing.quad) });
+        particle3X.value = withTiming(20, {
+          duration: 500,
+          easing: Easing.out(Easing.quad),
+        });
+        particle3Y.value = withTiming(80, {
+          duration: 500,
+          easing: Easing.out(Easing.quad),
+        });
       }, 200);
 
       // PHASE 4: Fade out and complete
@@ -139,7 +172,7 @@ export function SoloStarAnimation({ visible, onAnimationComplete }: StarAnimatio
           duration: 300,
           easing: Easing.out(Easing.quad),
         });
-        
+
         setTimeout(() => {
           runOnJS(onAnimationComplete)();
         }, 300);
@@ -196,24 +229,24 @@ export function SoloStarAnimation({ visible, onAnimationComplete }: StarAnimatio
     <View style={styles.container}>
       {/* Background overlay */}
       <Animated.View style={[styles.background, backgroundStyle]} />
-      
+
       {/* Flash effect */}
       <Animated.View style={[styles.flash, flashStyle]} />
-      
+
       {/* Main star */}
       <Animated.View style={[styles.centerContainer, starStyle]}>
         <FontAwesome name="star" size={80} color={goldYellow} />
       </Animated.View>
-      
+
       {/* Particles */}
       <Animated.View style={[styles.centerContainer, particle1Style]}>
         <FontAwesome name="star" size={20} color={mainPurple} />
       </Animated.View>
-      
+
       <Animated.View style={[styles.centerContainer, particle2Style]}>
         <FontAwesome name="star" size={16} color={goldYellow} />
       </Animated.View>
-      
+
       <Animated.View style={[styles.centerContainer, particle3Style]}>
         <FontAwesome name="star" size={18} color={mainPurple} />
       </Animated.View>
@@ -221,7 +254,10 @@ export function SoloStarAnimation({ visible, onAnimationComplete }: StarAnimatio
   );
 }
 
-export function DuoStarAnimation({ visible, onAnimationComplete }: StarAnimationProps) {
+export function DuoStarAnimation({
+  visible,
+  onAnimationComplete,
+}: StarAnimationProps) {
   const backgroundOpacity = useSharedValue(0);
   const star1Scale = useSharedValue(0);
   const star1Opacity = useSharedValue(0);
@@ -254,7 +290,7 @@ export function DuoStarAnimation({ visible, onAnimationComplete }: StarAnimation
       // PHASE 1: Flash effect
       flashOpacity.value = withSequence(
         withTiming(1, { duration: 50, easing: Easing.out(Easing.quad) }),
-        withTiming(0, { duration: 150, easing: Easing.out(Easing.quad) })
+        withTiming(0, { duration: 150, easing: Easing.out(Easing.quad) }),
       );
 
       backgroundOpacity.value = withTiming(0.6, {
@@ -273,12 +309,18 @@ export function DuoStarAnimation({ visible, onAnimationComplete }: StarAnimation
       });
 
       star1Scale.value = withSequence(
-        withTiming(1.2, { duration: 300, easing: Easing.out(Easing.back(1.7)) }),
-        withTiming(1, { duration: 200, easing: Easing.out(Easing.quad) })
+        withTiming(1.2, {
+          duration: 300,
+          easing: Easing.out(Easing.back(1.7)),
+        }),
+        withTiming(1, { duration: 200, easing: Easing.out(Easing.quad) }),
       );
       star2Scale.value = withSequence(
-        withTiming(1.2, { duration: 300, easing: Easing.out(Easing.back(1.7)) }),
-        withTiming(1, { duration: 200, easing: Easing.out(Easing.quad) })
+        withTiming(1.2, {
+          duration: 300,
+          easing: Easing.out(Easing.back(1.7)),
+        }),
+        withTiming(1, { duration: 200, easing: Easing.out(Easing.quad) }),
       );
 
       // PHASE 3: Stars move towards center
@@ -306,11 +348,17 @@ export function DuoStarAnimation({ visible, onAnimationComplete }: StarAnimation
       setTimeout(() => {
         connectionOpacity.value = withSequence(
           withTiming(1, { duration: 200, easing: Easing.out(Easing.quad) }),
-          withDelay(300, withTiming(0, { duration: 200, easing: Easing.out(Easing.quad) }))
+          withDelay(
+            300,
+            withTiming(0, { duration: 200, easing: Easing.out(Easing.quad) }),
+          ),
         );
         connectionScale.value = withSequence(
-          withTiming(1, { duration: 300, easing: Easing.out(Easing.back(1.5)) }),
-          withTiming(1.2, { duration: 200, easing: Easing.out(Easing.quad) })
+          withTiming(1, {
+            duration: 300,
+            easing: Easing.out(Easing.back(1.5)),
+          }),
+          withTiming(1.2, { duration: 200, easing: Easing.out(Easing.quad) }),
         );
       }, 500);
 
@@ -328,7 +376,7 @@ export function DuoStarAnimation({ visible, onAnimationComplete }: StarAnimation
           duration: 300,
           easing: Easing.out(Easing.quad),
         });
-        
+
         setTimeout(() => {
           runOnJS(onAnimationComplete)();
         }, 300);
@@ -373,20 +421,20 @@ export function DuoStarAnimation({ visible, onAnimationComplete }: StarAnimation
     <View style={styles.container}>
       {/* Background overlay */}
       <Animated.View style={[styles.background, backgroundStyle]} />
-      
+
       {/* Flash effect */}
       <Animated.View style={[styles.flash, flashStyle]} />
-      
+
       {/* Connection line/sparkle */}
       <Animated.View style={[styles.centerContainer, connectionStyle]}>
         <View style={styles.connectionLine} />
       </Animated.View>
-      
+
       {/* Stars */}
       <Animated.View style={[styles.centerContainer, star1Style]}>
         <FontAwesome name="star" size={60} color={goldYellow} />
       </Animated.View>
-      
+
       <Animated.View style={[styles.centerContainer, star2Style]}>
         <FontAwesome name="star" size={60} color={mainPurple} />
       </Animated.View>
@@ -396,27 +444,27 @@ export function DuoStarAnimation({ visible, onAnimationComplete }: StarAnimation
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     zIndex: 1000,
   },
   background: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
   },
   flash: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: goldYellow,
   },
   centerContainer: {
-    position: 'absolute',
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: "absolute",
+    justifyContent: "center",
+    alignItems: "center",
   },
   connectionLine: {
     width: 100,

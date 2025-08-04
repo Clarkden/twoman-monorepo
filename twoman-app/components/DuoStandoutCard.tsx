@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,18 +8,25 @@ import {
   ActivityIndicator,
   Image,
   Dimensions,
-} from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
-import { secondaryBackgroundColor, mainPurple } from '../constants/globalStyles';
-import { Profile } from '../types/api';
+} from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import {
+  secondaryBackgroundColor,
+  mainPurple,
+} from "../constants/globalStyles";
+import { Profile } from "../types/api";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 interface DuoStandoutCardProps {
   profile1: Profile;
   profile2: Profile;
   matchCount: number;
-  onSendLike: (profile1Id: number, profile2Id: number, starsCost: number) => Promise<void>;
+  onSendLike: (
+    profile1Id: number,
+    profile2Id: number,
+    starsCost: number,
+  ) => Promise<void>;
   isLoading: boolean;
   starsBalance: number;
 }
@@ -37,7 +44,12 @@ const DuoStandoutCard: React.FC<DuoStandoutCardProps> = ({
   const [profile2ImageIndex, setProfile2ImageIndex] = useState(0);
 
   const getProfileImages = (profile: Profile) => {
-    return [profile.image1, profile.image2, profile.image3, profile.image4].filter(Boolean);
+    return [
+      profile.image1,
+      profile.image2,
+      profile.image3,
+      profile.image4,
+    ].filter(Boolean);
   };
 
   const profile1Images = getProfileImages(profile1);
@@ -48,9 +60,14 @@ const DuoStandoutCard: React.FC<DuoStandoutCardProps> = ({
     onSendLike(profile1.user_id, profile2.user_id, starsCost);
   };
 
-  const renderImageCarousel = (images: string[], currentIndex: number, onTap: () => void, name: string) => {
-    const currentImage = images[currentIndex] || '';
-    
+  const renderImageCarousel = (
+    images: string[],
+    currentIndex: number,
+    onTap: () => void,
+    name: string,
+  ) => {
+    const currentImage = images[currentIndex] || "";
+
     return (
       <View style={styles.imageCarouselContainer}>
         <TouchableOpacity onPress={onTap} style={styles.imageContainer}>
@@ -65,7 +82,7 @@ const DuoStandoutCard: React.FC<DuoStandoutCardProps> = ({
               <FontAwesome name="user" size={40} color="#7f7985" />
             </View>
           )}
-          
+
           {/* Image indicators */}
           {images.length > 1 && (
             <View style={styles.imageIndicators}>
@@ -81,7 +98,7 @@ const DuoStandoutCard: React.FC<DuoStandoutCardProps> = ({
             </View>
           )}
         </TouchableOpacity>
-        
+
         <Text style={styles.profileName}>{name}</Text>
       </View>
     );
@@ -91,7 +108,9 @@ const DuoStandoutCard: React.FC<DuoStandoutCardProps> = ({
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>{profile1.name} & {profile2.name}</Text>
+        <Text style={styles.title}>
+          {profile1.name} & {profile2.name}
+        </Text>
         <Text style={styles.subtitle}>Popular duo pair</Text>
       </View>
 
@@ -100,15 +119,17 @@ const DuoStandoutCard: React.FC<DuoStandoutCardProps> = ({
         {renderImageCarousel(
           profile1Images,
           profile1ImageIndex,
-          () => setProfile1ImageIndex((prev) => (prev + 1) % profile1Images.length),
-          profile1.name
+          () =>
+            setProfile1ImageIndex((prev) => (prev + 1) % profile1Images.length),
+          profile1.name,
         )}
-        
+
         {renderImageCarousel(
           profile2Images,
           profile2ImageIndex,
-          () => setProfile2ImageIndex((prev) => (prev + 1) % profile2Images.length),
-          profile2.name
+          () =>
+            setProfile2ImageIndex((prev) => (prev + 1) % profile2Images.length),
+          profile2.name,
         )}
       </View>
 
@@ -123,9 +144,7 @@ const DuoStandoutCard: React.FC<DuoStandoutCardProps> = ({
         ) : (
           <>
             <FontAwesome name="users" size={16} color="white" />
-            <Text style={styles.sendButtonText}>
-              Add your duo partner
-            </Text>
+            <Text style={styles.sendButtonText}>Add your duo partner</Text>
           </>
         )}
       </TouchableOpacity>
@@ -142,33 +161,33 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 20,
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: 'white',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "white",
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 14,
     color: mainPurple,
-    fontWeight: '600',
+    fontWeight: "600",
     marginTop: 4,
   },
   carouselsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 20,
     gap: 12,
   },
   imageCarouselContainer: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
   },
   imageContainer: {
-    position: 'relative',
+    position: "relative",
     marginBottom: 8,
   },
   carouselImage: {
@@ -177,39 +196,39 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   placeholderImage: {
-    backgroundColor: '#7f7985',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#7f7985",
+    justifyContent: "center",
+    alignItems: "center",
   },
   imageIndicators: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 8,
     left: 0,
     right: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     gap: 4,
   },
   indicator: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    backgroundColor: "rgba(255, 255, 255, 0.4)",
   },
   activeIndicator: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
   },
   profileName: {
     fontSize: 16,
-    fontWeight: '600',
-    color: 'white',
-    textAlign: 'center',
+    fontWeight: "600",
+    color: "white",
+    textAlign: "center",
   },
   sendButton: {
     backgroundColor: mainPurple,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 14,
     borderRadius: 12,
     gap: 8,
@@ -218,9 +237,9 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   sendButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
 

@@ -13,6 +13,7 @@ import apiFetch from "@/utils/fetch";
 import { FeatureFlag, Friendship, Match, Message, Profile } from "@/types/api";
 import { messageHandler } from "@/utils/websocket";
 import Toast from "react-native-toast-message";
+import Purchases from "react-native-purchases";
 import {
   mainBackgroundColor,
   secondaryBackgroundColor,
@@ -91,12 +92,13 @@ export default function TabLayout() {
 
   const fetchStarsBalance = async () => {
     try {
-      const response = await apiFetch("/stars/balance");
-      if (response.success) {
-        setStarsBalance((response.data as any)?.balance || 0);
-      }
+      // Get stars from RevenueCat instead of API
+      const virtualCurrencies = await Purchases.getVirtualCurrencies();
+      const starsBalance = virtualCurrencies.all.STR?.balance || 0;
+      setStarsBalance(starsBalance);
     } catch (error) {
-      console.log("Error fetching stars balance:", error);
+      console.log("Error fetching stars balance from RevenueCat:", error);
+      setStarsBalance(0);
     }
   };
 

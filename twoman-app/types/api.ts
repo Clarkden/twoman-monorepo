@@ -156,5 +156,3 @@ export interface SoloStandout {
   is_active: boolean;
   profile: Profile;
 }
-
-

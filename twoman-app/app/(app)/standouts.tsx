@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,17 +8,18 @@ import {
   Alert,
   RefreshControl,
   ActivityIndicator,
-} from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
-import DuoStandoutCard from '../../components/DuoStandoutCard';
-import SoloStandoutCard from '../../components/SoloStandoutCard';
-import apiFetch from '../../utils/fetch';
+} from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import DuoStandoutCard from "../../components/DuoStandoutCard";
+import SoloStandoutCard from "../../components/SoloStandoutCard";
+import apiFetch from "../../utils/fetch";
+import Purchases from "react-native-purchases";
 import {
   mainBackgroundColor,
   secondaryBackgroundColor,
   mainPurple,
-} from '../../constants/globalStyles';
-import { Profile } from '../../types/api';
+} from "../../constants/globalStyles";
+import { Profile } from "../../types/api";
 
 interface DuoStandout {
   id: number;
@@ -47,29 +48,34 @@ export default function StandoutsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [sendingLike, setSendingLike] = useState<string | null>(null);
-  
+
   const fetchStandouts = async () => {
     try {
-      const [duoResponse, soloResponse, starsResponse] = await Promise.all([
-        apiFetch('/standouts/duo'),
-        apiFetch('/standouts/solo'),
-        apiFetch('/stars/balance'),
+      const [duoResponse, soloResponse] = await Promise.all([
+        apiFetch("/standouts/duo"),
+        apiFetch("/standouts/solo"),
       ]);
 
       if (duoResponse.success) {
         setDuoStandouts((duoResponse.data as any)?.duo_standouts || []);
       }
-      
+
       if (soloResponse.success) {
         setSoloStandouts((soloResponse.data as any)?.solo_standouts || []);
       }
-      
-      if (starsResponse.success) {
-        setStarsBalance((starsResponse.data as any)?.balance || 0);
+
+      // Get stars from RevenueCat instead of API
+      try {
+        const virtualCurrencies = await Purchases.getVirtualCurrencies();
+        const starsBalance = virtualCurrencies.all.STR?.balance || 0;
+        setStarsBalance(starsBalance);
+      } catch (error) {
+        console.error("Error fetching stars from RevenueCat:", error);
+        setStarsBalance(0);
       }
     } catch (error) {
-      console.error('Error fetching standouts:', error);
-      Alert.alert('Error', 'Failed to load standouts. Please try again.');
+      console.error("Error fetching standouts:", error);
+      Alert.alert("Error", "Failed to load standouts. Please try again.");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -85,9 +91,16 @@ export default function StandoutsScreen() {
     fetchStandouts();
   };
 
-  const handleSendDuoLike = async (profile1Id: number, profile2Id: number, starsCost: number) => {
+  const handleSendDuoLike = async (
+    profile1Id: number,
+    profile2Id: number,
+    starsCost: number,
+  ) => {
     if (starsBalance < starsCost) {
-      Alert.alert('Insufficient Stars', 'You don\'t have enough stars to send this like.');
+      Alert.alert(
+        "Insufficient Stars",
+        "You don't have enough stars to send this like.",
+      );
       return;
     }
 
@@ -95,8 +108,8 @@ export default function StandoutsScreen() {
     setSendingLike(likeKey);
 
     try {
-      const response = await apiFetch('/standouts/duo/like', {
-        method: 'POST',
+      const response = await apiFetch("/standouts/duo/like", {
+        method: "POST",
         body: {
           target_profile1_id: profile1Id,
           target_profile2_id: profile2Id,
@@ -105,18 +118,26 @@ export default function StandoutsScreen() {
       });
 
       if (response.success) {
-        setStarsBalance(prev => prev - starsCost);
-        Alert.alert('Success', 'Duo standout like sent! You\'ll appear at the top of their likes.');
+        setStarsBalance((prev) => prev - starsCost);
+        Alert.alert(
+          "Success",
+          "Duo standout like sent! You'll appear at the top of their likes.",
+        );
         // Remove the duo from the list since they can't send another like
-        setDuoStandouts(prev => prev.filter(duo => 
-          !(duo.profile1_id === profile1Id && duo.profile2_id === profile2Id)
-        ));
+        setDuoStandouts((prev) =>
+          prev.filter(
+            (duo) =>
+              !(
+                duo.profile1_id === profile1Id && duo.profile2_id === profile2Id
+              ),
+          ),
+        );
       } else {
-        Alert.alert('Error', response.error || 'Failed to send duo like.');
+        Alert.alert("Error", response.error || "Failed to send duo like.");
       }
     } catch (error) {
-      console.error('Error sending duo like:', error);
-      Alert.alert('Error', 'Failed to send duo like. Please try again.');
+      console.error("Error sending duo like:", error);
+      Alert.alert("Error", "Failed to send duo like. Please try again.");
     } finally {
       setSendingLike(null);
     }
@@ -124,7 +145,10 @@ export default function StandoutsScreen() {
 
   const handleSendSoloLike = async (profileId: number, starsCost: number) => {
     if (starsBalance < starsCost) {
-      Alert.alert('Insufficient Stars', 'You don\'t have enough stars to send this like.');
+      Alert.alert(
+        "Insufficient Stars",
+        "You don't have enough stars to send this like.",
+      );
       return;
     }
 
@@ -132,8 +156,8 @@ export default function StandoutsScreen() {
     setSendingLike(likeKey);
 
     try {
-      const response = await apiFetch('/standouts/solo/like', {
-        method: 'POST',
+      const response = await apiFetch("/standouts/solo/like", {
+        method: "POST",
         body: {
           target_profile_id: profileId,
           stars_cost: starsCost,
@@ -141,16 +165,21 @@ export default function StandoutsScreen() {
       });
 
       if (response.success) {
-        setStarsBalance(prev => prev - starsCost);
-        Alert.alert('Success', 'Solo standout like sent! You\'ll appear at the top of their likes.');
+        setStarsBalance((prev) => prev - starsCost);
+        Alert.alert(
+          "Success",
+          "Solo standout like sent! You'll appear at the top of their likes.",
+        );
         // Remove the profile from the list since they can't send another like
-        setSoloStandouts(prev => prev.filter(solo => solo.profile_id !== profileId));
+        setSoloStandouts((prev) =>
+          prev.filter((solo) => solo.profile_id !== profileId),
+        );
       } else {
-        Alert.alert('Error', response.error || 'Failed to send solo like.');
+        Alert.alert("Error", response.error || "Failed to send solo like.");
       }
     } catch (error) {
-      console.error('Error sending solo like:', error);
-      Alert.alert('Error', 'Failed to send solo like. Please try again.');
+      console.error("Error sending solo like:", error);
+      Alert.alert("Error", "Failed to send solo like. Please try again.");
     } finally {
       setSendingLike(null);
     }
@@ -168,7 +197,9 @@ export default function StandoutsScreen() {
   return (
     <View style={styles.container}>
       <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
         showsVerticalScrollIndicator={false}
       >
         {/* Header with star balance */}
@@ -181,7 +212,8 @@ export default function StandoutsScreen() {
         </View>
 
         <Text style={styles.subtitle}>
-          Send priority likes to standout profiles and appear at the top of their likes!
+          Send priority likes to standout profiles and appear at the top of
+          their likes!
         </Text>
 
         {/* Duo Standouts Section */}
@@ -190,7 +222,7 @@ export default function StandoutsScreen() {
           <Text style={styles.sectionSubtitle}>
             Friend pairs with the most matches together
           </Text>
-          
+
           {duoStandouts.length > 0 ? (
             duoStandouts.map((duo) => (
               <DuoStandoutCard
@@ -199,13 +231,17 @@ export default function StandoutsScreen() {
                 profile2={duo.profile2}
                 matchCount={duo.match_count}
                 onSendLike={handleSendDuoLike}
-                isLoading={sendingLike === `duo-${duo.profile1_id}-${duo.profile2_id}`}
+                isLoading={
+                  sendingLike === `duo-${duo.profile1_id}-${duo.profile2_id}`
+                }
                 starsBalance={starsBalance}
               />
             ))
           ) : (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>No duo standouts available right now</Text>
+              <Text style={styles.emptyText}>
+                No duo standouts available right now
+              </Text>
             </View>
           )}
         </View>
@@ -216,7 +252,7 @@ export default function StandoutsScreen() {
           <Text style={styles.sectionSubtitle}>
             Most popular individual profiles
           </Text>
-          
+
           {soloStandouts.length > 0 ? (
             soloStandouts.map((solo) => (
               <SoloStandoutCard
@@ -230,7 +266,9 @@ export default function StandoutsScreen() {
             ))
           ) : (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>No solo standouts available right now</Text>
+              <Text style={styles.emptyText}>
+                No solo standouts available right now
+              </Text>
             </View>
           )}
         </View>
@@ -239,10 +277,9 @@ export default function StandoutsScreen() {
         <View style={styles.infoSection}>
           <Text style={styles.infoTitle}>How Standouts Work</Text>
           <Text style={styles.infoText}>
-            • Duo standouts cost 3-5 stars{'\n'}
-            • Solo standouts cost 1-3 stars{'\n'}
-            • Your like appears at the top of their likes{'\n'}
-            • Standouts refresh daily with new profiles
+            • Duo standouts cost 3-5 stars{"\n"}• Solo standouts cost 1-3 stars
+            {"\n"}• Your like appears at the top of their likes{"\n"}• Standouts
+            refresh daily with new profiles
           </Text>
         </View>
       </ScrollView>
@@ -256,29 +293,29 @@ const styles = StyleSheet.create({
     backgroundColor: mainBackgroundColor,
   },
   loadingContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
-    color: 'white',
+    color: "white",
     marginTop: 10,
     fontSize: 16,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 20,
     paddingBottom: 10,
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
   },
   starsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: secondaryBackgroundColor,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -287,12 +324,12 @@ const styles = StyleSheet.create({
   starsText: {
     color: mainPurple,
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginLeft: 5,
   },
   subtitle: {
     fontSize: 16,
-    color: 'white',
+    color: "white",
     paddingHorizontal: 20,
     paddingBottom: 20,
     opacity: 0.8,
@@ -302,27 +339,27 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 22,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
     paddingHorizontal: 20,
     marginBottom: 5,
   },
   sectionSubtitle: {
     fontSize: 14,
-    color: 'white',
+    color: "white",
     paddingHorizontal: 20,
     marginBottom: 15,
     opacity: 0.7,
   },
   emptyState: {
     padding: 40,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emptyText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
     opacity: 0.6,
-    textAlign: 'center',
+    textAlign: "center",
   },
   infoSection: {
     backgroundColor: secondaryBackgroundColor,
@@ -333,13 +370,13 @@ const styles = StyleSheet.create({
   },
   infoTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
     marginBottom: 10,
   },
   infoText: {
     fontSize: 14,
-    color: 'white',
+    color: "white",
     lineHeight: 20,
     opacity: 0.8,
   },

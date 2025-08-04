@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -9,6 +10,9 @@ import (
 	"strings"
 	"twoman/handlers/helpers/subscription"
 	"twoman/handlers/response"
+	"twoman/schemas"
+
+	"gorm.io/gorm"
 )
 
 func (h Handler) HandleRevenueCatWebhook() http.Handler {
@@ -80,6 +84,17 @@ func (h Handler) HandleRevenueCatWebhook() http.Handler {
 			customerID = appUserID
 		}
 
+		// Store RevenueCat customer ID for the user if not already stored
+		if customerID != "" {
+			err := storeRevenueCatCustomerID(uint(parsedUserId), customerID, h.liveDB)
+			if err != nil {
+				err = storeRevenueCatCustomerID(uint(parsedUserId), customerID, h.demoDB)
+				if err != nil {
+					log.Printf("Error storing RevenueCat customer ID: %v", err)
+				}
+			}
+		}
+
 		switch eventType {
 		case "INITIAL_PURCHASE":
 			log.Println("User", userId, "made an initial purchase")
@@ -126,6 +141,32 @@ func (h Handler) HandleRevenueCatWebhook() http.Handler {
 				}
 			}
 
+		case "VIRTUAL_CURRENCY_TRANSACTION":
+			log.Println("User", userId, "virtual currency transaction")
+			
+			// Handle virtual currency transactions (star purchases)
+			err := handleVirtualCurrencyTransaction(event, uint(parsedUserId), h.liveDB)
+			if err != nil {
+				// Try demo DB
+				err = handleVirtualCurrencyTransaction(event, uint(parsedUserId), h.demoDB)
+				if err != nil {
+					log.Println("Error handling virtual currency transaction:", err)
+					response.InternalServerError(w, err, "Something went wrong")
+					return
+				}
+			}
+
+		case "NON_RENEWING_PURCHASE":
+			// Handle non-renewing purchases (could be star purchases)
+			log.Println("User", userId, "made a non-renewing purchase:", productID)
+			
+			// Check if this is a star purchase by product ID
+			if isStarProduct(productID) {
+				log.Println("Star purchase detected for user", userId)
+				// The virtual currency webhook will handle the actual currency adjustment
+				// This is just for logging/analytics
+			}
+
 		default:
 			log.Println("Unknown event type:", eventType)
 
@@ -133,4 +174,99 @@ func (h Handler) HandleRevenueCatWebhook() http.Handler {
 
 		response.OK(w, "OK")
 	})
+}
+
+// storeRevenueCatCustomerID stores the RevenueCat customer ID for a user
+func storeRevenueCatCustomerID(userID uint, customerID string, db *gorm.DB) error {
+	var user schemas.User
+	if err := db.Where("id = ?", userID).First(&user).Error; err != nil {
+		return err
+	}
+
+	// Only update if it's empty or different
+	if user.RevenuecatCustomerID == "" || user.RevenuecatCustomerID != customerID {
+		user.RevenuecatCustomerID = customerID
+		return db.Save(&user).Error
+	}
+
+	return nil
+}
+
+// handleVirtualCurrencyTransaction processes virtual currency webhook events
+func handleVirtualCurrencyTransaction(event map[string]any, userID uint, db *gorm.DB) error {
+	// Extract adjustments from the event
+	adjustments, ok := event["adjustments"].([]interface{})
+	if !ok {
+		log.Println("No adjustments found in virtual currency transaction")
+		return nil
+	}
+
+	for _, adj := range adjustments {
+		adjustment, ok := adj.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		// Extract currency details
+		currency, ok := adjustment["currency"].(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		currencyCode, ok := currency["code"].(string)
+		if !ok || currencyCode != "STR" {
+			continue // Only process STR (stars) currency
+		}
+
+		// Extract amount
+		amountFloat, ok := adjustment["amount"].(float64)
+		if !ok {
+			continue
+		}
+		amount := int(amountFloat)
+
+		// Extract transaction details
+		virtualCurrencyTransactionID := ""
+		if vcTxID, ok := event["virtual_currency_transaction_id"].(string); ok {
+			virtualCurrencyTransactionID = vcTxID
+		}
+
+		productDisplayName := ""
+		if pdn, ok := event["product_display_name"].(string); ok {
+			productDisplayName = pdn
+		}
+
+		source := ""
+		if src, ok := event["source"].(string); ok {
+			source = src
+		}
+
+		// Record the transaction locally for audit purposes
+		localTransaction := schemas.StarTransactions{
+			UserID:          userID,
+			Amount:          amount,
+			TransactionType: "virtual_currency_webhook",
+			Description:     fmt.Sprintf("RevenueCat virtual currency transaction: %s (source: %s, product: %s)", virtualCurrencyTransactionID, source, productDisplayName),
+		}
+
+		if err := db.Create(&localTransaction).Error; err != nil {
+			log.Printf("Warning: Failed to record local star transaction: %v", err)
+		}
+
+		log.Printf("Processed virtual currency transaction for user %d: %+d STR (source: %s)", userID, amount, source)
+	}
+
+	return nil
+}
+
+// isStarProduct checks if a product ID corresponds to a star purchase
+func isStarProduct(productID string) bool {
+	// Check if the product ID matches known star products
+	starProducts := []string{"stars_5", "stars_10", "stars_15"}
+	for _, starProduct := range starProducts {
+		if productID == starProduct {
+			return true
+		}
+	}
+	return false
 }

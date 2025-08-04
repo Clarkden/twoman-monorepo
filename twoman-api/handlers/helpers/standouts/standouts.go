@@ -81,29 +81,62 @@ func CheckAndRefreshStandouts(userID uint, db *gorm.DB) error {
 	now := time.Now()
 	weekAgo := now.AddDate(0, 0, -7)
 
-	// Use FirstOrCreate to handle the refresh record safely
+	// First try to get existing refresh record
 	var refresh schemas.StandoutRefresh
-	err := db.Where("user_id = ?", userID).FirstOrCreate(&refresh, schemas.StandoutRefresh{
-		UserID:          userID,
-		LastRefreshedAt: now.AddDate(0, 0, -8), // Set to 8 days ago to trigger refresh on first creation
-	}).Error
+	err := db.Where("user_id = ?", userID).First(&refresh).Error
 
 	if err != nil {
-		return err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// Record doesn't exist, try to create it
+			refresh = schemas.StandoutRefresh{
+				UserID:          userID,
+				LastRefreshedAt: now.AddDate(0, 0, -8), // Set to 8 days ago to trigger refresh
+			}
+
+			// Try to create, but handle race condition gracefully
+			if createErr := db.Create(&refresh).Error; createErr != nil {
+				// If creation fails (likely due to race condition), try to get the record again
+				if getErr := db.Where("user_id = ?", userID).First(&refresh).Error; getErr != nil {
+					return fmt.Errorf("failed to create or get refresh record: create=%v, get=%v", createErr, getErr)
+				}
+			}
+		} else {
+			return err
+		}
 	}
 
 	// Check if a week has passed (7 days)
 	needsRefresh := refresh.LastRefreshedAt.Before(weekAgo)
 
 	if needsRefresh {
-		// Refresh standouts
-		if err := RefreshStandoutsForUser(userID, db); err != nil {
+		// Use a transaction to prevent race conditions during refresh
+		tx := db.Begin()
+		defer func() {
+			if r := recover(); r != nil {
+				tx.Rollback()
+			}
+		}()
+
+		// Try to update the refresh timestamp first to claim the refresh operation
+		result := tx.Model(&refresh).Where("user_id = ? AND last_refreshed_at = ?", userID, refresh.LastRefreshedAt).Update("last_refreshed_at", now)
+		if result.Error != nil {
+			tx.Rollback()
+			return result.Error
+		}
+
+		// If no rows were affected, another process already updated it
+		if result.RowsAffected == 0 {
+			tx.Rollback()
+			return nil // Another process is handling the refresh
+		}
+
+		// We successfully claimed the refresh, now do the actual refresh
+		if err := RefreshStandoutsForUser(userID, tx); err != nil {
+			tx.Rollback()
 			return err
 		}
 
-		// Update refresh timestamp
-		refresh.LastRefreshedAt = now
-		if err := db.Save(&refresh).Error; err != nil {
+		if err := tx.Commit().Error; err != nil {
 			return err
 		}
 	}
@@ -140,6 +173,18 @@ func RefreshStandoutsForUser(userID uint, db *gorm.DB) error {
 	if err := tx.Model(&schemas.SoloStandouts{}).Where("is_active = true").Update("is_active", false).Error; err != nil {
 		tx.Rollback()
 		return err
+	}
+
+	// Generate new duo standouts
+	if err := generateDuoStandouts(userID, 10, tx); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to generate duo standouts: %v", err)
+	}
+
+	// Generate new solo standouts
+	if err := generateSoloStandouts(userID, 10, tx); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to generate solo standouts: %v", err)
 	}
 
 	return tx.Commit().Error
@@ -359,4 +404,148 @@ func GetSoloStandouts(userID uint, limit int, db *gorm.DB) ([]schemas.SoloStando
 	}
 
 	return soloStandouts, nil
+}
+
+// generateDuoStandouts creates new duo standouts for a user
+func generateDuoStandouts(userID uint, limit int, db *gorm.DB) error {
+	// Get user's profile for location filtering
+	var userProfile schemas.Profile
+	if err := db.Where("user_id = ?", userID).First(&userProfile).Error; err != nil {
+		return fmt.Errorf("failed to get user profile: %v", err)
+	}
+
+	// Get user's location point for distance calculation
+	userLocationWKT := fmt.Sprintf("POINT(%f %f)",
+		userProfile.LocationPoint.Point.Coords()[0],
+		userProfile.LocationPoint.Point.Coords()[1])
+
+	// Query to find friend pairs within distance
+	query := `
+		SELECT 
+			f1.profile_id as profile1_id,
+			f1.friend_id as profile2_id,
+			COUNT(DISTINCT m.id) as match_count
+		FROM friendships f1
+		JOIN friendships f2 ON f1.profile_id = f2.friend_id AND f1.friend_id = f2.profile_id
+		JOIN profiles p1 ON f1.profile_id = p1.user_id
+		JOIN profiles p2 ON f1.friend_id = p2.user_id
+		LEFT JOIN matches m ON (
+			(m.profile1_id = f1.profile_id AND m.profile2_id = f1.friend_id AND m.is_duo = true AND m.status = 'accepted')
+			OR
+			(m.profile1_id = f1.friend_id AND m.profile2_id = f1.profile_id AND m.is_duo = true AND m.status = 'accepted')
+		)
+		WHERE f1.accepted = true 
+		AND f2.accepted = true
+		AND f1.profile_id != ? 
+		AND f1.friend_id != ?
+		AND f1.profile_id < f1.friend_id -- Avoid duplicates
+		AND (ST_Distance_Sphere(p1.location_point, ST_GeomFromText(?)) <= ? * 1000
+		     OR ST_Distance_Sphere(p2.location_point, ST_GeomFromText(?)) <= ? * 1000)
+		GROUP BY f1.profile_id, f1.friend_id
+		ORDER BY match_count DESC, RAND()
+		LIMIT ?
+	`
+
+	type DuoResult struct {
+		Profile1ID uint `json:"profile1_id"`
+		Profile2ID uint `json:"profile2_id"`
+		MatchCount int  `json:"match_count"`
+	}
+
+	var results []DuoResult
+	if err := db.Raw(query, userID, userID, userLocationWKT, userProfile.PreferredDistanceMax, userLocationWKT, userProfile.PreferredDistanceMax, limit).Scan(&results).Error; err != nil {
+		return fmt.Errorf("failed to query duo standouts: %v", err)
+	}
+
+	// Create DuoStandouts records
+	for _, result := range results {
+		duoStandout := schemas.DuoStandouts{
+			Profile1ID: result.Profile1ID,
+			Profile2ID: result.Profile2ID,
+			MatchCount: result.MatchCount,
+			IsActive:   true,
+		}
+
+		if err := db.Create(&duoStandout).Error; err != nil {
+			log.Printf("Error creating duo standout: %v", err)
+			continue
+		}
+	}
+
+	return nil
+}
+
+// generateSoloStandouts creates new solo standouts for a user
+func generateSoloStandouts(userID uint, limit int, db *gorm.DB) error {
+	// Get user's profile for location filtering
+	var userProfile schemas.Profile
+	if err := db.Where("user_id = ?", userID).First(&userProfile).Error; err != nil {
+		return fmt.Errorf("failed to get user profile: %v", err)
+	}
+
+	// Get user's location point for distance calculation
+	userLocationWKT := fmt.Sprintf("POINT(%f %f)",
+		userProfile.LocationPoint.Point.Coords()[0],
+		userProfile.LocationPoint.Point.Coords()[1])
+
+	// First try to get profiles with matches (popularity-based)
+	query := `
+		SELECT 
+			p1.user_id as profile_id,
+			COUNT(DISTINCT m.id) as popularity_score
+		FROM profiles p1
+		LEFT JOIN matches m ON (
+			(m.profile1_id = p1.user_id AND m.status = 'accepted')
+			OR
+			(m.profile2_id = p1.user_id AND m.status = 'accepted')
+		)
+		WHERE p1.user_id != ?
+		AND ST_Distance_Sphere(p1.location_point, ST_GeomFromText(?)) <= ? * 1000
+		GROUP BY p1.user_id
+		ORDER BY popularity_score DESC, RAND()
+		LIMIT ?
+	`
+
+	type SoloResult struct {
+		ProfileID       uint `json:"profile_id"`
+		PopularityScore int  `json:"popularity_score"`
+	}
+
+	var results []SoloResult
+	if err := db.Raw(query, userID, userLocationWKT, userProfile.PreferredDistanceMax, limit).Scan(&results).Error; err != nil {
+		return fmt.Errorf("failed to query solo standouts: %v", err)
+	}
+
+	// If no results from popularity-based query, fall back to random nearby profiles
+	if len(results) == 0 {
+		fallbackQuery := `
+			SELECT 
+				p1.user_id as profile_id,
+				0 as popularity_score
+			FROM profiles p1
+			WHERE p1.user_id != ?
+			AND ST_Distance_Sphere(p1.location_point, ST_GeomFromText(?)) <= ? * 1000
+			ORDER BY RAND()
+			LIMIT ?
+		`
+		if err := db.Raw(fallbackQuery, userID, userLocationWKT, userProfile.PreferredDistanceMax, limit).Scan(&results).Error; err != nil {
+			return fmt.Errorf("failed to query fallback solo standouts: %v", err)
+		}
+	}
+
+	// Create SoloStandouts records
+	for _, result := range results {
+		soloStandout := schemas.SoloStandouts{
+			ProfileID:       result.ProfileID,
+			PopularityScore: result.PopularityScore,
+			IsActive:        true,
+		}
+
+		if err := db.Create(&soloStandout).Error; err != nil {
+			log.Printf("Error creating solo standout: %v", err)
+			continue
+		}
+	}
+
+	return nil
 }

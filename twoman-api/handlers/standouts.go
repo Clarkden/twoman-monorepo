@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"twoman/globals"
+	"twoman/handlers/helpers/revenuecat"
 	"twoman/handlers/helpers/standouts"
 	"twoman/handlers/response"
 	"twoman/types"
@@ -15,7 +16,7 @@ func (h Handler) HandleGetUserStarBalance() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session := r.Context().Value(globals.SessionMiddlewareKey).(*types.Session)
 
-		balance, err := standouts.GetUserStarBalance(session.UserID, h.DB(r))
+		balance, err := revenuecat.GetUserStarBalance(session.UserID, h.DB(r))
 		if err != nil {
 			response.InternalServerError(w, err, "Failed to get star balance")
 			return
