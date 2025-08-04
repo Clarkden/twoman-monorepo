@@ -143,7 +143,7 @@ func (h Handler) HandleRevenueCatWebhook() http.Handler {
 
 		case "VIRTUAL_CURRENCY_TRANSACTION":
 			log.Println("User", userId, "virtual currency transaction")
-			
+
 			// Handle virtual currency transactions (star purchases)
 			err := handleVirtualCurrencyTransaction(event, uint(parsedUserId), h.liveDB)
 			if err != nil {
@@ -159,7 +159,7 @@ func (h Handler) HandleRevenueCatWebhook() http.Handler {
 		case "NON_RENEWING_PURCHASE":
 			// Handle non-renewing purchases (could be star purchases)
 			log.Println("User", userId, "made a non-renewing purchase:", productID)
-			
+
 			// Check if this is a star purchase by product ID
 			if isStarProduct(productID) {
 				log.Println("Star purchase detected for user", userId)
