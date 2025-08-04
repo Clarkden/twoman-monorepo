@@ -12,6 +12,7 @@ import (
 	"twoman/handlers/helpers/matches"
 	"twoman/handlers/helpers/notifications"
 	"twoman/handlers/helpers/profile"
+	"twoman/handlers/helpers/standouts"
 	"twoman/handlers/helpers/user"
 	"twoman/schemas"
 	"twoman/types"
@@ -463,42 +464,76 @@ func (s Handler) HandleProfile(socketMessage types.SocketMessage[types.SocketPro
 		profileData := socketMessage.Data
 
 		if profileData.Decision == "like" {
+			// Handle standout likes differently - they don't count towards daily limits and require star payment
+			if profileData.IsStandout {
+				// Check if user has enough stars
+				balance, err := standouts.GetUserStarBalance(userId, db)
+				if err != nil {
+					log.Println("Error getting user star balance:", err)
+					sendErrorResponse(userId, "Error processing standout like", rdb, db)
+					sentry.CaptureException(err)
+					return
+				}
 
-			key := fmt.Sprintf("user:likes:%d:%s", userId, time.Now().Format("2006-01-02"))
-			likesCount, err := rdb.Get(ctx, key).Int()
-			if err != nil && !errors.Is(err, redis.Nil) {
-				log.Println("Error getting likes count:", err)
-				sendErrorResponse(userId, "Error processing like", rdb, db)
-				sentry.CaptureException(err)
-				return
-			}
+				starsCost := profileData.StarsCost
+				if starsCost <= 0 {
+					starsCost = 1 // Default cost
+				}
 
-			log.Println("Likes count:", likesCount)
+				if balance < starsCost {
+					sendErrorResponse(userId, "Insufficient star balance", rdb, db)
+					return
+				}
 
-			userIsPro, err := user.IsUserPro(userId, db)
+				// Deduct stars
+				transactionDescription := "Sent standout like"
+				if profileData.IsDuo {
+					transactionDescription = "Sent duo standout like"
+				}
+				if err := standouts.UpdateUserStarBalance(userId, -starsCost, "standout_like", transactionDescription, db); err != nil {
+					log.Println("Error updating star balance:", err)
+					sendErrorResponse(userId, "Error processing standout like", rdb, db)
+					sentry.CaptureException(err)
+					return
+				}
+			} else {
+				// Regular like - check daily limits
+				key := fmt.Sprintf("user:likes:%d:%s", userId, time.Now().Format("2006-01-02"))
+				likesCount, err := rdb.Get(ctx, key).Int()
+				if err != nil && !errors.Is(err, redis.Nil) {
+					log.Println("Error getting likes count:", err)
+					sendErrorResponse(userId, "Error processing like", rdb, db)
+					sentry.CaptureException(err)
+					return
+				}
 
-			if err != nil {
-				log.Println("Error checking if user is pro:", err)
-				sendErrorResponse(userId, "Error processing like", rdb, db)
-				sentry.CaptureException(err)
-				return
-			}
+				log.Println("Likes count:", likesCount)
 
-			if !userIsPro && likesCount >= 8 {
-				sendErrorResponse(userId, "Daily like limit reached", rdb, db)
-				return
-			}
+				userIsPro, err := user.IsUserPro(userId, db)
 
-			_, err = rdb.Incr(ctx, key).Result()
-			if err != nil {
-				log.Println("Error incrementing likes count:", err)
-				sendErrorResponse(userId, "Error processing like", rdb, db)
-				sentry.CaptureException(err)
-				return
-			}
+				if err != nil {
+					log.Println("Error checking if user is pro:", err)
+					sendErrorResponse(userId, "Error processing like", rdb, db)
+					sentry.CaptureException(err)
+					return
+				}
 
-			if likesCount == 0 {
-				rdb.Expire(ctx, key, 24*time.Hour)
+				if !userIsPro && likesCount >= 8 {
+					sendErrorResponse(userId, "Daily like limit reached", rdb, db)
+					return
+				}
+
+				_, err = rdb.Incr(ctx, key).Result()
+				if err != nil {
+					log.Println("Error incrementing likes count:", err)
+					sendErrorResponse(userId, "Error processing like", rdb, db)
+					sentry.CaptureException(err)
+					return
+				}
+
+				if likesCount == 0 {
+					rdb.Expire(ctx, key, 24*time.Hour)
+				}
 			}
 
 			if err := profile.CreateProfileView(userId, profileData.TargetProfile, db); err != nil {
@@ -515,7 +550,7 @@ func (s Handler) HandleProfile(socketMessage types.SocketMessage[types.SocketPro
 			}
 
 			if profileData.IsDuo {
-				if err := matches.CreateDuoMatch(userId, profileData.FriendProfile, profileData.TargetProfile, db); err != nil {
+				if err := matches.CreateDuoMatchWithStandout(userId, profileData.FriendProfile, profileData.TargetProfile, profileData.IsStandout, db); err != nil {
 					log.Println("Error creating match:", err)
 					sendErrorResponse(userId, "Error processing like", rdb, db)
 					sentry.CaptureException(err)
@@ -539,7 +574,7 @@ func (s Handler) HandleProfile(socketMessage types.SocketMessage[types.SocketPro
 				BroadcastToUser(profileData.FriendProfile, matchSocketMessage, rdb, db)
 			} else {
 
-				if err := matches.CreateSoloMatch(userId, profileData.TargetProfile, db); err != nil {
+				if err := matches.CreateSoloMatchWithStandout(userId, profileData.TargetProfile, profileData.IsStandout, db); err != nil {
 					log.Println("Error creating match:", err)
 					sendErrorResponse(userId, "Error processing like", rdb, db)
 					sentry.CaptureException(err)

@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Tabs, useRouter, useSegments } from "expo-router";
 import { Linking, Pressable, Text, View } from "react-native";
-import { CircleUser, Heart, Home, MessageCircle } from "lucide-react-native";
+import {
+  CircleUser,
+  Heart,
+  Home,
+  MessageCircle,
+  Star,
+} from "lucide-react-native";
+import { FontAwesome } from "@expo/vector-icons";
 import apiFetch from "@/utils/fetch";
 import { FeatureFlag, Friendship, Match, Message, Profile } from "@/types/api";
 import { messageHandler } from "@/utils/websocket";
@@ -9,6 +16,7 @@ import Toast from "react-native-toast-message";
 import {
   mainBackgroundColor,
   secondaryBackgroundColor,
+  mainPurple,
 } from "@/constants/globalStyles";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
@@ -24,6 +32,7 @@ export default function TabLayout() {
   const userId = useSession((state) => state.session?.user_id);
 
   const [waitlistEnabled, setWaitlistEnabled] = useState(false);
+  const [starsBalance, setStarsBalance] = useState(0);
   const { connectionStatus } = useWebSocket();
   const [initialized, setInitialized] = useState(false);
 
@@ -53,6 +62,9 @@ export default function TabLayout() {
       // Fetch subscription status on app initialization
       console.log("Fetching subscription status on app init...");
       await fetchSubscriptionStatus();
+
+      // Fetch stars balance
+      await fetchStarsBalance();
     } catch (error) {
       console.log(error);
     } finally {
@@ -74,6 +86,17 @@ export default function TabLayout() {
       }
     } catch (error) {
       console.log(error);
+    }
+  };
+
+  const fetchStarsBalance = async () => {
+    try {
+      const response = await apiFetch("/stars/balance");
+      if (response.success) {
+        setStarsBalance((response.data as any)?.balance || 0);
+      }
+    } catch (error) {
+      console.log("Error fetching stars balance:", error);
     }
   };
 
@@ -231,6 +254,51 @@ export default function TabLayout() {
     };
   }, [messageHandler, segments]);
 
+  // Custom header component for Standouts tab
+  const StandoutsHeader = () => (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingRight: 16,
+        width: "100%",
+      }}
+    >
+      <Text
+        style={{
+          color: mainPurple,
+          fontSize: 24,
+          fontWeight: "bold",
+        }}
+      >
+        Standouts
+      </Text>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          backgroundColor: secondaryBackgroundColor,
+          paddingHorizontal: 10,
+          paddingVertical: 5,
+          borderRadius: 16,
+        }}
+      >
+        <FontAwesome name="star" size={16} color={mainPurple} />
+        <Text
+          style={{
+            color: mainPurple,
+            fontSize: 16,
+            fontWeight: "600",
+            marginLeft: 4,
+          }}
+        >
+          {starsBalance}
+        </Text>
+      </View>
+    </View>
+  );
+
   if (waitlistEnabled) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -342,6 +410,14 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
+          name="standouts"
+          options={{
+            headerTitle: () => <StandoutsHeader />,
+            headerTitleAlign: "left",
+            tabBarIcon: ({ color }) => <Star size={24} color={color} />,
+          }}
+        />
+        <Tabs.Screen
           name="likes"
           options={{
             title: "Likes",
@@ -349,6 +425,7 @@ export default function TabLayout() {
             tabBarIcon: ({ color }) => <Heart size={24} color={color} />,
           }}
         />
+
         <Tabs.Screen
           name="chat"
           options={{

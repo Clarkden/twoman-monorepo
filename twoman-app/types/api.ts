@@ -32,6 +32,7 @@ export interface Match {
   status: string;
   is_duo: boolean;
   is_friend: boolean;
+  is_standout: boolean;
   last_message: string;
   last_message_at: string;
 }
@@ -119,3 +120,41 @@ export interface Notification {
   ExponentPushToken: string;
   UserID: number;
 }
+
+export interface StarsBalance {
+  balance: number;
+}
+
+export interface StarTransaction {
+  ID: number;
+  CreatedAt: string;
+  UpdatedAt: string;
+  user_id: number;
+  amount: number;
+  transaction_type: string;
+  description: string;
+}
+
+export interface DuoStandout {
+  ID: number;
+  CreatedAt: string;
+  UpdatedAt: string;
+  profile1_id: number;
+  profile2_id: number;
+  match_count: number;
+  is_active: boolean;
+  profile1: Profile;
+  profile2: Profile;
+}
+
+export interface SoloStandout {
+  ID: number;
+  CreatedAt: string;
+  UpdatedAt: string;
+  profile_id: number;
+  popularity_score: number;
+  is_active: boolean;
+  profile: Profile;
+}
+
+

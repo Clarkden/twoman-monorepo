@@ -11,6 +11,10 @@ import (
 )
 
 func CreateSoloMatch(profileID uint, targetProfileID uint, db *gorm.DB) error {
+	return CreateSoloMatchWithStandout(profileID, targetProfileID, false, db)
+}
+
+func CreateSoloMatchWithStandout(profileID uint, targetProfileID uint, isStandout bool, db *gorm.DB) error {
 	if profileID == targetProfileID {
 		return errors.New("a profile cannot match with itself")
 	}
@@ -26,6 +30,7 @@ func CreateSoloMatch(profileID uint, targetProfileID uint, db *gorm.DB) error {
 		Profile1ID: profileID,
 		Profile3ID: targetProfileID,
 		IsDuo:      false,
+		IsStandout: isStandout,
 		Status:     "pending",
 	}
 	if err := db.Create(&newMatch).Error; err != nil {
@@ -36,6 +41,10 @@ func CreateSoloMatch(profileID uint, targetProfileID uint, db *gorm.DB) error {
 }
 
 func CreateDuoMatch(profileID uint, friendProfileID uint, targetProfileID uint, db *gorm.DB) error {
+	return CreateDuoMatchWithStandout(profileID, friendProfileID, targetProfileID, false, db)
+}
+
+func CreateDuoMatchWithStandout(profileID uint, friendProfileID uint, targetProfileID uint, isStandout bool, db *gorm.DB) error {
 	if profileID == targetProfileID || profileID == friendProfileID {
 		return errors.New("a profile cannot match itself")
 	}
@@ -52,6 +61,7 @@ func CreateDuoMatch(profileID uint, friendProfileID uint, targetProfileID uint, 
 		Profile2ID: &friendProfileID,
 		Profile3ID: targetProfileID,
 		IsDuo:      true,
+		IsStandout: isStandout,
 		Status:     "pending",
 	}
 	if err := db.Create(&newMatch).Error; err != nil {
@@ -300,7 +310,7 @@ func GetPendingMatches(profileId uint, db *gorm.DB) ([]schemas.Matches, error) {
 			profileId,
 			profileId,
 		).
-		Order("created_at desc").
+		Order("CASE WHEN is_standout = true THEN 0 ELSE 1 END, created_at desc").
 		Preload("Profile1").
 		Preload("Profile2").
 		Preload("Profile3").

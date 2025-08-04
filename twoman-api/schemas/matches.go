@@ -21,6 +21,7 @@ type Matches struct {
 	Status           string     `json:"status"`
 	IsDuo            bool       `json:"is_duo"`
 	IsFriend         bool       `json:"is_friend"`
+	IsStandout       bool       `json:"is_standout"` // Whether this was a standout like
 	LastMessage      string     `json:"last_message"`
 	LastMessageAt    *time.Time `json:"last_message_at"`
 }

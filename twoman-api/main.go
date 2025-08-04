@@ -292,6 +292,12 @@ func MigrateDB(db *gorm.DB) error {
 		&schemas.ReferralCode{},
 		&schemas.ReferralReward{},
 		&schemas.ProSubscriptionV2{},
+		&schemas.Stars{},
+		&schemas.StarTransactions{},
+		&schemas.DuoStandouts{},
+		&schemas.SoloStandouts{},
+
+		&schemas.StandoutRefresh{},
 	)
 
 	if err != nil {

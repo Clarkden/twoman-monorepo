@@ -25,6 +25,16 @@
       "type": "integer",
       "description": "Target profile ID being decided on",
       "minimum": 1
+    },
+    "is_standout": {
+      "type": "boolean",
+      "description": "Whether this is a standout like",
+      "default": false
+    },
+    "stars_cost": {
+      "type": "integer",
+      "description": "Number of stars required for this standout like",
+      "minimum": 1
     }
   },
   "additionalProperties": false

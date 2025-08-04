@@ -52,6 +52,8 @@ type SocketProfileDecisionData struct {
 	IsDuo         bool   `json:"is_duo,omitempty"`
 	FriendProfile uint   `json:"friend_profile,omitempty"`
 	TargetProfile uint   `json:"target_profile,omitempty"`
+	IsStandout    bool   `json:"is_standout,omitempty"`
+	StarsCost     int    `json:"stars_cost,omitempty"`
 }
 
 type SocketProfileDiscoveryData struct {

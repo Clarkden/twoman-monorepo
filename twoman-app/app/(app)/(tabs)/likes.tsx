@@ -524,6 +524,8 @@ export default function LikeScreen() {
     setPendingTargets(pendingTargets);
   };
 
+
+
   const handleAcceptMatch = async () => {
     if (selectedMatch) {
       MatchDecision(selectedMatch.ID.toString(), true, sendMessage);
@@ -658,12 +660,16 @@ export default function LikeScreen() {
     };
   }, [refreshSubscriptionStatus]);
 
+
+
   const MatchItem = ({
     item,
     isBlurred = false,
+    showStarBadge = false,
   }: {
     item: Match;
     isBlurred?: boolean;
+    showStarBadge?: boolean;
   }) => (
     <TouchableOpacity
       style={styles.matchContainer}
@@ -710,6 +716,13 @@ export default function LikeScreen() {
               source={{ uri: item.profile4?.image1 }}
               style={[styles.pendingTargetImage]}
             />
+          </View>
+        )}
+
+        {/* Star badge for standout likes */}
+        {showStarBadge && !isBlurred && (
+          <View style={styles.starIndicator}>
+            <FontAwesome name="star" size={12} color="#FFD700" />
           </View>
         )}
 
@@ -834,25 +847,31 @@ export default function LikeScreen() {
             >
               Likes ({pendingMatches.length})
             </Text>
-            {pendingMatches.length > 0 &&
-              pendingMatches.map((match, index) => {
-                // If user has Pro, show all likes normally
-                if (isPro) {
-                  return (
-                    <MatchItem key={match.ID} item={match} isBlurred={false} />
-                  );
-                }
-
-                // If user doesn't have Pro, show first like clearly, blur the rest
+            
+            {/* Render all likes with proper Pro blur logic and star badges for standout likes */}
+            {pendingMatches.map((match, index) => {
+              if (isPro) {
+                return (
+                  <MatchItem 
+                    key={`match-${match.ID}`} 
+                    item={match} 
+                    isBlurred={false}
+                    showStarBadge={match.is_standout}
+                  />
+                );
+              } else {
+                // For non-Pro users, blur likes after the first like
                 const isBlurred = index > 0;
                 return (
                   <MatchItem
-                    key={match.ID}
+                    key={`match-${match.ID}`}
                     item={match}
                     isBlurred={isBlurred}
+                    showStarBadge={match.is_standout}
                   />
                 );
-              })}
+              }
+            })}
           </View>
           <PotentialMatchModal
             visible={modalVisible}
@@ -1068,5 +1087,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 5,
     opacity: 0.8,
+  },
+  starIndicator: {
+    position: "absolute",
+    top: 16,
+    right: 8,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    borderRadius: 12,
+    padding: 4,
+    paddingHorizontal: 8,
   },
 });

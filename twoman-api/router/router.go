@@ -87,6 +87,13 @@ func Router(liveDB, demoDB *gorm.DB, rdb *redis.Client, s3 *s3.S3, rlmdb *redis.
 	// Chat Routes
 	router.Handle("GET /v1/chat/{matchId}", middlewareProvider.AuthMiddleware(middlewareProvider.DatabaseMiddleware(handler.HandleGetMatchChats())))
 
+	// Standouts Routes
+	router.Handle("GET /v1/stars/balance", middlewareProvider.AuthMiddleware(middlewareProvider.DatabaseMiddleware(handler.HandleGetUserStarBalance())))
+	router.Handle("GET /v1/standouts/duo", middlewareProvider.AuthMiddleware(middlewareProvider.DatabaseMiddleware(handler.HandleGetDuoStandouts())))
+	router.Handle("GET /v1/standouts/solo", middlewareProvider.AuthMiddleware(middlewareProvider.DatabaseMiddleware(handler.HandleGetSoloStandouts())))
+
+	router.Handle("PUT /v1/stars/balance/{userId}", middlewareProvider.AuthMiddleware(middlewareProvider.DatabaseMiddleware(handler.HandleUpdateStarBalance())))
+
 	// File Routes
 	router.Handle("POST /v1/file/upload", middlewareProvider.AuthMiddleware(middlewareProvider.DatabaseMiddleware(handler.HandleFileUpload())))
 
