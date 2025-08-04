@@ -16,10 +16,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Push to dokku
-        uses: dokku/github-action@master
-        with:
-          branch: main
-          git_remote_url: "ssh://dokku@api.twoman.dating/api.twoman.dating"
-          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
-          git_push_flags: '--force'
+      - name: Setup SSH and Deploy
+        run: |
+          # Setup SSH
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H api.twoman.dating >> ~/.ssh/known_hosts
+          
+          # Deploy only the API subdirectory using git subtree
+          git subtree push --prefix=twoman-api ssh://dokku@api.twoman.dating/api.twoman.dating main --force || \
+          git push ssh://dokku@api.twoman.dating/api.twoman.dating `git subtree split --prefix=twoman-api main`:main --force
