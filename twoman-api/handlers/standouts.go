@@ -33,13 +33,7 @@ func (h Handler) HandleGetDuoStandouts() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session := r.Context().Value(globals.SessionMiddlewareKey).(*types.Session)
 
-		// Default limit to 5 duo standouts
 		limit := 5
-		if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
-			if parsedLimit, err := strconv.Atoi(limitStr); err == nil && parsedLimit > 0 && parsedLimit <= 10 {
-				limit = parsedLimit
-			}
-		}
 
 		duoStandouts, err := standouts.GetDuoStandouts(session.UserID, limit, h.DB(r))
 		if err != nil {
