@@ -139,7 +139,7 @@ function SoloLikeAnimation({
       // PHASE 1: Instant flash + shockwave burst (anime impact effect)
       flashOpacity.value = withSequence(
         withTiming(1, { duration: 50, easing: Easing.out(Easing.quad) }),
-        withTiming(0, { duration: 150, easing: Easing.out(Easing.quad) }),
+        withTiming(0, { duration: 150, easing: Easing.out(Easing.quad) })
       );
 
       backgroundOpacity.value = withTiming(0.8, {
@@ -150,7 +150,7 @@ function SoloLikeAnimation({
       // Explosive shockwave
       shockwaveOpacity.value = withSequence(
         withTiming(0.8, { duration: 100, easing: Easing.out(Easing.quad) }),
-        withTiming(0, { duration: 600, easing: Easing.out(Easing.cubic) }),
+        withTiming(0, { duration: 600, easing: Easing.out(Easing.cubic) })
       );
       shockwaveScale.value = withTiming(8, {
         duration: 700,
@@ -168,44 +168,44 @@ function SoloLikeAnimation({
         withTiming(-15, { duration: 400, easing: Easing.in(Easing.sin) }),
         withDelay(
           300,
-          withTiming(-700, { duration: 500, easing: Easing.out(Easing.sin) }),
-        ),
+          withTiming(-700, { duration: 500, easing: Easing.out(Easing.sin) })
+        )
       );
       soloActionLine2Y.value = withSequence(
         withTiming(-10, { duration: 420, easing: Easing.in(Easing.sin) }),
         withDelay(
           280,
-          withTiming(-680, { duration: 520, easing: Easing.out(Easing.sin) }),
-        ),
+          withTiming(-680, { duration: 520, easing: Easing.out(Easing.sin) })
+        )
       );
       soloActionLine3Y.value = withSequence(
         withTiming(-5, { duration: 440, easing: Easing.in(Easing.sin) }),
         withDelay(
           260,
-          withTiming(-660, { duration: 540, easing: Easing.out(Easing.sin) }),
-        ),
+          withTiming(-660, { duration: 540, easing: Easing.out(Easing.sin) })
+        )
       );
 
       soloActionLine4Y.value = withSequence(
         withTiming(15, { duration: 400, easing: Easing.in(Easing.sin) }),
         withDelay(
           300,
-          withTiming(700, { duration: 500, easing: Easing.out(Easing.sin) }),
-        ),
+          withTiming(700, { duration: 500, easing: Easing.out(Easing.sin) })
+        )
       );
       soloActionLine5Y.value = withSequence(
         withTiming(10, { duration: 420, easing: Easing.in(Easing.sin) }),
         withDelay(
           280,
-          withTiming(680, { duration: 520, easing: Easing.out(Easing.sin) }),
-        ),
+          withTiming(680, { duration: 520, easing: Easing.out(Easing.sin) })
+        )
       );
       soloActionLine6Y.value = withSequence(
         withTiming(5, { duration: 440, easing: Easing.in(Easing.sin) }),
         withDelay(
           260,
-          withTiming(660, { duration: 540, easing: Easing.out(Easing.sin) }),
-        ),
+          withTiming(660, { duration: 540, easing: Easing.out(Easing.sin) })
+        )
       );
 
       // PHASE 2: Heart dramatic entrance (anime-style impact)
@@ -221,10 +221,10 @@ function SoloLikeAnimation({
             duration: 200,
             easing: Easing.bezier(0.175, 0.885, 0.32, 1.275), // Back ease out
           }),
-          withTiming(1.8, {
+          withTiming(1.5, {
             duration: 400,
             easing: Easing.bezier(0.25, 0.46, 0.45, 0.94),
-          }),
+          })
         );
 
         // Dramatic rotation spin
@@ -236,7 +236,7 @@ function SoloLikeAnimation({
           withTiming(720, {
             duration: 400,
             easing: Easing.out(Easing.cubic),
-          }),
+          })
         );
       }, 200);
 
@@ -245,11 +245,11 @@ function SoloLikeAnimation({
         // Particle 1 - Top right
         particle1Opacity.value = withSequence(
           withTiming(1, { duration: 100 }),
-          withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) }),
+          withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) })
         );
         particle1Scale.value = withSequence(
           withTiming(1.5, { duration: 300, easing: Easing.out(Easing.quad) }),
-          withTiming(0.5, { duration: 300, easing: Easing.out(Easing.cubic) }),
+          withTiming(0.5, { duration: 300, easing: Easing.out(Easing.cubic) })
         );
         particle1X.value = withTiming(120, {
           duration: 600,
@@ -263,11 +263,11 @@ function SoloLikeAnimation({
         // Particle 2 - Bottom left
         particle2Opacity.value = withSequence(
           withTiming(1, { duration: 100 }),
-          withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) }),
+          withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) })
         );
         particle2Scale.value = withSequence(
           withTiming(1.2, { duration: 300, easing: Easing.out(Easing.quad) }),
-          withTiming(0.3, { duration: 300, easing: Easing.out(Easing.cubic) }),
+          withTiming(0.3, { duration: 300, easing: Easing.out(Easing.cubic) })
         );
         particle2X.value = withTiming(-100, {
           duration: 600,
@@ -281,11 +281,11 @@ function SoloLikeAnimation({
         // Particle 3 - Top left
         particle3Opacity.value = withSequence(
           withTiming(1, { duration: 100 }),
-          withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) }),
+          withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) })
         );
         particle3Scale.value = withSequence(
           withTiming(1.8, { duration: 300, easing: Easing.out(Easing.quad) }),
-          withTiming(0.2, { duration: 300, easing: Easing.out(Easing.cubic) }),
+          withTiming(0.2, { duration: 300, easing: Easing.out(Easing.cubic) })
         );
         particle3X.value = withTiming(-80, {
           duration: 600,
@@ -312,7 +312,7 @@ function SoloLikeAnimation({
           },
           () => {
             runOnJS(onAnimationComplete)();
-          },
+          }
         );
 
         // Final dramatic scale down
@@ -736,13 +736,13 @@ function DuoLikeAnimation({
       // Power-up flash
       flashOpacity.value = withSequence(
         withTiming(1, { duration: 80, easing: Easing.out(Easing.quad) }),
-        withTiming(0, { duration: 120, easing: Easing.out(Easing.quad) }),
+        withTiming(0, { duration: 120, easing: Easing.out(Easing.quad) })
       );
 
       // Power ring expansion
       powerRingOpacity.value = withSequence(
         withTiming(1, { duration: 150 }),
-        withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) }),
+        withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) })
       );
       powerRingScale.value = withTiming(3, {
         duration: 650,
@@ -760,44 +760,44 @@ function DuoLikeAnimation({
         withTiming(-20, { duration: 350, easing: Easing.in(Easing.cubic) }),
         withDelay(
           250,
-          withTiming(-750, { duration: 450, easing: Easing.out(Easing.cubic) }),
-        ),
+          withTiming(-750, { duration: 450, easing: Easing.out(Easing.cubic) })
+        )
       );
       duoActionLine2Y.value = withSequence(
         withTiming(-15, { duration: 370, easing: Easing.in(Easing.cubic) }),
         withDelay(
           230,
-          withTiming(-730, { duration: 470, easing: Easing.out(Easing.cubic) }),
-        ),
+          withTiming(-730, { duration: 470, easing: Easing.out(Easing.cubic) })
+        )
       );
       duoActionLine3Y.value = withSequence(
         withTiming(-10, { duration: 390, easing: Easing.in(Easing.cubic) }),
         withDelay(
           210,
-          withTiming(-710, { duration: 490, easing: Easing.out(Easing.cubic) }),
-        ),
+          withTiming(-710, { duration: 490, easing: Easing.out(Easing.cubic) })
+        )
       );
 
       duoActionLine4Y.value = withSequence(
         withTiming(20, { duration: 350, easing: Easing.in(Easing.cubic) }),
         withDelay(
           250,
-          withTiming(750, { duration: 450, easing: Easing.out(Easing.cubic) }),
-        ),
+          withTiming(750, { duration: 450, easing: Easing.out(Easing.cubic) })
+        )
       );
       duoActionLine5Y.value = withSequence(
         withTiming(15, { duration: 370, easing: Easing.in(Easing.cubic) }),
         withDelay(
           230,
-          withTiming(730, { duration: 470, easing: Easing.out(Easing.cubic) }),
-        ),
+          withTiming(730, { duration: 470, easing: Easing.out(Easing.cubic) })
+        )
       );
       duoActionLine6Y.value = withSequence(
         withTiming(10, { duration: 390, easing: Easing.in(Easing.cubic) }),
         withDelay(
           210,
-          withTiming(710, { duration: 490, easing: Easing.out(Easing.cubic) }),
-        ),
+          withTiming(710, { duration: 490, easing: Easing.out(Easing.cubic) })
+        )
       );
 
       // PHASE 2: Hearts emerge from opposite sides (duo entrance)
@@ -815,7 +815,7 @@ function DuoLikeAnimation({
           withTiming(1.2, {
             duration: 200,
             easing: Easing.out(Easing.cubic),
-          }),
+          })
         );
         heart1X.value = withTiming(-60, {
           duration: 400,
@@ -839,7 +839,7 @@ function DuoLikeAnimation({
           withTiming(1.2, {
             duration: 200,
             easing: Easing.out(Easing.cubic),
-          }),
+          })
         );
         heart2X.value = withTiming(60, {
           duration: 400,
@@ -866,11 +866,11 @@ function DuoLikeAnimation({
         // Connection effect appears
         connectionOpacity.value = withSequence(
           withTiming(1, { duration: 200 }),
-          withTiming(0.8, { duration: 400 }),
+          withTiming(0.8, { duration: 400 })
         );
         connectionScale.value = withSequence(
           withTiming(1.5, { duration: 300, easing: Easing.out(Easing.quad) }),
-          withTiming(1, { duration: 200, easing: Easing.out(Easing.cubic) }),
+          withTiming(1, { duration: 200, easing: Easing.out(Easing.cubic) })
         );
       }, 700);
 
@@ -879,7 +879,7 @@ function DuoLikeAnimation({
         // Sparkle explosion
         sparkleOpacity.value = withSequence(
           withTiming(1, { duration: 150 }),
-          withTiming(0, { duration: 600, easing: Easing.out(Easing.cubic) }),
+          withTiming(0, { duration: 600, easing: Easing.out(Easing.cubic) })
         );
         sparkleScale.value = withTiming(2.5, {
           duration: 750,
@@ -889,7 +889,7 @@ function DuoLikeAnimation({
         // Celebration particles
         celebrationOpacity.value = withSequence(
           withTiming(1, { duration: 200 }),
-          withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) }),
+          withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) })
         );
         celebrationScale.value = withTiming(3, {
           duration: 700,
@@ -927,7 +927,7 @@ function DuoLikeAnimation({
           },
           () => {
             runOnJS(onAnimationComplete)();
-          },
+          }
         );
 
         connectionOpacity.value = withTiming(0, {
@@ -1278,7 +1278,7 @@ function XAnimation({
 
   useEffect(() => {
     if (visible) {
-      console.log("X animation started");
+
 
       // PHASE 1: Dramatic build-up with screen shake
       backgroundOpacity.value = withTiming(0.7, {
@@ -1292,14 +1292,14 @@ function XAnimation({
         withTiming(-5, { duration: 50 }),
         withTiming(3, { duration: 50 }),
         withTiming(-3, { duration: 50 }),
-        withTiming(0, { duration: 100 }),
+        withTiming(0, { duration: 100 })
       );
       shakeY.value = withSequence(
         withTiming(-3, { duration: 50 }),
         withTiming(3, { duration: 50 }),
         withTiming(-2, { duration: 50 }),
         withTiming(2, { duration: 50 }),
-        withTiming(0, { duration: 100 }),
+        withTiming(0, { duration: 100 })
       );
 
       // Action lines converging animation - EASE IN → PAUSE → EASE OUT
@@ -1313,22 +1313,22 @@ function XAnimation({
         withTiming(-20, { duration: 300, easing: Easing.in(Easing.quad) }),
         withDelay(
           200,
-          withTiming(-800, { duration: 400, easing: Easing.out(Easing.quad) }),
-        ),
+          withTiming(-800, { duration: 400, easing: Easing.out(Easing.quad) })
+        )
       );
       actionLine2Y.value = withSequence(
         withTiming(-10, { duration: 320, easing: Easing.in(Easing.quad) }),
         withDelay(
           180,
-          withTiming(-780, { duration: 420, easing: Easing.out(Easing.quad) }),
-        ),
+          withTiming(-780, { duration: 420, easing: Easing.out(Easing.quad) })
+        )
       );
       actionLine3Y.value = withSequence(
         withTiming(0, { duration: 340, easing: Easing.in(Easing.quad) }),
         withDelay(
           160,
-          withTiming(-760, { duration: 440, easing: Easing.out(Easing.quad) }),
-        ),
+          withTiming(-760, { duration: 440, easing: Easing.out(Easing.quad) })
+        )
       );
 
       // Bottom lines move to center (ease in)
@@ -1336,35 +1336,35 @@ function XAnimation({
         withTiming(20, { duration: 300, easing: Easing.in(Easing.quad) }),
         withDelay(
           200,
-          withTiming(800, { duration: 400, easing: Easing.out(Easing.quad) }),
-        ),
+          withTiming(800, { duration: 400, easing: Easing.out(Easing.quad) })
+        )
       );
       actionLine5Y.value = withSequence(
         withTiming(10, { duration: 320, easing: Easing.in(Easing.quad) }),
         withDelay(
           180,
-          withTiming(780, { duration: 420, easing: Easing.out(Easing.quad) }),
-        ),
+          withTiming(780, { duration: 420, easing: Easing.out(Easing.quad) })
+        )
       );
       actionLine6Y.value = withSequence(
         withTiming(0, { duration: 340, easing: Easing.in(Easing.quad) }),
         withDelay(
           160,
-          withTiming(760, { duration: 440, easing: Easing.out(Easing.quad) }),
-        ),
+          withTiming(760, { duration: 440, easing: Easing.out(Easing.quad) })
+        )
       );
 
       // PHASE 2: Lightning flash + slash effect
       setTimeout(() => {
         flashOpacity.value = withSequence(
           withTiming(1, { duration: 80, easing: Easing.out(Easing.quad) }),
-          withTiming(0, { duration: 120, easing: Easing.out(Easing.quad) }),
+          withTiming(0, { duration: 120, easing: Easing.out(Easing.quad) })
         );
 
         // Lightning bolts
         lightningOpacity.value = withSequence(
           withTiming(1, { duration: 100 }),
-          withTiming(0, { duration: 300, easing: Easing.out(Easing.cubic) }),
+          withTiming(0, { duration: 300, easing: Easing.out(Easing.cubic) })
         );
         lightningScale.value = withTiming(1.5, {
           duration: 400,
@@ -1384,7 +1384,7 @@ function XAnimation({
           withTiming(1.2, {
             duration: 200,
             easing: Easing.out(Easing.cubic),
-          }),
+          })
         );
         slashRotation.value = withTiming(45, {
           duration: 400,
@@ -1408,7 +1408,7 @@ function XAnimation({
           withTiming(1.5, {
             duration: 300,
             easing: Easing.out(Easing.cubic),
-          }),
+          })
         );
 
         xRotation.value = withSequence(
@@ -1419,13 +1419,13 @@ function XAnimation({
           withTiming(360, {
             duration: 300,
             easing: Easing.out(Easing.cubic),
-          }),
+          })
         );
 
         // Screen crack effect
         crackOpacity.value = withSequence(
           withTiming(0.8, { duration: 150 }),
-          withTiming(0.3, { duration: 400, easing: Easing.out(Easing.cubic) }),
+          withTiming(0.3, { duration: 400, easing: Easing.out(Easing.cubic) })
         );
         crackScale.value = withTiming(6, {
           duration: 550,
@@ -1435,7 +1435,7 @@ function XAnimation({
 
       // PHASE 4: Epic dramatic exit
       setTimeout(() => {
-        console.log("X animation finishing");
+
 
         // Everything fades out dramatically
         backgroundOpacity.value = withTiming(0, {
@@ -1460,9 +1460,9 @@ function XAnimation({
             easing: Easing.bezier(0.25, 0.46, 0.45, 0.94),
           },
           () => {
-            console.log("X animation complete callback triggered");
+
             runOnJS(onAnimationComplete)();
-          },
+          }
         );
 
         // Final scale down
@@ -1833,8 +1833,8 @@ function FriendshipPager({
     setFriends(
       friends.filter(
         (friendship) =>
-          friendship.ProfileID !== userId && friendship.FriendID !== userId,
-      ),
+          friendship.ProfileID !== userId && friendship.FriendID !== userId
+      )
     );
   };
 
@@ -2056,7 +2056,7 @@ function SelectFriendMenu({
                         handleAccept(
                           userId === friendship.Friend.user_id
                             ? friendship.Profile.user_id
-                            : friendship.Friend.user_id,
+                            : friendship.Friend.user_id
                         );
                         setMenuVisible(false);
                       }}
@@ -2551,7 +2551,7 @@ export default function TabOneScreen() {
     useState<boolean>(false);
   const [showLikeModal, setShowLikeModal] = useState(false);
   const [currentUserFriends, setCurrentUserFriends] = useState<Friendship[]>(
-    [],
+    []
   );
   const [selectFriendMenuVisible, setSelectFriendMenuVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -2699,7 +2699,7 @@ export default function TabOneScreen() {
 
     try {
       const response = await apiFetch<Friendship[]>(
-        `/profile/${profile.user_id}/friends`,
+        `/profile/${profile.user_id}/friends`
       );
 
       if (response.code !== 200) {
@@ -2726,7 +2726,7 @@ export default function TabOneScreen() {
   const fetchCurrentUserFriends = async () => {
     try {
       const response = await apiFetch<Friendship[]>(
-        `/profile/${userId}/friends`,
+        `/profile/${userId}/friends`
       );
 
       if (response.code !== 200) {
@@ -2772,7 +2772,7 @@ export default function TabOneScreen() {
       if (data.success) {
         console.log(
           "Profile response successful, animation in progress:",
-          animationInProgressRef.current,
+          animationInProgressRef.current
         );
 
         // Start fetching new profile immediately regardless of animation state
@@ -3221,7 +3221,7 @@ const styles = StyleSheet.create({
   },
   actionButtonContainer: {
     position: "absolute",
-    bottom: 40,
+    bottom: 20,
     left: 20,
     right: 20,
     flexDirection: "row",
