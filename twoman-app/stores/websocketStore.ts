@@ -469,12 +469,7 @@ export const useWebSocketStore = create<WebSocketStore>((set, get) => ({
     // If we've exceeded the max attempts, give up and surface the error.
     if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
       console.warn("Max websocket reconnection attempts exhausted.");
-      set({ retriesExhausted: true });
-
-      // If we've exhausted retries, it likely means persistent auth issues
-      // Log out the user so they can re-authenticate
-      console.log("Logging out user due to persistent connection failures.");
-      useSession.getState().setSession(null);
+      set({ retriesExhausted: true, connectionStatus: "disconnected" });
       return;
     }
 

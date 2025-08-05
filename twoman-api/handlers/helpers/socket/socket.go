@@ -12,7 +12,7 @@ import (
 	"twoman/handlers/helpers/matches"
 	"twoman/handlers/helpers/notifications"
 	"twoman/handlers/helpers/profile"
-	"twoman/handlers/helpers/revenuecat"
+	"twoman/handlers/helpers/standouts"
 	"twoman/handlers/helpers/user"
 	"twoman/schemas"
 	"twoman/types"
@@ -466,8 +466,8 @@ func (s Handler) HandleProfile(socketMessage types.SocketMessage[types.SocketPro
 		if profileData.Decision == "like" {
 			// Handle standout likes differently - they don't count towards daily limits and require star payment
 			if profileData.IsStandout {
-				// Check if user has enough stars
-				balance, err := revenuecat.GetUserStarBalance(userId, db)
+				// Check if user has enough stars from local database
+				balance, err := standouts.GetUserStarBalance(userId, db)
 				if err != nil {
 					log.Println("Error getting user star balance:", err)
 					sendErrorResponse(userId, "Error processing standout like", rdb, db)
@@ -481,21 +481,37 @@ func (s Handler) HandleProfile(socketMessage types.SocketMessage[types.SocketPro
 				}
 
 				if balance < starsCost {
+					log.Printf("User %d has insufficient stars: need %d, have %d", userId, starsCost, balance)
 					sendErrorResponse(userId, "Insufficient star balance", rdb, db)
 					return
 				}
 
-				// Deduct stars
+				// Deduct stars from local database
 				transactionDescription := "Sent standout like"
 				if profileData.IsDuo {
 					transactionDescription = "Sent duo standout like"
 				}
-				if err := revenuecat.UpdateUserStarBalance(userId, -starsCost, "standout_like", transactionDescription, db); err != nil {
+				if err := standouts.UpdateUserStarBalance(userId, -starsCost, "standout_like", transactionDescription, db); err != nil {
 					log.Println("Error updating star balance:", err)
 					sendErrorResponse(userId, "Error processing standout like", rdb, db)
 					sentry.CaptureException(err)
 					return
 				}
+
+				// Mark standout as liked in Redis instead of creating database match
+				if profileData.IsDuo {
+					if err := standouts.MarkDuoStandoutLiked(userId, profileData.TargetProfile, profileData.FriendProfile, rdb); err != nil {
+						log.Printf("Error marking duo standout as liked in Redis: %v", err)
+						// Continue anyway - star was already deducted
+					}
+				} else {
+					if err := standouts.MarkSoloStandoutLiked(userId, profileData.TargetProfile, rdb); err != nil {
+						log.Printf("Error marking solo standout as liked in Redis: %v", err)
+						// Continue anyway - star was already deducted
+					}
+				}
+
+				log.Printf("Successfully deducted %d stars from user %d for standout like", starsCost, userId)
 			} else {
 				// Regular like - check daily limits
 				key := fmt.Sprintf("user:likes:%d:%s", userId, time.Now().Format("2006-01-02"))
@@ -536,66 +552,68 @@ func (s Handler) HandleProfile(socketMessage types.SocketMessage[types.SocketPro
 				}
 			}
 
-			if err := profile.CreateProfileView(userId, profileData.TargetProfile, db); err != nil {
-				log.Println("Error creating profile view:", err)
-				sendErrorResponse(userId, "Error processing like", rdb, db)
-				sentry.CaptureException(err)
-				return
-			}
-
-			if err := profile.CreateProfileView(profileData.TargetProfile, userId, db); err != nil {
-				sendErrorResponse(userId, "Error processing like", rdb, db)
-				sentry.CaptureException(err)
-				return
-			}
-
-			if profileData.IsDuo {
-				if err := matches.CreateDuoMatchWithStandout(userId, profileData.FriendProfile, profileData.TargetProfile, profileData.IsStandout, db); err != nil {
-					log.Println("Error creating match:", err)
+			// Only create profile views and matches for non-standout likes
+			// Standout likes are now tracked only in Redis for display filtering
+			if !profileData.IsStandout {
+				if err := profile.CreateProfileView(userId, profileData.TargetProfile, db); err != nil {
+					log.Println("Error creating profile view:", err)
 					sendErrorResponse(userId, "Error processing like", rdb, db)
 					sentry.CaptureException(err)
 					return
 				}
 
-				match, err := matches.GetDuoMatchByProfileIDs(userId, profileData.FriendProfile, profileData.TargetProfile, db)
-
-				if err != nil {
-					log.Println("Error getting match:", err)
+				if err := profile.CreateProfileView(profileData.TargetProfile, userId, db); err != nil {
 					sendErrorResponse(userId, "Error processing like", rdb, db)
 					sentry.CaptureException(err)
 					return
 				}
 
-				matchSocketMessage := types.SocketMessage[*schemas.Matches]{
-					Type: "match",
-					Data: match,
+				if profileData.IsDuo {
+					if err := matches.CreateDuoMatch(userId, profileData.FriendProfile, profileData.TargetProfile, db); err != nil {
+						log.Println("Error creating duo match:", err)
+						sendErrorResponse(userId, "Error processing like", rdb, db)
+						sentry.CaptureException(err)
+						return
+					}
+
+					match, err := matches.GetDuoMatchByProfileIDs(userId, profileData.FriendProfile, profileData.TargetProfile, db)
+
+					if err != nil {
+						log.Println("Error getting duo match:", err)
+						sendErrorResponse(userId, "Error processing like", rdb, db)
+						sentry.CaptureException(err)
+						return
+					}
+
+					matchSocketMessage := types.SocketMessage[*schemas.Matches]{
+						Type: "match",
+						Data: match,
+					}
+
+					BroadcastToUser(profileData.FriendProfile, matchSocketMessage, rdb, db)
+				} else {
+					if err := matches.CreateSoloMatch(userId, profileData.TargetProfile, db); err != nil {
+						log.Println("Error creating solo match:", err)
+						sendErrorResponse(userId, "Error processing like", rdb, db)
+						sentry.CaptureException(err)
+						return
+					}
+
+					match, err := matches.GetSoloMatchByProfileIDs(userId, profileData.TargetProfile, db)
+
+					if err != nil {
+						log.Println("Error getting solo match:", err)
+						sentry.CaptureException(err)
+						return
+					}
+
+					matchSocketMessage := types.SocketMessage[*schemas.Matches]{
+						Type: "match",
+						Data: match,
+					}
+
+					BroadcastToUser(profileData.TargetProfile, matchSocketMessage, rdb, db)
 				}
-
-				BroadcastToUser(profileData.FriendProfile, matchSocketMessage, rdb, db)
-			} else {
-
-				if err := matches.CreateSoloMatchWithStandout(userId, profileData.TargetProfile, profileData.IsStandout, db); err != nil {
-					log.Println("Error creating match:", err)
-					sendErrorResponse(userId, "Error processing like", rdb, db)
-					sentry.CaptureException(err)
-					return
-				}
-
-				match, err := matches.GetSoloMatchByProfileIDs(userId, profileData.TargetProfile, db)
-
-				if err != nil {
-					log.Println("Error getting match:", err)
-					sentry.CaptureException(err)
-					return
-				}
-
-				matchSocketMessage := types.SocketMessage[*schemas.Matches]{
-					Type: "match",
-					Data: match,
-				}
-
-				BroadcastToUser(profileData.TargetProfile, matchSocketMessage, rdb, db)
-
 			}
 
 			sendSuccessResponse(userId, "Successfully processed like", rdb, db)

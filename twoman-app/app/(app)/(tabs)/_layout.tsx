@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Tabs, useRouter, useSegments } from "expo-router";
-import { Linking, Pressable, Text, View } from "react-native";
+import { Linking, Pressable, Text, TouchableOpacity, View } from "react-native";
 import {
   CircleUser,
   Heart,
@@ -9,11 +9,12 @@ import {
   Star,
 } from "lucide-react-native";
 import { FontAwesome } from "@expo/vector-icons";
+import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
+import Purchases from "react-native-purchases";
 import apiFetch from "@/utils/fetch";
 import { FeatureFlag, Friendship, Match, Message, Profile } from "@/types/api";
 import { messageHandler } from "@/utils/websocket";
 import Toast from "react-native-toast-message";
-import Purchases from "react-native-purchases";
 import {
   mainBackgroundColor,
   secondaryBackgroundColor,
@@ -23,8 +24,10 @@ import { FontAwesome5 } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSession } from "@/stores/auth";
-import { useSubscriptionStore } from "@/stores/subscription";
+import { useSubscriptionStore, useRefreshStarBalance } from "@/stores/subscription";
 import useWebSocket from "@/hooks/useWebsocket";
+import ConnectionErrorScreen from "@/components/ConnectionErrorScreen";
+import { useWebSocketStore } from "@/stores/websocketStore";
 
 export default function TabLayout() {
   const router = useRouter();
@@ -33,12 +36,14 @@ export default function TabLayout() {
   const userId = useSession((state) => state.session?.user_id);
 
   const [waitlistEnabled, setWaitlistEnabled] = useState(false);
-  const [starsBalance, setStarsBalance] = useState(0);
   const { connectionStatus } = useWebSocket();
   const [initialized, setInitialized] = useState(false);
+  const { retriesExhausted } = useWebSocketStore();
 
   // Get subscription store
-  const { fetchSubscriptionStatus } = useSubscriptionStore();
+  const { fetchSubscriptionStatus, starBalance } = useSubscriptionStore();
+  const refreshStarBalance = useRefreshStarBalance();
+  const [paywallVisible, setPaywallVisible] = useState(false);
 
   const handleGetProfile = async () => {
     if (!session) return;
@@ -63,9 +68,6 @@ export default function TabLayout() {
       // Fetch subscription status on app initialization
       console.log("Fetching subscription status on app init...");
       await fetchSubscriptionStatus();
-
-      // Fetch stars balance
-      await fetchStarsBalance();
     } catch (error) {
       console.log(error);
     } finally {
@@ -87,18 +89,6 @@ export default function TabLayout() {
       }
     } catch (error) {
       console.log(error);
-    }
-  };
-
-  const fetchStarsBalance = async () => {
-    try {
-      // Get stars from RevenueCat instead of API
-      const virtualCurrencies = await Purchases.getVirtualCurrencies();
-      const starsBalance = virtualCurrencies.all.STR?.balance || 0;
-      setStarsBalance(starsBalance);
-    } catch (error) {
-      console.log("Error fetching stars balance from RevenueCat:", error);
-      setStarsBalance(0);
     }
   };
 
@@ -256,6 +246,81 @@ export default function TabLayout() {
     };
   }, [messageHandler, segments]);
 
+  const presentStarPaywall = async (): Promise<boolean> => {
+    try {
+      console.log("Getting offerings for star paywall...");
+      const offerings = await Purchases.getOfferings();
+
+      // Try to find the "Stars" offering first, fallback to "5 Stars"
+      const starOffering = offerings.all["Stars"] || offerings.all["5 Stars"];
+
+      if (starOffering) {
+        console.log("✅ Found star offering:", starOffering.identifier);
+        
+        try {
+          const paywallResult: PAYWALL_RESULT =
+            await RevenueCatUI.presentPaywall({
+              offering: starOffering,
+            });
+
+          switch (paywallResult) {
+            case PAYWALL_RESULT.PURCHASED:
+            case PAYWALL_RESULT.RESTORED:
+              // Refresh star balance immediately after purchase
+              await refreshStarBalance();
+              return true;
+            default:
+              return false;
+          }
+        } catch (paywallError) {
+          console.error("Star paywall presentation failed:", paywallError);
+          
+          // Try direct product purchase as fallback
+          try {
+            const starPackage = starOffering.availablePackages[0];
+            if (starPackage) {
+              console.log("Attempting direct purchase of:", starPackage.product.identifier);
+              const purchaseResult = await Purchases.purchasePackage(starPackage);
+              
+              if (purchaseResult.customerInfo.entitlements.active) {
+                await refreshStarBalance();
+                return true;
+              }
+            }
+          } catch (directPurchaseError) {
+            console.error("Direct purchase also failed:", directPurchaseError);
+          }
+          
+          return false;
+        }
+      } else {
+        console.log("❌ No star offering found!");
+        return false;
+      }
+    } catch (error) {
+      console.error("Error getting offerings for star paywall:", error);
+      return false;
+    }
+  };
+
+  const handleStarBalancePress = async () => {
+    if (paywallVisible) {
+      console.log("⚠️ Paywall already visible, skipping");
+      return;
+    }
+    
+    setPaywallVisible(true);
+    console.log("🚀 Presenting star paywall from header...");
+    const paywallResult = await presentStarPaywall();
+    setPaywallVisible(false);
+    
+    if (paywallResult) {
+      console.log("✅ Star purchase successful from header");
+    } else {
+      console.log("❌ Star purchase cancelled/failed from header");
+    }
+  };
+
   // Custom header component for Standouts tab
   const StandoutsHeader = () => (
     <View
@@ -276,7 +341,8 @@ export default function TabLayout() {
       >
         Standouts
       </Text>
-      <View
+      <TouchableOpacity
+        onPress={handleStarBalancePress}
         style={{
           flexDirection: "row",
           alignItems: "center",
@@ -285,6 +351,7 @@ export default function TabLayout() {
           paddingVertical: 5,
           borderRadius: 16,
         }}
+        activeOpacity={0.7}
       >
         <FontAwesome name="star" size={16} color={mainPurple} />
         <Text
@@ -295,9 +362,9 @@ export default function TabLayout() {
             marginLeft: 4,
           }}
         >
-          {starsBalance}
+          {starBalance}
         </Text>
-      </View>
+      </TouchableOpacity>
     </View>
   );
 
@@ -447,6 +514,9 @@ export default function TabLayout() {
           }}
         />
       </Tabs>
+      
+      {/* Connection Error Overlay */}
+      <ConnectionErrorScreen visible={retriesExhausted} />
     </View>
   );
 }

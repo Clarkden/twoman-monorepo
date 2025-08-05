@@ -1,10 +1,8 @@
 package handlers
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -172,17 +170,17 @@ func (h Handler) HandleRevenueCatWebhook() http.Handler {
 				starAmount := getStarAmountForProduct(productID)
 				if starAmount > 0 {
 					// Try live DB first
-					err := creditStarsViaRevenueCat(uint(parsedUserId), starAmount, productID, h.liveDB)
+					err := creditStarsToLocalDB(uint(parsedUserId), starAmount, productID, h.liveDB)
 					if err != nil {
 						// Try demo DB
-						err = creditStarsViaRevenueCat(uint(parsedUserId), starAmount, productID, h.demoDB)
+						err = creditStarsToLocalDB(uint(parsedUserId), starAmount, productID, h.demoDB)
 						if err != nil {
 							log.Printf("Error crediting stars to user %s: %v", userId, err)
 							response.InternalServerError(w, err, "Something went wrong")
 							return
 						}
 					}
-					log.Printf("Successfully credited %d stars to user %s via RevenueCat", starAmount, userId)
+					log.Printf("Successfully credited %d stars to user %s", starAmount, userId)
 				}
 			}
 
@@ -304,72 +302,45 @@ func getStarAmountForProduct(productID string) int {
 	}
 }
 
-// creditStarsViaRevenueCat adds stars to a user's RevenueCat virtual currency balance
-func creditStarsViaRevenueCat(userID uint, amount int, productID string, db *gorm.DB) error {
-	// Get user's RevenueCat customer ID
-	var user schemas.User
-	if err := db.Where("id = ?", userID).First(&user).Error; err != nil {
-		return fmt.Errorf("failed to get user: %v", err)
-	}
-
-	if user.RevenuecatCustomerID == "" {
-		return fmt.Errorf("user does not have RevenueCat customer ID")
-	}
-
-	// Credit stars via RevenueCat API
-	projectID := os.Getenv("REVENUECAT_PROJECT_ID")
-	apiKey := os.Getenv("REVENUECAT_SECRET_KEY")
-
-	if projectID == "" || apiKey == "" {
-		return fmt.Errorf("RevenueCat credentials not configured")
-	}
-
-	url := fmt.Sprintf("https://api.revenuecat.com/v2/projects/%s/customers/%s/virtual_currencies/transactions", projectID, user.RevenuecatCustomerID)
-
-	// Create transaction payload
-	transaction := map[string]interface{}{
-		"adjustments": map[string]int{
-			"STR": amount, // Positive amount for adding stars
-		},
-	}
-
-	jsonData, err := json.Marshal(transaction)
+// creditStarsToLocalDB adds stars to a user's local database balance
+func creditStarsToLocalDB(userID uint, amount int, productID string, db *gorm.DB) error {
+	// Get or create user's star balance
+	var stars schemas.Stars
+	err := db.Where("user_id = ?", userID).First(&stars).Error
 	if err != nil {
-		return fmt.Errorf("failed to marshal transaction: %v", err)
+		if err == gorm.ErrRecordNotFound {
+			// Create new star balance
+			stars = schemas.Stars{
+				UserID:  userID,
+				Balance: amount,
+			}
+			if err := db.Create(&stars).Error; err != nil {
+				return fmt.Errorf("failed to create star balance: %v", err)
+			}
+		} else {
+			return fmt.Errorf("failed to get star balance: %v", err)
+		}
+	} else {
+		// Update existing balance
+		stars.Balance += amount
+		if err := db.Save(&stars).Error; err != nil {
+			return fmt.Errorf("failed to update star balance: %v", err)
+		}
 	}
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
-	if err != nil {
-		return fmt.Errorf("failed to create request: %v", err)
-	}
-
-	req.Header.Set("Authorization", "Bearer "+apiKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("failed to make request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("RevenueCat API error: %d - %s", resp.StatusCode, string(body))
-	}
-
-	// Record the transaction locally for audit purposes
-	localTransaction := schemas.StarTransactions{
+	// Record the transaction
+	transaction := schemas.StarTransactions{
 		UserID:          userID,
 		Amount:          amount,
 		TransactionType: "purchase",
-		Description:     fmt.Sprintf("Purchased %s via RevenueCat webhook", productID),
+		Description:     fmt.Sprintf("Purchased %s via RevenueCat", productID),
 	}
 
-	if err := db.Create(&localTransaction).Error; err != nil {
+	if err := db.Create(&transaction).Error; err != nil {
 		log.Printf("Warning: Failed to record star transaction: %v", err)
 		// Don't fail the whole operation for transaction logging
 	}
 
+	log.Printf("Credited %d stars to user %d (new balance: %d)", amount, userID, stars.Balance)
 	return nil
 }

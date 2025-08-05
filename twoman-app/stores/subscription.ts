@@ -5,6 +5,7 @@ import {
 } from "@/utils/subscription";
 import Purchases from "react-native-purchases";
 import { AppState } from "react-native";
+import apiFetch from "@/utils/fetch";
 
 interface SubscriptionState {
   subscriptionInfo: SubscriptionInfo | null;
@@ -104,16 +105,24 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     set({ starBalanceLoading: true });
 
     try {
-      console.log("Fetching star balance from RevenueCat...");
-      const virtualCurrencies = await Purchases.getVirtualCurrencies();
-      const starBalance = virtualCurrencies.all.STR?.balance || 0;
-      console.log("Star balance fetched:", starBalance);
+      const starsResponse = await apiFetch<{ balance: number }>(
+        "/stars/balance",
+      );
 
-      set({
-        starBalance,
-        starBalanceLoading: false,
-        lastStarFetched: new Date(),
-      });
+      if (starsResponse.success) {
+        const starBalance = starsResponse.data.balance;
+        set({
+          starBalance,
+          starBalanceLoading: false,
+          lastStarFetched: new Date(),
+        });
+      } else {
+        console.error("Failed to fetch star balance:", starsResponse.error);
+        set({
+          starBalanceLoading: false,
+          starBalance: 0,
+        });
+      }
     } catch (error) {
       console.error("Error fetching star balance:", error);
       set({

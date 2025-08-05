@@ -294,10 +294,6 @@ func MigrateDB(db *gorm.DB) error {
 		&schemas.ProSubscriptionV2{},
 		&schemas.Stars{},
 		&schemas.StarTransactions{},
-		&schemas.DuoStandouts{},
-		&schemas.SoloStandouts{},
-
-		&schemas.StandoutRefresh{},
 	)
 
 	if err != nil {

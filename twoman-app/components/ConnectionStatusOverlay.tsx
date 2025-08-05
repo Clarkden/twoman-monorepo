@@ -7,10 +7,8 @@ import useWebSocket from "@/hooks/useWebsocket";
 export const ConnectionStatusOverlay: React.FC = () => {
   const { retriesExhausted, connectionStatus, manualRetry } = useWebSocket();
 
-  // Only show the overlay once we've fully given up retrying.
-  if (!retriesExhausted) {
-    return null;
-  }
+  // Hide this overlay - we now use ConnectionErrorScreen in the tabs layout instead
+  return null;
 
   return (
     <BlurView intensity={25} style={styles.overlay}>

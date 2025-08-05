@@ -1,11 +1,10 @@
 package handlers
 
 import (
-	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"twoman/globals"
-	"twoman/handlers/helpers/revenuecat"
 	"twoman/handlers/helpers/standouts"
 	"twoman/handlers/response"
 	"twoman/types"
@@ -20,7 +19,7 @@ func (h Handler) HandleGetUserStarBalance() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session := r.Context().Value(globals.SessionMiddlewareKey).(*types.Session)
 
-		balance, err := revenuecat.GetUserStarBalance(session.UserID, h.DB(r))
+		balance, err := standouts.GetUserStarBalance(session.UserID, h.DB(r))
 		if err != nil {
 			response.InternalServerError(w, err, "Failed to get star balance")
 			return
@@ -37,11 +36,13 @@ func (h Handler) HandleGetDuoStandouts() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session := r.Context().Value(globals.SessionMiddlewareKey).(*types.Session)
 
-		duoStandouts, err := standouts.GetDuoStandouts(session.UserID, MAX_STANDOUTS_LIMIT, h.DB(r))
+		duoStandouts, err := standouts.GetDuoStandouts(session.UserID, MAX_STANDOUTS_LIMIT, h.DB(r), h.rdb)
 		if err != nil {
 			response.InternalServerError(w, err, "Failed to get duo standouts")
 			return
 		}
+
+		log.Printf("Duo standouts retrieved successfully %d", len(duoStandouts))
 
 		response.OKWithData(w, "Duo standouts retrieved successfully", map[string]interface{}{
 			"duo_standouts": duoStandouts,
@@ -62,7 +63,7 @@ func (h Handler) HandleGetSoloStandouts() http.Handler {
 			}
 		}
 
-		soloStandouts, err := standouts.GetSoloStandouts(session.UserID, limit, h.DB(r))
+		soloStandouts, err := standouts.GetSoloStandouts(session.UserID, limit, h.DB(r), h.rdb)
 		if err != nil {
 			response.InternalServerError(w, err, "Failed to get solo standouts")
 			return
@@ -71,57 +72,5 @@ func (h Handler) HandleGetSoloStandouts() http.Handler {
 		response.OKWithData(w, "Solo standouts retrieved successfully", map[string]interface{}{
 			"solo_standouts": soloStandouts,
 		})
-	})
-}
-
-// HandleUpdateStarBalance allows admins to update user star balances (for purchases, bonuses, etc.)
-func (h Handler) HandleUpdateStarBalance() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// This should be admin-only - add admin check here
-		// For now, allowing any authenticated user for testing
-
-		targetUserIDStr := r.PathValue("userId")
-		targetUserID, err := strconv.ParseUint(targetUserIDStr, 10, 32)
-		if err != nil {
-			response.BadRequest(w, "Invalid user ID")
-			return
-		}
-
-		var requestBody struct {
-			Amount          int    `json:"amount"`
-			TransactionType string `json:"transaction_type"`
-			Description     string `json:"description"`
-		}
-
-		if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-			response.BadRequest(w, "Invalid request body")
-			return
-		}
-
-		// Validate transaction type
-		validTypes := map[string]bool{
-			"purchase": true,
-			"bonus":    true,
-			"refund":   true,
-		}
-		if !validTypes[requestBody.TransactionType] {
-			response.BadRequest(w, "Invalid transaction type")
-			return
-		}
-
-		err = standouts.UpdateUserStarBalance(
-			uint(targetUserID),
-			requestBody.Amount,
-			requestBody.TransactionType,
-			requestBody.Description,
-			h.DB(r),
-		)
-
-		if err != nil {
-			response.InternalServerError(w, err, "Failed to update star balance")
-			return
-		}
-
-		response.OK(w, "Star balance updated successfully")
 	})
 }
