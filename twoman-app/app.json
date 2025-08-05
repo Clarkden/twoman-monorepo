@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0c0c0d"
+      "backgroundColor": "#1A1A1A"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
@@ -26,7 +26,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
-        "backgroundColor": "#1e1d1f"
+        "backgroundColor": "#1A1A1A"
       },
       "permissions": [
         "android.permission.RECORD_AUDIO",
