@@ -222,9 +222,9 @@ func GetDuoStandouts(userID uint, limit int, db *gorm.DB) ([]schemas.DuoStandout
 		JOIN profiles p1 ON f1.profile_id = p1.user_id
 		JOIN profiles p2 ON f1.friend_id = p2.user_id
 		JOIN matches m ON (
-			(m.profile1_id = f1.profile_id AND m.profile2_id = f1.friend_id AND m.is_duo = true AND m.status = 'accepted')
+			(m.profile3_id = f1.profile_id AND m.profile4_id = f1.friend_id AND m.is_duo = true AND m.status = 'accepted')
 			OR
-			(m.profile1_id = f1.friend_id AND m.profile2_id = f1.profile_id AND m.is_duo = true AND m.status = 'accepted')
+			(m.profile3_id = f1.friend_id AND m.profile4_id = f1.profile_id AND m.is_duo = true AND m.status = 'accepted')
 		)
 		LEFT JOIN matches existing_match ON (
 			existing_match.profile1_id = ? AND existing_match.is_standout = true AND 
@@ -430,9 +430,9 @@ func generateDuoStandouts(userID uint, limit int, db *gorm.DB) error {
 		JOIN profiles p1 ON f1.profile_id = p1.user_id
 		JOIN profiles p2 ON f1.friend_id = p2.user_id
 		LEFT JOIN matches m ON (
-			(m.profile1_id = f1.profile_id AND m.profile2_id = f1.friend_id AND m.is_duo = true AND m.status = 'accepted')
+			(m.profile3_id = f1.profile_id AND m.profile4_id = f1.friend_id AND m.is_duo = true AND m.status = 'accepted')
 			OR
-			(m.profile1_id = f1.friend_id AND m.profile2_id = f1.profile_id AND m.is_duo = true AND m.status = 'accepted')
+			(m.profile3_id = f1.friend_id AND m.profile4_id = f1.profile_id AND m.is_duo = true AND m.status = 'accepted')
 		)
 		WHERE f1.accepted = true 
 		AND f2.accepted = true
