@@ -137,6 +137,9 @@ web-build/
 # Metro
 .metro-health-check*
 
+# Watchman
+.watchman-cookie-*
+
 # Bundle artifacts
 *.jsbundle
 
