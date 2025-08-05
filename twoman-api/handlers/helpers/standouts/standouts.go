@@ -227,7 +227,7 @@ func GetDuoStandouts(userID uint, limit int, db *gorm.DB) ([]schemas.DuoStandout
 			(m.profile1_id = f1.friend_id AND m.profile2_id = f1.profile_id AND m.is_duo = true AND m.status = 'accepted')
 		)
 		LEFT JOIN matches existing_match ON (
-			existing_match.profile1_id = ? AND existing_match.star = true AND 
+			existing_match.profile1_id = ? AND existing_match.is_standout = true AND 
 			((existing_match.profile3_id = f1.profile_id AND existing_match.profile4_id = f1.friend_id) OR
 			 (existing_match.profile3_id = f1.friend_id AND existing_match.profile4_id = f1.profile_id))
 		)
@@ -268,7 +268,7 @@ func GetDuoStandouts(userID uint, limit int, db *gorm.DB) ([]schemas.DuoStandout
 			JOIN profiles p1 ON f1.profile_id = p1.user_id
 			JOIN profiles p2 ON f1.friend_id = p2.user_id
 			LEFT JOIN matches existing_match ON (
-				existing_match.profile1_id = ? AND existing_match.star = true AND 
+				existing_match.profile1_id = ? AND existing_match.is_standout = true AND 
 				((existing_match.profile3_id = f1.profile_id AND existing_match.profile4_id = f1.friend_id) OR
 				 (existing_match.profile3_id = f1.friend_id AND existing_match.profile4_id = f1.profile_id))
 			)
@@ -343,7 +343,7 @@ func GetSoloStandouts(userID uint, limit int, db *gorm.DB) ([]schemas.SoloStando
 			(m.profile4_id = p1.user_id AND m.status = 'accepted')
 		)
 		LEFT JOIN matches existing_match ON (
-			existing_match.profile1_id = ? AND existing_match.profile3_id = p1.user_id AND existing_match.star = true
+			existing_match.profile1_id = ? AND existing_match.profile3_id = p1.user_id AND existing_match.is_standout = true
 		)
 		WHERE p1.user_id != ?
 		AND ST_Distance_Sphere(p1.location_point, ST_GeomFromText(?)) <= ? * 1000
@@ -372,7 +372,7 @@ func GetSoloStandouts(userID uint, limit int, db *gorm.DB) ([]schemas.SoloStando
 				0 as popularity_score
 			FROM profiles p1
 			LEFT JOIN matches existing_match ON (
-				existing_match.profile1_id = ? AND existing_match.profile3_id = p1.user_id AND existing_match.star = true
+				existing_match.profile1_id = ? AND existing_match.profile3_id = p1.user_id AND existing_match.is_standout = true
 			)
 			WHERE p1.user_id != ?
 			AND ST_Distance_Sphere(p1.location_point, ST_GeomFromText(?)) <= ? * 1000
