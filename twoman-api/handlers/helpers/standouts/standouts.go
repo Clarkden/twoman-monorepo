@@ -226,10 +226,10 @@ func GetDuoStandouts(userID uint, limit int, db *gorm.DB) ([]schemas.DuoStandout
 			OR
 			(m.profile1_id = f1.friend_id AND m.profile2_id = f1.profile_id AND m.is_duo = true AND m.status = 'accepted')
 		)
-		LEFT JOIN standout_likes sl ON (
-			sl.sender_id = ? AND sl.is_duo = true AND 
-			((sl.target_profile1_id = f1.profile_id AND sl.target_profile2_id = f1.friend_id) OR
-			 (sl.target_profile1_id = f1.friend_id AND sl.target_profile2_id = f1.profile_id))
+		LEFT JOIN matches existing_match ON (
+			existing_match.profile1_id = ? AND existing_match.star = true AND 
+			((existing_match.profile3_id = f1.profile_id AND existing_match.profile4_id = f1.friend_id) OR
+			 (existing_match.profile3_id = f1.friend_id AND existing_match.profile4_id = f1.profile_id))
 		)
 		WHERE f1.accepted = true 
 		AND f2.accepted = true
@@ -238,7 +238,7 @@ func GetDuoStandouts(userID uint, limit int, db *gorm.DB) ([]schemas.DuoStandout
 		AND f1.profile_id < f1.friend_id -- Avoid duplicates
 		AND (ST_Distance_Sphere(p1.location_point, ST_GeomFromText(?)) <= ? * 1000
 		     OR ST_Distance_Sphere(p2.location_point, ST_GeomFromText(?)) <= ? * 1000)
-		AND sl.id IS NULL -- Exclude duos already liked
+		AND existing_match.id IS NULL -- Exclude duos already liked
 		GROUP BY f1.profile_id, f1.friend_id
 		ORDER BY match_count DESC
 		LIMIT ?
@@ -267,10 +267,10 @@ func GetDuoStandouts(userID uint, limit int, db *gorm.DB) ([]schemas.DuoStandout
 			JOIN friendships f2 ON f1.profile_id = f2.friend_id AND f1.friend_id = f2.profile_id
 			JOIN profiles p1 ON f1.profile_id = p1.user_id
 			JOIN profiles p2 ON f1.friend_id = p2.user_id
-			LEFT JOIN standout_likes sl ON (
-				sl.sender_id = ? AND sl.is_duo = true AND 
-				((sl.target_profile1_id = f1.profile_id AND sl.target_profile2_id = f1.friend_id) OR
-				 (sl.target_profile1_id = f1.friend_id AND sl.target_profile2_id = f1.profile_id))
+			LEFT JOIN matches existing_match ON (
+				existing_match.profile1_id = ? AND existing_match.star = true AND 
+				((existing_match.profile3_id = f1.profile_id AND existing_match.profile4_id = f1.friend_id) OR
+				 (existing_match.profile3_id = f1.friend_id AND existing_match.profile4_id = f1.profile_id))
 			)
 			WHERE f1.accepted = true 
 			AND f2.accepted = true
@@ -279,7 +279,7 @@ func GetDuoStandouts(userID uint, limit int, db *gorm.DB) ([]schemas.DuoStandout
 			AND f1.profile_id < f1.friend_id -- Avoid duplicates
 			AND (ST_Distance_Sphere(p1.location_point, ST_GeomFromText(?)) <= ? * 1000
 			     OR ST_Distance_Sphere(p2.location_point, ST_GeomFromText(?)) <= ? * 1000)
-			AND sl.id IS NULL -- Exclude duos already liked
+			AND existing_match.id IS NULL -- Exclude duos already liked
 			ORDER BY RAND()
 			LIMIT ?
 		`
@@ -342,12 +342,12 @@ func GetSoloStandouts(userID uint, limit int, db *gorm.DB) ([]schemas.SoloStando
 			OR
 			(m.profile4_id = p1.user_id AND m.status = 'accepted')
 		)
-		LEFT JOIN standout_likes sl ON (
-			sl.sender_id = ? AND sl.target_profile1_id = p1.user_id AND sl.is_duo = false
+		LEFT JOIN matches existing_match ON (
+			existing_match.profile1_id = ? AND existing_match.profile3_id = p1.user_id AND existing_match.star = true
 		)
 		WHERE p1.user_id != ?
 		AND ST_Distance_Sphere(p1.location_point, ST_GeomFromText(?)) <= ? * 1000
-		AND sl.id IS NULL -- Exclude profiles already liked
+		AND existing_match.id IS NULL -- Exclude profiles already liked
 		GROUP BY p1.user_id
 		ORDER BY popularity_score DESC
 		LIMIT ?
@@ -371,12 +371,12 @@ func GetSoloStandouts(userID uint, limit int, db *gorm.DB) ([]schemas.SoloStando
 				p1.user_id as profile_id,
 				0 as popularity_score
 			FROM profiles p1
-			LEFT JOIN standout_likes sl ON (
-				sl.sender_id = ? AND sl.target_profile1_id = p1.user_id AND sl.is_duo = false
+			LEFT JOIN matches existing_match ON (
+				existing_match.profile1_id = ? AND existing_match.profile3_id = p1.user_id AND existing_match.star = true
 			)
 			WHERE p1.user_id != ?
 			AND ST_Distance_Sphere(p1.location_point, ST_GeomFromText(?)) <= ? * 1000
-			AND sl.id IS NULL -- Exclude profiles already liked
+			AND existing_match.id IS NULL -- Exclude profiles already liked
 			ORDER BY RAND()
 			LIMIT ?
 		`
