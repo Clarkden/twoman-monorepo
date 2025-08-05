@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -79,6 +81,8 @@ func (h Handler) HandleRevenueCatWebhook() http.Handler {
 
 		if productIdentifier, ok := event["product_identifier"].(string); ok {
 			productID = productIdentifier
+		} else if productId, ok := event["product_id"].(string); ok {
+			productID = productId
 		}
 		if appUserID, ok := event["app_user_id"].(string); ok {
 			customerID = appUserID
@@ -163,8 +167,23 @@ func (h Handler) HandleRevenueCatWebhook() http.Handler {
 			// Check if this is a star purchase by product ID
 			if isStarProduct(productID) {
 				log.Println("Star purchase detected for user", userId)
-				// The virtual currency webhook will handle the actual currency adjustment
-				// This is just for logging/analytics
+
+				// Credit stars based on product ID
+				starAmount := getStarAmountForProduct(productID)
+				if starAmount > 0 {
+					// Try live DB first
+					err := creditStarsViaRevenueCat(uint(parsedUserId), starAmount, productID, h.liveDB)
+					if err != nil {
+						// Try demo DB
+						err = creditStarsViaRevenueCat(uint(parsedUserId), starAmount, productID, h.demoDB)
+						if err != nil {
+							log.Printf("Error crediting stars to user %s: %v", userId, err)
+							response.InternalServerError(w, err, "Something went wrong")
+							return
+						}
+					}
+					log.Printf("Successfully credited %d stars to user %s via RevenueCat", starAmount, userId)
+				}
 			}
 
 		default:
@@ -269,4 +288,88 @@ func isStarProduct(productID string) bool {
 		}
 	}
 	return false
+}
+
+// getStarAmountForProduct returns the number of stars for a given product ID
+func getStarAmountForProduct(productID string) int {
+	switch productID {
+	case "stars_5":
+		return 5
+	case "stars_10":
+		return 10
+	case "stars_15":
+		return 15
+	default:
+		return 0
+	}
+}
+
+// creditStarsViaRevenueCat adds stars to a user's RevenueCat virtual currency balance
+func creditStarsViaRevenueCat(userID uint, amount int, productID string, db *gorm.DB) error {
+	// Get user's RevenueCat customer ID
+	var user schemas.User
+	if err := db.Where("id = ?", userID).First(&user).Error; err != nil {
+		return fmt.Errorf("failed to get user: %v", err)
+	}
+
+	if user.RevenuecatCustomerID == "" {
+		return fmt.Errorf("user does not have RevenueCat customer ID")
+	}
+
+	// Credit stars via RevenueCat API
+	projectID := os.Getenv("REVENUECAT_PROJECT_ID")
+	apiKey := os.Getenv("REVENUECAT_SECRET_KEY")
+
+	if projectID == "" || apiKey == "" {
+		return fmt.Errorf("RevenueCat credentials not configured")
+	}
+
+	url := fmt.Sprintf("https://api.revenuecat.com/v2/projects/%s/customers/%s/virtual_currencies/transactions", projectID, user.RevenuecatCustomerID)
+
+	// Create transaction payload
+	transaction := map[string]interface{}{
+		"adjustments": map[string]int{
+			"STR": amount, // Positive amount for adding stars
+		},
+	}
+
+	jsonData, err := json.Marshal(transaction)
+	if err != nil {
+		return fmt.Errorf("failed to marshal transaction: %v", err)
+	}
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %v", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to make request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("RevenueCat API error: %d - %s", resp.StatusCode, string(body))
+	}
+
+	// Record the transaction locally for audit purposes
+	localTransaction := schemas.StarTransactions{
+		UserID:          userID,
+		Amount:          amount,
+		TransactionType: "purchase",
+		Description:     fmt.Sprintf("Purchased %s via RevenueCat webhook", productID),
+	}
+
+	if err := db.Create(&localTransaction).Error; err != nil {
+		log.Printf("Warning: Failed to record star transaction: %v", err)
+		// Don't fail the whole operation for transaction logging
+	}
+
+	return nil
 }
