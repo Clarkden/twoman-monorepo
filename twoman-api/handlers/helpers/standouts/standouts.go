@@ -18,8 +18,8 @@ const STANDOUTS_TTL = 7 * 24 * time.Hour
 
 // Redis data structures
 type DuoStandoutsRedis struct {
-	ProfilePairs [][]uint           `json:"profile_pairs"` // Array of [profile1_id, profile2_id] pairs
-	Liked        map[string]bool    `json:"liked"`         // "profile1_id,profile2_id" -> true
+	ProfilePairs [][]uint        `json:"profile_pairs"` // Array of [profile1_id, profile2_id] pairs
+	Liked        map[string]bool `json:"liked"`         // "profile1_id,profile2_id" -> true
 }
 
 type SoloStandoutsRedis struct {
@@ -322,6 +322,8 @@ func generateAndCacheDuoStandouts(userID uint, limit int, db *gorm.DB, rdb *redi
 		return fmt.Errorf("failed to query duo standouts: %v", err)
 	}
 
+	log.Printf("Primary duo query returned %d results for user %d", len(results), userID)
+
 	// If no results from match-based query, fall back to random nearby friend pairs
 	if len(results) == 0 {
 		fallbackQuery := `
@@ -347,6 +349,8 @@ func generateAndCacheDuoStandouts(userID uint, limit int, db *gorm.DB, rdb *redi
 			return fmt.Errorf("failed to query fallback duo standouts: %v", err)
 		}
 
+		log.Printf("Fallback duo query returned %d results for user %d", len(results), userID)
+
 		// If still no results, fall back to random friend pairs without distance constraint
 		if len(results) == 0 {
 			noDistanceFallbackQuery := `
@@ -366,6 +370,34 @@ func generateAndCacheDuoStandouts(userID uint, limit int, db *gorm.DB, rdb *redi
 			`
 			if err := db.Raw(noDistanceFallbackQuery, userID, userID, limit).Scan(&results).Error; err != nil {
 				return fmt.Errorf("failed to query no-distance fallback duo standouts: %v", err)
+			}
+
+			log.Printf("No-distance fallback duo query returned %d results for user %d", len(results), userID)
+
+			// If still no results, try a simple query for any two profiles that are friends (not necessarily mutual)
+			if len(results) == 0 {
+				log.Printf("No mutual friendships found, trying simple friendship query for user %d", userID)
+				simpleFriendshipQuery := `
+					SELECT
+						f.profile_id as profile1_id,
+						f.friend_id as profile2_id,
+						0 as match_count
+					FROM friendships f
+					JOIN profiles p1 ON f.profile_id = p1.user_id
+					JOIN profiles p2 ON f.friend_id = p2.user_id
+					WHERE f.accepted = true
+					AND f.profile_id != ?
+					AND f.friend_id != ?
+					AND f.profile_id != f.friend_id
+					ORDER BY RAND()
+					LIMIT ?
+				`
+				if err := db.Raw(simpleFriendshipQuery, userID, userID, limit).Scan(&results).Error; err != nil {
+					log.Printf("Failed to query simple friendship duo standouts for user %d: %v", userID, err)
+					return fmt.Errorf("failed to query simple friendship duo standouts: %v", err)
+				}
+
+				log.Printf("Simple friendship duo query returned %d results for user %d", len(results), userID)
 			}
 		}
 	}
