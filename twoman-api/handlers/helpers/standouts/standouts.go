@@ -346,6 +346,28 @@ func generateAndCacheDuoStandouts(userID uint, limit int, db *gorm.DB, rdb *redi
 		if err := db.Raw(fallbackQuery, userID, userID, userLocationWKT, userProfile.PreferredDistanceMax, userLocationWKT, userProfile.PreferredDistanceMax, limit).Scan(&results).Error; err != nil {
 			return fmt.Errorf("failed to query fallback duo standouts: %v", err)
 		}
+
+		// If still no results, fall back to random friend pairs without distance constraint
+		if len(results) == 0 {
+			noDistanceFallbackQuery := `
+				SELECT
+					f1.profile_id as profile1_id,
+					f1.friend_id as profile2_id,
+					0 as match_count
+				FROM friendships f1
+				JOIN friendships f2 ON f1.profile_id = f2.friend_id AND f1.friend_id = f2.profile_id
+				WHERE f1.accepted = true
+				AND f2.accepted = true
+				AND f1.profile_id != ?
+				AND f1.friend_id != ?
+				AND f1.profile_id < f1.friend_id -- Avoid duplicates
+				ORDER BY RAND()
+				LIMIT ?
+			`
+			if err := db.Raw(noDistanceFallbackQuery, userID, userID, limit).Scan(&results).Error; err != nil {
+				return fmt.Errorf("failed to query no-distance fallback duo standouts: %v", err)
+			}
+		}
 	}
 
 	// Convert to Redis format
