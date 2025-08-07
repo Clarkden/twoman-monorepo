@@ -1,7 +1,9 @@
 import {
   FlatList,
   Image,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,7 +13,6 @@ import {
   View,
   Alert,
   Share,
-  Animated,
 } from "react-native";
 import {
   accentGray,
@@ -79,24 +80,6 @@ export default function FriendsScreen() {
   const [redeeming, setRedeeming] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [showConfetti, setShowConfetti] = useState(false);
-  const slideAnim = useState(new Animated.Value(300))[0];
-
-  // Modal animation effect
-  useEffect(() => {
-    if (showRedeemModal) {
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.timing(slideAnim, {
-        toValue: 300,
-        duration: 250,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [showRedeemModal, slideAnim]);
 
   // Confetti debug
   useEffect(() => {
@@ -796,30 +779,22 @@ export default function FriendsScreen() {
       </Modal>
 
       {/* Redeem Code Modal */}
-      {showRedeemModal && (
-        <Modal
-          visible={showRedeemModal}
-          transparent
-          animationType="fade"
-          presentationStyle="overFullScreen"
-          onRequestClose={() => {
-            console.log("Modal onRequestClose called - NOT resetting confetti");
-            setShowRedeemModal(false);
-            setRedeemStep("input");
-            setCodeInput("");
-            setErrorMessage("");
-            // Don't reset confetti here - let it finish naturally
-          }}
+      <Modal
+        visible={showRedeemModal}
+        onRequestClose={() => {
+          setShowRedeemModal(false);
+          setRedeemStep("input");
+          setCodeInput("");
+          setErrorMessage("");
+        }}
+        presentationStyle="pageSheet"
+        animationType="slide"
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
         >
-          <View style={styles.fullScreenModalOverlay}>
-            <Animated.View
-              style={[
-                styles.animatedBottomSheetContainer,
-                {
-                  transform: [{ translateY: slideAnim }],
-                },
-              ]}
-            >
+          <View style={styles.modalContainer}>
               {redeemStep === "input" ? (
                 <>
                   <View style={styles.nativeModalHeader}>
@@ -968,10 +943,9 @@ export default function FriendsScreen() {
                   </View>
                 </>
               ) : null}
-            </Animated.View>
           </View>
-        </Modal>
-      )}
+        </KeyboardAvoidingView>
+      </Modal>
 
       {/* Full-screen Confetti Animation - Absolute positioned view */}
       {showConfetti && (
@@ -1582,19 +1556,10 @@ const styles = StyleSheet.create({
     color: "#CCCCCC",
     fontSize: 14,
   },
-  fullScreenModalOverlay: {
+  modalContainer: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-end",
-  },
-  animatedBottomSheetContainer: {
-    backgroundColor: secondaryBackgroundColor,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingTop: 8,
-    paddingBottom: 34, // Safe area for home indicator
-    paddingHorizontal: 24,
-    minHeight: 300,
+    backgroundColor: mainBackgroundColor,
+    padding: 24,
   },
   modalCodeInput: {
     backgroundColor: "#2a2a2c",
