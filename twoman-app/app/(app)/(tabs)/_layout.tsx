@@ -24,7 +24,10 @@ import { FontAwesome5 } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSession } from "@/stores/auth";
-import { useSubscriptionStore, useRefreshStarBalance } from "@/stores/subscription";
+import {
+  useSubscriptionStore,
+  useRefreshStarBalance,
+} from "@/stores/subscription";
 import useWebSocket from "@/hooks/useWebsocket";
 import ConnectionErrorScreen from "@/components/ConnectionErrorScreen";
 import { useWebSocketStore } from "@/stores/websocketStore";
@@ -256,7 +259,7 @@ export default function TabLayout() {
 
       if (starOffering) {
         console.log("✅ Found star offering:", starOffering.identifier);
-        
+
         try {
           const paywallResult: PAYWALL_RESULT =
             await RevenueCatUI.presentPaywall({
@@ -274,14 +277,18 @@ export default function TabLayout() {
           }
         } catch (paywallError) {
           console.error("Star paywall presentation failed:", paywallError);
-          
+
           // Try direct product purchase as fallback
           try {
             const starPackage = starOffering.availablePackages[0];
             if (starPackage) {
-              console.log("Attempting direct purchase of:", starPackage.product.identifier);
-              const purchaseResult = await Purchases.purchasePackage(starPackage);
-              
+              console.log(
+                "Attempting direct purchase of:",
+                starPackage.product.identifier,
+              );
+              const purchaseResult =
+                await Purchases.purchasePackage(starPackage);
+
               if (purchaseResult.customerInfo.entitlements.active) {
                 await refreshStarBalance();
                 return true;
@@ -290,7 +297,7 @@ export default function TabLayout() {
           } catch (directPurchaseError) {
             console.error("Direct purchase also failed:", directPurchaseError);
           }
-          
+
           return false;
         }
       } else {
@@ -308,12 +315,12 @@ export default function TabLayout() {
       console.log("⚠️ Paywall already visible, skipping");
       return;
     }
-    
+
     setPaywallVisible(true);
     console.log("🚀 Presenting star paywall from header...");
     const paywallResult = await presentStarPaywall();
     setPaywallVisible(false);
-    
+
     if (paywallResult) {
       console.log("✅ Star purchase successful from header");
     } else {
@@ -514,7 +521,7 @@ export default function TabLayout() {
           }}
         />
       </Tabs>
-      
+
       {/* Connection Error Overlay */}
       <ConnectionErrorScreen visible={retriesExhausted} />
     </View>

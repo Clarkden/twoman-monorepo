@@ -18,6 +18,7 @@ import {
   useFetchStarBalance,
   useRefreshStarBalance,
 } from "@/stores/subscription";
+import { resetReviewSession } from "@/utils/reviewPrompt";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -68,6 +69,9 @@ export default function RootLayout() {
       // Also fetch star balance now that RevenueCat is configured
       fetchStarBalance();
     }
+
+    // Reset review session when app starts
+    resetReviewSession();
   }, [userId, fetchSubscriptionStatus, fetchStarBalance]);
 
   // Global star balance refresh logic (after RevenueCat is configured)

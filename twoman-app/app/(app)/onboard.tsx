@@ -20,6 +20,7 @@ import LottieView from "lottie-react-native";
 import { useSession } from "@/stores/auth";
 import apiFetch from "@/utils/fetch";
 import { uploadFile } from "@/utils/files";
+import { useReviewPrompt } from "@/hooks/useReviewPrompt";
 import { BlurView } from "expo-blur";
 import { ImagePickerAsset } from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
@@ -129,6 +130,11 @@ export default function OnBoardScreen() {
   const [submittingProfileError, setSubmittingProfileError] =
     useState<string>();
   const [submitted, setSubmitted] = useState(false);
+
+  // Review prompt for onboarding completion
+  const onboardingCompleteReview = useReviewPrompt({
+    trigger: "onboarding_complete",
+  });
 
   useEffect(() => {
     initialProgressAnimation.value = withTiming(1, {
@@ -300,9 +306,14 @@ export default function OnBoardScreen() {
     setSubmitted(false);
   };
 
-  const handleNextOnDone = () => {
+  const handleNextOnDone = async () => {
     // TODO: Implement small walk through of app
     router.replace("/(tabs)");
+
+    // Trigger onboarding complete review prompt after a delay
+    setTimeout(async () => {
+      await onboardingCompleteReview.checkAndShowPrompt();
+    }, 3000);
   };
 
   const renderScreen = (index: number) => {

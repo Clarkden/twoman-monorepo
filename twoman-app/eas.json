@@ -27,7 +27,6 @@
         "EXPO_PUBLIC_HTTP_PROTOCOL": "https",
         "EXPO_PUBLIC_WS_PROTOCOL": "wss",
         "EXPO_PUBLIC_API_VERSION": "v1",
-        "EXPO_PUBLIC_CLIENT_VERSION": "1.0.3",
         "EXPO_PUBLIC_APPS_FLYER_DEV_KEY": "pzATwUtnFguqUMwfTFCLjT",
         "EXPO_PUBLIC_APPS_FLYER_IS_DEBUG": "false"
       },
@@ -43,7 +42,6 @@
         "EXPO_PUBLIC_HTTP_PROTOCOL": "https",
         "EXPO_PUBLIC_WS_PROTOCOL": "wss",
         "EXPO_PUBLIC_API_VERSION": "v1",
-        "EXPO_PUBLIC_CLIENT_VERSION": "1.0.3",
         "EXPO_PUBLIC_APPS_FLYER_DEV_KEY": "pzATwUtnFguqUMwfTFCLjT",
         "EXPO_PUBLIC_APPS_FLYER_IS_DEBUG": "false"
       },

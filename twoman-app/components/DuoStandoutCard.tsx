@@ -60,11 +60,11 @@ const DuoStandoutCard: React.FC<DuoStandoutCardProps> = ({
     if (starsBalance < starsCost) {
       Alert.alert(
         "Insufficient Stars",
-        `You need ${starsCost} star${starsCost > 1 ? 's' : ''} to send this like. You currently have ${starsBalance} star${starsBalance > 1 ? 's' : ''}.`
+        `You need ${starsCost} star${starsCost > 1 ? "s" : ""} to send this like. You currently have ${starsBalance} star${starsBalance > 1 ? "s" : ""}.`,
       );
       return;
     }
-    
+
     // Always trigger the duo flow (friend selection first)
     onSendLike(profile1.user_id, profile2.user_id, starsCost);
   };

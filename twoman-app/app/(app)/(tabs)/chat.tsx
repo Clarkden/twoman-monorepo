@@ -1,6 +1,7 @@
 import { Match, Message, Profile } from "@/types/api";
 import { GetMatches } from "@/utils/match";
 import { useEffect, useState } from "react";
+import { useReviewPrompt } from "@/hooks/useReviewPrompt";
 import {
   FlatList,
   Image,
@@ -69,6 +70,9 @@ export default function Chat() {
 
   const userId = useSession((state) => state.session?.user_id);
   const [matches, setMatches] = useState<Match[]>([]);
+
+  // Review prompt for first chat
+  const firstChatReview = useReviewPrompt({ trigger: "first_chat" });
   const segments = useSegments();
   const globalSearchParams = useGlobalSearchParams();
 
@@ -93,6 +97,11 @@ export default function Chat() {
         match.ID === matchId ? { ...match, hasUnreadMessages: false } : match,
       ),
     );
+
+    // Trigger first chat review prompt after a short delay
+    setTimeout(async () => {
+      await firstChatReview.checkAndShowPrompt();
+    }, 1500);
   };
 
   const isFocused = useIsFocused();

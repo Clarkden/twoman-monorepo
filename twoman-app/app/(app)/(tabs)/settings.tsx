@@ -48,6 +48,7 @@ import {
   getSubscriptionStatus,
   type SubscriptionInfo,
 } from "@/utils/subscription";
+import { APP_VERSION } from "@/utils/general";
 
 async function presentPaywall(): Promise<boolean> {
   console.log("Starting presentPaywall function for settings");
@@ -416,7 +417,7 @@ export default function SettingsScreen() {
                 marginTop: 5,
               }}
             >
-              Version {process.env.EXPO_PUBLIC_CLIENT_VERSION}
+              Version {APP_VERSION}
             </Text>
           </View>
           <View>

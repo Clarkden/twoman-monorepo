@@ -795,154 +795,154 @@ export default function FriendsScreen() {
           style={{ flex: 1 }}
         >
           <View style={styles.modalContainer}>
-              {redeemStep === "input" ? (
-                <>
-                  <View style={styles.nativeModalHeader}>
-                    <Text style={styles.nativeModalTitle}>
-                      Enter Referral Code
-                    </Text>
-                    <TouchableOpacity
-                      onPress={() => {
-                        setShowRedeemModal(false);
-                        setRedeemStep("input");
-                      }}
-                      style={styles.nativeModalCloseButton}
-                    >
-                      <Text style={styles.nativeModalCloseButtonText}>✕</Text>
-                    </TouchableOpacity>
-                  </View>
+            {redeemStep === "input" ? (
+              <>
+                <View style={styles.nativeModalHeader}>
+                  <Text style={styles.nativeModalTitle}>
+                    Enter Referral Code
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setShowRedeemModal(false);
+                      setRedeemStep("input");
+                    }}
+                    style={styles.nativeModalCloseButton}
+                  >
+                    <Text style={styles.nativeModalCloseButtonText}>✕</Text>
+                  </TouchableOpacity>
+                </View>
 
-                  <Text style={styles.nativeModalSubtitle}>
-                    Enter your friend's code to get 1 week of 2 Man Pro free!
+                <Text style={styles.nativeModalSubtitle}>
+                  Enter your friend's code to get 1 week of 2 Man Pro free!
+                </Text>
+
+                <TextInput
+                  value={codeInput}
+                  onChangeText={(text) => setCodeInput(text.toUpperCase())}
+                  style={styles.nativeModalCodeInput}
+                  placeholder="Enter 8-character code"
+                  placeholderTextColor="#666"
+                  maxLength={8}
+                  autoCapitalize="characters"
+                  autoCorrect={false}
+                  autoFocus
+                />
+
+                <TouchableOpacity
+                  style={[
+                    styles.nativeModalRedeemButton,
+                    (!codeInput.trim() || redeeming) &&
+                      styles.nativeModalRedeemButtonDisabled,
+                  ]}
+                  onPress={handleRedeemCode}
+                  disabled={!codeInput.trim() || redeeming}
+                >
+                  {redeeming ? (
+                    <LoadingIndicator size={16} />
+                  ) : (
+                    <Text style={styles.nativeModalRedeemButtonText}>
+                      Redeem Code
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </>
+            ) : redeemStep === "success" ? (
+              <>
+                <View style={styles.nativeModalHeader}>
+                  <Text style={styles.nativeModalTitle}>Success!</Text>
+                  <TouchableOpacity
+                    style={styles.nativeModalCloseButton}
+                    onPress={() => {
+                      setShowRedeemModal(false);
+                      setRedeemStep("input");
+                    }}
+                  >
+                    <Text style={styles.nativeModalCloseButtonText}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.successContent}>
+                  <Text style={styles.successTitle}>Success! 🎉</Text>
+
+                  <Text style={styles.successSubtitle}>
+                    Your referral code has been redeemed successfully!
                   </Text>
 
-                  <TextInput
-                    value={codeInput}
-                    onChangeText={(text) => setCodeInput(text.toUpperCase())}
-                    style={styles.nativeModalCodeInput}
-                    placeholder="Enter 8-character code"
-                    placeholderTextColor="#666"
-                    maxLength={8}
-                    autoCapitalize="characters"
-                    autoCorrect={false}
-                    autoFocus
-                  />
+                  <View style={styles.successBenefitsContainer}>
+                    <View style={styles.successBenefitItem}>
+                      <Users size={20} color={goldYellow} />
+                      <Text style={styles.successBenefitText}>
+                        You got 1 week of Pro free!
+                      </Text>
+                    </View>
+
+                    <View style={styles.successBenefitItem}>
+                      <Users size={20} color={goldYellow} />
+                      <Text style={styles.successBenefitText}>
+                        You're now friends with your referrer!
+                      </Text>
+                    </View>
+                  </View>
 
                   <TouchableOpacity
-                    style={[
-                      styles.nativeModalRedeemButton,
-                      (!codeInput.trim() || redeeming) &&
-                        styles.nativeModalRedeemButtonDisabled,
-                    ]}
-                    onPress={handleRedeemCode}
-                    disabled={!codeInput.trim() || redeeming}
+                    style={styles.successContinueButton}
+                    onPress={() => {
+                      setShowRedeemModal(false);
+                      setRedeemStep("input");
+                      setCodeInput("");
+                      setErrorMessage("");
+                      setShowConfetti(false);
+                    }}
                   >
-                    {redeeming ? (
-                      <LoadingIndicator size={16} />
-                    ) : (
-                      <Text style={styles.nativeModalRedeemButtonText}>
-                        Redeem Code
-                      </Text>
-                    )}
-                  </TouchableOpacity>
-                </>
-              ) : redeemStep === "success" ? (
-                <>
-                  <View style={styles.nativeModalHeader}>
-                    <Text style={styles.nativeModalTitle}>Success!</Text>
-                    <TouchableOpacity
-                      style={styles.nativeModalCloseButton}
-                      onPress={() => {
-                        setShowRedeemModal(false);
-                        setRedeemStep("input");
-                      }}
-                    >
-                      <Text style={styles.nativeModalCloseButtonText}>✕</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={styles.successContent}>
-                    <Text style={styles.successTitle}>Success! 🎉</Text>
-
-                    <Text style={styles.successSubtitle}>
-                      Your referral code has been redeemed successfully!
+                    <Text style={styles.successContinueButtonText}>
+                      Let's Go!
                     </Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : redeemStep === "error" ? (
+              <>
+                <View style={styles.nativeModalHeader}>
+                  <Text style={styles.nativeModalTitle}>Error</Text>
+                  <TouchableOpacity
+                    style={styles.nativeModalCloseButton}
+                    onPress={() => {
+                      setShowRedeemModal(false);
+                      setRedeemStep("input");
+                      setCodeInput("");
+                      setErrorMessage("");
+                    }}
+                  >
+                    <Text style={styles.nativeModalCloseButtonText}>✕</Text>
+                  </TouchableOpacity>
+                </View>
 
-                    <View style={styles.successBenefitsContainer}>
-                      <View style={styles.successBenefitItem}>
-                        <Users size={20} color={goldYellow} />
-                        <Text style={styles.successBenefitText}>
-                          You got 1 week of Pro free!
-                        </Text>
-                      </View>
+                <View style={styles.errorContent}>
+                  {/* Error Icon */}
+                  <View style={styles.errorAnimationPlaceholder}>
+                    <Text style={styles.errorIcon}>⚠️</Text>
+                  </View>
 
-                      <View style={styles.successBenefitItem}>
-                        <Users size={20} color={goldYellow} />
-                        <Text style={styles.successBenefitText}>
-                          You're now friends with your referrer!
-                        </Text>
-                      </View>
-                    </View>
+                  <Text style={styles.errorTitle}>Oops!</Text>
 
+                  <Text style={styles.errorSubtitle}>{errorMessage}</Text>
+
+                  <View style={styles.errorButtonsContainer}>
                     <TouchableOpacity
-                      style={styles.successContinueButton}
+                      style={styles.errorTryAgainButton}
                       onPress={() => {
-                        setShowRedeemModal(false);
                         setRedeemStep("input");
-                        setCodeInput("");
                         setErrorMessage("");
-                        setShowConfetti(false);
                       }}
                     >
-                      <Text style={styles.successContinueButtonText}>
-                        Let's Go!
+                      <Text style={styles.errorTryAgainButtonText}>
+                        Try Again
                       </Text>
                     </TouchableOpacity>
                   </View>
-                </>
-              ) : redeemStep === "error" ? (
-                <>
-                  <View style={styles.nativeModalHeader}>
-                    <Text style={styles.nativeModalTitle}>Error</Text>
-                    <TouchableOpacity
-                      style={styles.nativeModalCloseButton}
-                      onPress={() => {
-                        setShowRedeemModal(false);
-                        setRedeemStep("input");
-                        setCodeInput("");
-                        setErrorMessage("");
-                      }}
-                    >
-                      <Text style={styles.nativeModalCloseButtonText}>✕</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={styles.errorContent}>
-                    {/* Error Icon */}
-                    <View style={styles.errorAnimationPlaceholder}>
-                      <Text style={styles.errorIcon}>⚠️</Text>
-                    </View>
-
-                    <Text style={styles.errorTitle}>Oops!</Text>
-
-                    <Text style={styles.errorSubtitle}>{errorMessage}</Text>
-
-                    <View style={styles.errorButtonsContainer}>
-                      <TouchableOpacity
-                        style={styles.errorTryAgainButton}
-                        onPress={() => {
-                          setRedeemStep("input");
-                          setErrorMessage("");
-                        }}
-                      >
-                        <Text style={styles.errorTryAgainButtonText}>
-                          Try Again
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </>
-              ) : null}
+                </View>
+              </>
+            ) : null}
           </View>
         </KeyboardAvoidingView>
       </Modal>

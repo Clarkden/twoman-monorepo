@@ -7,6 +7,7 @@ import {
   secondaryBackgroundColor,
 } from "@/constants/globalStyles";
 import useWebSocket from "@/hooks/useWebsocket";
+import { useReviewPrompt } from "@/hooks/useReviewPrompt";
 import { useSession } from "@/stores/auth";
 import { Friendship, Profile } from "@/types/api";
 import { SocketProfileResponseData } from "@/types/socket";
@@ -2573,6 +2574,16 @@ export default function TabOneScreen() {
     friendId?: number;
   } | null>(null);
 
+  // Track match count for review prompts
+  const [matchCount, setMatchCount] = useState(0);
+
+  // Review prompt hooks
+  const firstMatchReview = useReviewPrompt({ trigger: "first_match" });
+  const multipleMatchesReview = useReviewPrompt({
+    trigger: "multiple_matches",
+    data: { matchCount },
+  });
+
   const { sendMessage } = useWebSocket();
 
   // Add a ref to track animation state to avoid closure issues with useEffect
@@ -2781,6 +2792,25 @@ export default function TabOneScreen() {
           animationInProgressRef.current,
         );
 
+        // Track match for review prompts
+        const newMatchCount = matchCount + 1;
+        setMatchCount(newMatchCount);
+
+        // Trigger review prompts based on match count
+        if (newMatchCount === 1) {
+          // First match
+          setTimeout(
+            async () => await firstMatchReview.checkAndShowPrompt(),
+            2000,
+          );
+        } else if (newMatchCount === 3 || newMatchCount === 7) {
+          // Multiple matches milestone
+          setTimeout(
+            async () => await multipleMatchesReview.checkAndShowPrompt(),
+            2000,
+          );
+        }
+
         // Start fetching new profile immediately regardless of animation state
         if (!fetchInProgressRef.current) {
           fetchInProgressRef.current = true;
@@ -2987,6 +3017,7 @@ export default function TabOneScreen() {
           handleAnimationComplete();
         }}
       />
+
       <Modal
         visible={showLikeModal}
         presentationStyle="pageSheet"

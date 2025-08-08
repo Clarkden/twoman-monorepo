@@ -60,23 +60,39 @@ export default function ConnectionErrorScreen({
       {/* Action Buttons - Bottom */}
       <View style={styles.buttonsContainer}>
         <TouchableOpacity
-          style={[globalStyles.onboardingNextButton, styles.buttonRow, styles.retryButton]}
+          style={[
+            globalStyles.onboardingNextButton,
+            styles.buttonRow,
+            styles.retryButton,
+          ]}
           onPress={handleRetryConnection}
           activeOpacity={0.8}
         >
           <FontAwesome name="refresh" size={20} color="white" />
-          <Text style={[globalStyles.onBoardingNextButtonText, { marginLeft: 8 }]}>
+          <Text
+            style={[globalStyles.onBoardingNextButtonText, { marginLeft: 8 }]}
+          >
             Retry Connection
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[globalStyles.onboardingNextButton, styles.logoutButton, styles.buttonRow]}
+          style={[
+            globalStyles.onboardingNextButton,
+            styles.logoutButton,
+            styles.buttonRow,
+          ]}
           onPress={handleLogout}
           activeOpacity={0.8}
         >
           <FontAwesome name="sign-out" size={20} color="#ff6b6b" />
-          <Text style={[globalStyles.onBoardingNextButtonText, styles.logoutButtonText, { marginLeft: 8 }]}>
+          <Text
+            style={[
+              globalStyles.onBoardingNextButtonText,
+              styles.logoutButtonText,
+              { marginLeft: 8 },
+            ]}
+          >
             Logout
           </Text>
         </TouchableOpacity>
