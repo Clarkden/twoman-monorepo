@@ -142,7 +142,7 @@ export default function NotificationsScreen() {
   }, [notificationPreferences, updateNotificationPreferences]);
 
   useEffect(() => {
-    registerForPushNotificationsAsync().then(() => setToken);
+    registerForPushNotificationsAsync().then(setToken);
   }, []);
 
   if (!notificationPreferences) {
@@ -207,8 +207,8 @@ export default function NotificationsScreen() {
   );
 }
 
-async function registerForPushNotificationsAsync() {
-  let token;
+async function registerForPushNotificationsAsync(): Promise<string | null> {
+  let token: string | null = null;
 
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("default", {
@@ -237,7 +237,7 @@ async function registerForPushNotificationsAsync() {
         Constants?.easConfig?.projectId;
       if (!projectId) {
         Alert.alert("Error", "No project ID found");
-        return;
+        return null;
       }
       token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
     } catch (e) {
@@ -245,6 +245,7 @@ async function registerForPushNotificationsAsync() {
     }
   } else {
     Alert.alert("Error", "Must use physical device for Push Notifications");
+    return null;
   }
 
   return token;

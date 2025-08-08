@@ -3,6 +3,9 @@ import { useReviewStore } from "@/stores/reviewStore";
 import * as Sentry from "@sentry/react-native";
 import appsFlyer from "react-native-appsflyer";
 
+type ReviewStoreState = ReturnType<typeof useReviewStore.getState>;
+type MilestoneKey = keyof ReviewStoreState["milestoneEvents"];
+
 export type ReviewTrigger =
   | "first_match"
   | "multiple_matches"
@@ -65,9 +68,7 @@ class ReviewPromptManager {
   /**
    * Mark that a milestone has been reached (but don't necessarily show prompt)
    */
-  markMilestone(
-    milestone: keyof typeof useReviewStore.getState.milestoneEvents,
-  ): void {
+  markMilestone(milestone: MilestoneKey): void {
     const store = useReviewStore.getState();
     store.markMilestone(milestone);
 
@@ -210,9 +211,8 @@ export const reviewPromptManager = ReviewPromptManager.getInstance();
 export const shouldShowReviewPrompt = (options: ReviewPromptOptions) =>
   reviewPromptManager.shouldShowPrompt(options);
 
-export const markReviewMilestone = (
-  milestone: keyof typeof useReviewStore.getState.milestoneEvents,
-) => reviewPromptManager.markMilestone(milestone);
+export const markReviewMilestone = (milestone: MilestoneKey) =>
+  reviewPromptManager.markMilestone(milestone);
 
 export const requestAppReview = () => reviewPromptManager.requestReview();
 

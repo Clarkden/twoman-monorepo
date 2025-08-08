@@ -44,6 +44,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-splash-screen",
       [
         "expo-image-picker",
         {
@@ -100,7 +101,6 @@
         "projectId": "2b8a60ce-2841-4dba-970b-d148666af7b1"
       }
     },
-    "runtimeVersion": "1.0.1",
     "updates": {
       "url": "https://u.expo.dev/2b8a60ce-2841-4dba-970b-d148666af7b1"
     }
