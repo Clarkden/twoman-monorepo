@@ -4,7 +4,7 @@ import React, { useEffect, useRef } from "react";
 import { ThemeProvider } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import { ChevronLeft } from "lucide-react-native";
-import { mainPurple } from "@/constants/globalStyles";
+import { mainPurple, mainBackgroundColor } from "@/constants/globalStyles";
 import { updatePushToken } from "@/utils/user";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
@@ -31,6 +31,14 @@ const REVENUE_CAT_APPLE_API_KEY =
 
 const commonHeaderOptions = {
   headerTintColor: mainPurple,
+  headerTitleStyle: {
+    color: mainPurple,
+    fontSize: 18,
+    fontWeight: "bold" as "bold",
+  },
+  headerStyle: {
+    backgroundColor: "#0f0f0f",
+  },
   headerShadowVisible: false, // This removes the bottom border
   headerLeft: () => (
     <TouchableOpacity onPress={() => router.back()}>
@@ -42,8 +50,8 @@ const commonHeaderOptions = {
 export default function RootLayout() {
   const { session } = useSession();
 
-  const notificationListener = useRef<Notifications.Subscription>();
-  const responseListener = useRef<Notifications.Subscription>();
+  const notificationListener = useRef<Notifications.Subscription | null>(null);
+  const responseListener = useRef<Notifications.Subscription | null>(null);
   const userId = useSession((state) => state.session?.user_id);
 
   // Get subscription store

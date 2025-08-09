@@ -285,13 +285,13 @@ export default function SettingsScreen() {
                   style={[
                     styles.settingsItemText,
                     {
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: "500",
                       color: "lightgray",
                     },
                   ]}
                 >
-                  Get Unlimited Likes with Pro
+                  Get unlimted likes and more with Pro
                 </Text>
               </View>
               <Image
