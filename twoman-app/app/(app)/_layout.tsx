@@ -139,7 +139,7 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={Theme}>
+    <>
       <ConnectionStatusOverlay />
       <StatusBar style="light" />
       <Stack>
@@ -192,7 +192,7 @@ export default function RootLayout() {
           }}
         />
       </Stack>
-    </ThemeProvider>
+    </>
   );
 }
 

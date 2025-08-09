@@ -90,7 +90,9 @@
         {
           "contactsPermission": "Allow 2 Man to access your contacts so you can add your friends."
         }
-      ]
+      ],
+      "expo-web-browser",
+      "expo-mail-composer"
     ],
     "experiments": {},
     "extra": {
@@ -103,6 +105,9 @@
     },
     "updates": {
       "url": "https://u.expo.dev/2b8a60ce-2841-4dba-970b-d148666af7b1"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }

@@ -11,22 +11,22 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as Sentry from "@sentry/react-native";
 // Star balance management moved to (app)/_layout.tsx where RevenueCat is configured
 
-Sentry.init({
-  dsn: "https://712986772afb4d1f15186c40cdf55a97@o4509483335942144.ingest.us.sentry.io/4509483342757888",
-  environment: __DEV__ ? "development" : "production",
+// Sentry.init({
+//   dsn: "https://712986772afb4d1f15186c40cdf55a97@o4509483335942144.ingest.us.sentry.io/4509483342757888",
+//   environment: __DEV__ ? "development" : "production",
 
-  // Adds more context data to events (IP address, cookies, user, etc.)
-  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
-  sendDefaultPii: true,
+//   // Adds more context data to events (IP address, cookies, user, etc.)
+//   // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
+//   sendDefaultPii: true,
 
-  // Configure Session Replay
-  // replaysSessionSampleRate: 0.1,
-  // replaysOnErrorSampleRate: 1,
-  // integrations: [Sentry.mobileReplayIntegration()],
+//   // Configure Session Replay
+//   replaysSessionSampleRate: 0.1,
+//   replaysOnErrorSampleRate: 1,
+//   integrations: [Sentry.mobileReplayIntegration()],
 
-  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
-  // spotlight: __DEV__,
-});
+//   // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+//   // spotlight: __DEV__,
+// });
 
 const toastConfig = {
   messageToast: ({ text1, text2, props }: ToastConfigParams<any>) => (
@@ -64,6 +64,7 @@ const toastConfig = {
 };
 
 export default Sentry.wrap(function Root() {
+  // export default function Root() {
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     ...FontAwesome.font,

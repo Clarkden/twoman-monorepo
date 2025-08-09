@@ -229,7 +229,7 @@ async function registerForPushNotificationsAsync(): Promise<string | null> {
     }
     if (finalStatus !== "granted") {
       Alert.alert("Error", "Failed to get push token for push notification!");
-      return;
+      return null;
     }
     try {
       const projectId =
