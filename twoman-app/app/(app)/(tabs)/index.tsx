@@ -22,9 +22,11 @@ import { goldYellow } from "@/constants/globalStyles";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import {
+  AlertTriangle,
   Heart,
   RotateCw,
   UsersRound,
+  UserRoundMinus,
   X,
   MoreHorizontal,
   NotepadText,
@@ -35,6 +37,7 @@ import {
 } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import {
+  Alert,
   Dimensions,
   Image,
   Modal,
@@ -2284,6 +2287,7 @@ function EnhancedProfileCard({
   onBlock: () => void;
   onViewAllFriends: () => void;
 }) {
+  const [profileOptionsVisible, setProfileOptionsVisible] = useState(false);
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(20);
 
@@ -2320,8 +2324,154 @@ function EnhancedProfileCard({
       : friendship.Friend;
   };
 
+  const handleBlockProfile = async () => {
+    try {
+      const response = await apiFetch("/profile/block", {
+        method: "POST",
+        body: {
+          profile_id: profile.user_id,
+        },
+      });
+
+      if (!response.success) {
+        console.log(response.error);
+        return;
+      }
+
+      onBlock();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleReportProfile = async (reason?: string) => {
+    if (!reason) return;
+
+    try {
+      const response = await apiFetch("/profile/report", {
+        method: "POST",
+        body: JSON.stringify({
+          reported_id: profile.user_id,
+          reason,
+        }),
+      });
+
+      if (!response.success) {
+        console.log(response.error);
+        return;
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
-    <Animated.View style={animatedStyle}>
+    <>
+      <Modal
+        visible={profileOptionsVisible}
+        presentationStyle={"pageSheet"}
+        animationType={"slide"}
+        onRequestClose={() => setProfileOptionsVisible(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: mainBackgroundColor,
+          }}
+        >
+          <View
+            style={{
+              padding: 20,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                gap: 10,
+                justifyContent: "space-between",
+                alignItems: "center",
+                position: "relative",
+              }}
+            >
+              <Pressable
+                onPress={() => {
+                  setProfileOptionsVisible(false);
+                }}
+                style={{
+                  flex: 1,
+                  zIndex: 1,
+                }}
+              >
+                <FontAwesome name="angle-down" size={24} color="white" />
+              </Pressable>
+            </View>
+          </View>
+          <View style={{
+            paddingHorizontal: 20,
+            gap: 10,
+          }}>
+            <TouchableOpacity
+              style={{
+                backgroundColor: secondaryBackgroundColor,
+                padding: 15,
+                borderRadius: 10,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 20,
+              }}
+              onPress={() => {
+                Alert.prompt(
+                  "Report Profile",
+                  "Please provide a reason for reporting this profile.",
+                  [
+                    {
+                      text: "Cancel",
+                      style: "cancel",
+                    },
+                    {
+                      text: "Report",
+                      onPress: (reason) => handleReportProfile(reason),
+                    },
+                  ],
+                );
+              }}
+            >
+              <AlertTriangle size={18} color="white" />
+              <Text style={{ color: "white", fontSize: 16, fontWeight: "400" }}>Report Profile</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                backgroundColor: secondaryBackgroundColor,
+                padding: 15,
+                borderRadius: 10,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 20,
+              }}
+              onPress={() => {
+                Alert.alert(
+                  "Are you sure you want to block this profile?",
+                  "You can unblock them later.",
+                  [
+                    {
+                      text: "Cancel",
+                      style: "cancel",
+                    },
+                    {
+                      text: "Block",
+                      onPress: handleBlockProfile,
+                    },
+                  ],
+                );
+              }}
+            >
+              <UserRoundMinus size={18} color="white" />
+              <Text style={{ color: "white", fontSize: 16, fontWeight: "400" }}>Block Profile</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      <Animated.View style={animatedStyle}>
       {/* Profile Header */}
       <View
         style={{
@@ -2332,11 +2482,7 @@ function EnhancedProfileCard({
         }}
       >
         <Text style={styles.profileName}>{profile.name}</Text>
-        <TouchableOpacity
-          onPress={() => {
-            /* Options functionality if needed */
-          }}
-        >
+        <TouchableOpacity onPress={() => setProfileOptionsVisible(true)}>
           <MoreHorizontal color={"white"} size={20} />
         </TouchableOpacity>
       </View>
@@ -2520,7 +2666,8 @@ function EnhancedProfileCard({
           </View>
         )}
       </View>
-    </Animated.View>
+      </Animated.View>
+    </>
   );
 }
 
