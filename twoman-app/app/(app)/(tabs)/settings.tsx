@@ -53,9 +53,9 @@ import { APP_VERSION } from "@/utils/general";
 async function presentPaywall(): Promise<boolean> {
   console.log("Starting presentPaywall function for settings");
   try {
-    // Get offerings to present "2 Man Pro" offering specifically
+    // Get offerings to present "Pro Subscription 1" offering specifically
     const offerings = await Purchases.getOfferings();
-    const proOffering = offerings.all["2 Man Pro"] || offerings.current;
+    const proOffering = offerings.all["Pro Subscription 1"] || offerings.current;
 
     console.log(
       "Presenting Pro paywall with offering:",
