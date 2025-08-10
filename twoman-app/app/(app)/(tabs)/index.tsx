@@ -454,6 +454,7 @@ function SoloLikeAnimation({
         right: 0,
         bottom: 0,
         zIndex: 9999,
+        backgroundColor: mainBackgroundColor,
       }}
     >
       {/* Background overlay */}
@@ -1041,6 +1042,7 @@ function DuoLikeAnimation({
         right: 0,
         bottom: 0,
         zIndex: 9999,
+        backgroundColor: mainBackgroundColor,
       }}
     >
       {/* Background overlay */}
@@ -1516,14 +1518,6 @@ function XAnimation({
     opacity: flashOpacity.value,
   }));
 
-  const slashStyle = useAnimatedStyle(() => ({
-    opacity: slashOpacity.value,
-    transform: [
-      { scale: slashScale.value },
-      { rotateZ: `${slashRotation.value}deg` },
-    ],
-  }));
-
   const xStyle = useAnimatedStyle(() => ({
     opacity: xOpacity.value,
     transform: [{ scale: xScale.value }, { rotateZ: `${xRotation.value}deg` }],
@@ -1582,6 +1576,7 @@ function XAnimation({
           right: 0,
           bottom: 0,
           zIndex: 9999,
+          backgroundColor: mainBackgroundColor,
         },
         containerStyle,
       ]}
@@ -1731,23 +1726,6 @@ function XAnimation({
             transform: [{ rotateZ: "-25deg" }],
           },
           lightningStyle,
-        ]}
-      />
-
-      {/* Diagonal slash effect */}
-      <Animated.View
-        style={[
-          {
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            width: 400,
-            height: 8,
-            marginLeft: -200,
-            marginTop: -4,
-            backgroundColor: "#f05d5d",
-          },
-          slashStyle,
         ]}
       />
 
