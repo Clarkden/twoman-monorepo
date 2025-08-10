@@ -121,9 +121,9 @@ export default function StandoutsScreen() {
   const presentPaywall = async (): Promise<boolean> => {
     console.log("Starting presentPaywall function for standouts");
     try {
-      // Get offerings to present "Pro Subscription 1" offering specifically
+      // Get offerings to present "2 Man Pro New" offering specifically
       const offerings = await Purchases.getOfferings();
-      const proOffering = offerings.all["Pro Subscription 1"] || offerings.current;
+      const proOffering = offerings.all["2 Man Pro New"] || offerings.current;
 
       console.log(
         "Presenting Pro paywall with offering:",
