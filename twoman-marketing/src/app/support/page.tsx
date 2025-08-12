@@ -7,7 +7,7 @@ export default function Support() {
 
       <div className="flex flex-col gap-8 items-center max-w-2xl text-center">
         <p className="text-xl">
-          Need help with 2 Man? We're here to support you!
+          Need help with 2 Man? We&apos;re here to support you!
         </p>
 
         <div className="bg-white/10 rounded-lg p-8 backdrop-blur-sm">
@@ -34,7 +34,9 @@ export default function Support() {
             </div>
             <div>
               <h3 className="font-bold">How do I report a problem?</h3>
-              <p>Email us with details about the issue you're experiencing.</p>
+              <p>
+                Email us with details about the issue you&apos;re experiencing.
+              </p>
             </div>
             <div>
               <h3 className="font-bold">Privacy concerns?</h3>
