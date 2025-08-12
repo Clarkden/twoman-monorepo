@@ -45,6 +45,12 @@ export default function RootLayout({
             </a>
             <div className="flex flex-row gap-5">
               <Link
+                href="/support"
+                className="text-sm text-neutral-300 hover:text-neutral-200"
+              >
+                Support
+              </Link>
+              <Link
                 href="/privacy"
                 className="text-sm text-neutral-300 hover:text-neutral-200"
               >
