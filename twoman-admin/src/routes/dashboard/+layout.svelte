@@ -35,6 +35,9 @@
         <li>
           <a href="/dashboard/reports" class="hover:underline">Reports</a>
         </li>
+        <li>
+          <a href="/dashboard/notifications" class="hover:underline">Notifications</a>
+        </li>
         <li><button on:click={logout}>Logout</button></li>
       </ul>
       <button
@@ -104,6 +107,13 @@
             href="/dashboard/reports"
             class="block hover:underline"
             on:click={() => (mobileNavOpen = false)}>Reports</a
+          >
+        </li>
+        <li>
+          <a
+            href="/dashboard/notifications"
+            class="block hover:underline"
+            on:click={() => (mobileNavOpen = false)}>Notifications</a
           >
         </li>
         <li>

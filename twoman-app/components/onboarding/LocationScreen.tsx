@@ -37,14 +37,30 @@ export default function LocationPicker({
   }, []);
 
   const requestLocationPermission = useCallback(async () => {
-    const { status } = await requestForegroundPermissionsAsync();
-    setLocationStatus({
-      status,
-      canAskAgain: true,
-      granted: status === "granted",
-      expires: "never",
-    });
-    return status === "granted";
+    // First check current status
+    const currentStatus = await getForegroundPermissionsAsync();
+
+    // If permission can still be requested
+    if (currentStatus.canAskAgain) {
+      const { status } = await requestForegroundPermissionsAsync();
+      setLocationStatus({
+        status,
+        canAskAgain: status !== "granted",
+        granted: status === "granted",
+        expires: "never",
+      });
+
+      if (status !== "granted") {
+        // Permission was denied, open settings
+        await openSettings();
+      }
+
+      return status === "granted";
+    } else {
+      // Can't ask again, go directly to settings
+      await openSettings();
+      return false;
+    }
   }, []);
 
   const handleAppStateChange = useCallback(
@@ -124,21 +140,68 @@ export default function LocationPicker({
               <Text style={{ color: "white", textAlign: "center" }}>
                 {errorMsg}
               </Text>
-              {!locationStatus.granted && (
+              <View style={{ gap: 10, width: "100%" }}>
+                {!locationStatus.granted && (
+                  <TouchableOpacity
+                    onPress={openSettings}
+                    style={styles.requestLocationButton}
+                  >
+                    <Text style={styles.requestLocationButtonText}>
+                      Open Settings
+                    </Text>
+                  </TouchableOpacity>
+                )}
                 <TouchableOpacity
-                  onPress={openSettings}
-                  style={styles.requestLocationButton}
+                  onPress={() => {
+                    onValueChange(null);
+                    onNext();
+                  }}
+                  style={[
+                    styles.requestLocationButton,
+                    {
+                      backgroundColor: "transparent",
+                      borderWidth: 1,
+                      borderColor: "white",
+                    },
+                  ]}
                 >
-                  <Text style={styles.requestLocationButtonText}>
-                    Open Settings
+                  <Text
+                    style={[
+                      styles.requestLocationButtonText,
+                      { color: "white" },
+                    ]}
+                  >
+                    Skip for Now
                   </Text>
                 </TouchableOpacity>
-              )}
+              </View>
             </View>
           ) : (
-            <Text style={{ color: "white", textAlign: "center" }}>
-              Getting your location...
-            </Text>
+            <View style={{ gap: 10, alignItems: "center" }}>
+              <Text style={{ color: "white", textAlign: "center" }}>
+                Getting your location...
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  onValueChange(null);
+                  onNext();
+                }}
+                style={[
+                  styles.requestLocationButton,
+                  {
+                    backgroundColor: "transparent",
+                    borderWidth: 1,
+                    borderColor: "white",
+                  },
+                ]}
+              >
+                <Text
+                  style={[styles.requestLocationButtonText, { color: "white" }]}
+                >
+                  Skip for Now
+                </Text>
+              </TouchableOpacity>
+            </View>
           )}
         </>
       ) : (

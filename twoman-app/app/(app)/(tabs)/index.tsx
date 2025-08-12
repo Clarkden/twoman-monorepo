@@ -38,6 +38,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import {
   Alert,
+  AppState,
   Dimensions,
   Image,
   Modal,
@@ -48,7 +49,9 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Linking,
 } from "react-native";
+import * as Location from "expo-location";
 import PagerView from "react-native-pager-view";
 import Purchases from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
@@ -63,6 +66,9 @@ import Animated, {
 } from "react-native-reanimated";
 
 const { width } = Dimensions.get("window");
+const isTablet = width > 768;
+const maxContentWidth = isTablet ? 500 : width;
+const responsiveImageHeight = isTablet ? 400 : width - 40;
 
 const backgroundColor = mainBackgroundColor;
 
@@ -2406,10 +2412,12 @@ function EnhancedProfileCard({
               </Pressable>
             </View>
           </View>
-          <View style={{
-            paddingHorizontal: 20,
-            gap: 10,
-          }}>
+          <View
+            style={{
+              paddingHorizontal: 20,
+              gap: 10,
+            }}
+          >
             <TouchableOpacity
               style={{
                 backgroundColor: secondaryBackgroundColor,
@@ -2437,7 +2445,9 @@ function EnhancedProfileCard({
               }}
             >
               <AlertTriangle size={18} color="white" />
-              <Text style={{ color: "white", fontSize: 16, fontWeight: "400" }}>Report Profile</Text>
+              <Text style={{ color: "white", fontSize: 16, fontWeight: "400" }}>
+                Report Profile
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={{
@@ -2466,206 +2476,223 @@ function EnhancedProfileCard({
               }}
             >
               <UserRoundMinus size={18} color="white" />
-              <Text style={{ color: "white", fontSize: 16, fontWeight: "400" }}>Block Profile</Text>
+              <Text style={{ color: "white", fontSize: 16, fontWeight: "400" }}>
+                Block Profile
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
       <Animated.View style={animatedStyle}>
-      {/* Profile Header */}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 10,
-        }}
-      >
-        <Text style={styles.profileName}>{profile.name}</Text>
-        <TouchableOpacity onPress={() => setProfileOptionsVisible(true)}>
-          <MoreHorizontal color={"white"} size={20} />
-        </TouchableOpacity>
-      </View>
+        {/* Profile Header */}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 10,
+          }}
+        >
+          <Text style={styles.profileName}>{profile.name}</Text>
+          <TouchableOpacity onPress={() => setProfileOptionsVisible(true)}>
+            <MoreHorizontal color={"white"} size={20} />
+          </TouchableOpacity>
+        </View>
 
-      {/* Profile Image */}
-      <Image source={{ uri: profile.image1 }} style={styles.mainProfileImage} />
+        {/* Profile Image */}
+        <Image
+          source={{ uri: profile.image1 }}
+          style={styles.mainProfileImage}
+        />
 
-      {/* Friends Section - Right after image */}
-      <View
-        style={{
-          backgroundColor: secondaryBackgroundColor,
-          borderRadius: 12,
-          padding: 16,
-          marginTop: 16,
-          marginBottom: 16,
-        }}
-      >
-        {!friendsFetched ? (
-          <View style={{ alignItems: "center", paddingVertical: 12 }}>
-            <Text style={{ color: "#888", fontSize: 14 }}>
-              Loading friends...
-            </Text>
-          </View>
-        ) : friends.length === 0 ? (
-          <View style={{ alignItems: "center", paddingVertical: 12 }}>
-            <Text
-              style={{
-                color: "#888",
-                fontSize: 16,
-                fontWeight: "600",
-                marginBottom: 4,
-              }}
-            >
-              No Friends for Duo Dating
-            </Text>
-            <Text style={{ color: "#666", fontSize: 14, textAlign: "center" }}>
-              {profile.name} hasn't added any friends yet
-            </Text>
-          </View>
-        ) : (
-          <>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: 12,
-              }}
-            >
-              <Text style={{ color: "white", fontSize: 16, fontWeight: "700" }}>
-                {profile.name}'s Friends ({friends.length})
+        {/* Friends Section - Right after image */}
+        <View
+          style={{
+            backgroundColor: secondaryBackgroundColor,
+            borderRadius: 12,
+            padding: 16,
+            marginTop: 16,
+            marginBottom: 16,
+          }}
+        >
+          {!friendsFetched ? (
+            <View style={{ alignItems: "center", paddingVertical: 12 }}>
+              <Text style={{ color: "#888", fontSize: 14 }}>
+                Loading friends...
               </Text>
-              {friends.length > 3 && (
-                <TouchableOpacity
-                  onPress={onViewAllFriends}
-                  style={{
-                    backgroundColor: mainPurple,
-                    paddingHorizontal: 12,
-                    paddingVertical: 6,
-                    borderRadius: 15,
-                  }}
-                >
-                  <Text
-                    style={{ color: "white", fontSize: 12, fontWeight: "600" }}
-                  >
-                    View All
-                  </Text>
-                </TouchableOpacity>
-              )}
             </View>
-
-            <View style={{ flexDirection: "row", gap: 12 }}>
-              {friends.slice(0, 3).map((friendship, index) => {
-                const friendProfile = getFriendProfile(friendship);
-                return (
+          ) : friends.length === 0 ? (
+            <View style={{ alignItems: "center", paddingVertical: 12 }}>
+              <Text
+                style={{
+                  color: "#888",
+                  fontSize: 16,
+                  fontWeight: "600",
+                  marginBottom: 4,
+                }}
+              >
+                No Friends for Duo Dating
+              </Text>
+              <Text
+                style={{ color: "#666", fontSize: 14, textAlign: "center" }}
+              >
+                {profile.name} hasn't added any friends yet
+              </Text>
+            </View>
+          ) : (
+            <>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 12,
+                }}
+              >
+                <Text
+                  style={{ color: "white", fontSize: 16, fontWeight: "700" }}
+                >
+                  {profile.name}'s Friends ({friends.length})
+                </Text>
+                {friends.length > 3 && (
                   <TouchableOpacity
-                    key={index}
                     onPress={onViewAllFriends}
                     style={{
-                      flex: 1,
-                      alignItems: "center",
-                      backgroundColor: "rgba(255, 255, 255, 0.05)",
-                      borderRadius: 10,
-                      padding: 12,
+                      backgroundColor: mainPurple,
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      borderRadius: 15,
                     }}
                   >
-                    <Image
-                      source={{ uri: friendProfile.image1 }}
-                      style={{
-                        width: 60,
-                        height: 60,
-                        borderRadius: 30,
-                        marginBottom: 8,
-                      }}
-                    />
                     <Text
                       style={{
                         color: "white",
                         fontSize: 12,
                         fontWeight: "600",
-                        textAlign: "center",
                       }}
-                      numberOfLines={1}
                     >
-                      {friendProfile.name}
-                    </Text>
-                    <Text
-                      style={{
-                        color: "#888",
-                        fontSize: 10,
-                        textAlign: "center",
-                        marginTop: 2,
-                      }}
-                      numberOfLines={1}
-                    >
-                      {friendProfile.age}
+                      View All
                     </Text>
                   </TouchableOpacity>
-                );
-              })}
-            </View>
+                )}
+              </View>
 
-            {friends.length > 0 && (
-              <TouchableOpacity
-                onPress={onViewAllFriends}
-                style={{
-                  backgroundColor: "rgba(163, 100, 245, 0.1)",
-                  borderWidth: 1,
-                  borderColor: "rgba(163, 100, 245, 0.3)",
-                  borderRadius: 8,
-                  paddingVertical: 12,
-                  marginTop: 12,
-                  alignItems: "center",
-                }}
-              >
-                <Text
-                  style={{ color: mainPurple, fontSize: 14, fontWeight: "600" }}
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                {friends.slice(0, 3).map((friendship, index) => {
+                  const friendProfile = getFriendProfile(friendship);
+                  return (
+                    <TouchableOpacity
+                      key={index}
+                      onPress={onViewAllFriends}
+                      style={{
+                        flex: 1,
+                        alignItems: "center",
+                        backgroundColor: "rgba(255, 255, 255, 0.05)",
+                        borderRadius: 10,
+                        padding: 12,
+                      }}
+                    >
+                      <Image
+                        source={{ uri: friendProfile.image1 }}
+                        style={{
+                          width: 60,
+                          height: 60,
+                          borderRadius: 30,
+                          marginBottom: 8,
+                        }}
+                      />
+                      <Text
+                        style={{
+                          color: "white",
+                          fontSize: 12,
+                          fontWeight: "600",
+                          textAlign: "center",
+                        }}
+                        numberOfLines={1}
+                      >
+                        {friendProfile.name}
+                      </Text>
+                      <Text
+                        style={{
+                          color: "#888",
+                          fontSize: 10,
+                          textAlign: "center",
+                          marginTop: 2,
+                        }}
+                        numberOfLines={1}
+                      >
+                        {friendProfile.age}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {friends.length > 0 && (
+                <TouchableOpacity
+                  onPress={onViewAllFriends}
+                  style={{
+                    backgroundColor: "rgba(163, 100, 245, 0.1)",
+                    borderWidth: 1,
+                    borderColor: "rgba(163, 100, 245, 0.3)",
+                    borderRadius: 8,
+                    paddingVertical: 12,
+                    marginTop: 12,
+                    alignItems: "center",
+                  }}
                 >
-                  🎭 Start Duo Match with {profile.name}
-                </Text>
-              </TouchableOpacity>
-            )}
-          </>
-        )}
-      </View>
+                  <Text
+                    style={{
+                      color: mainPurple,
+                      fontSize: 14,
+                      fontWeight: "600",
+                    }}
+                  >
+                    🎭 Start Duo Match with {profile.name}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+        </View>
 
-      {/* Rest of Profile Information */}
-      <View style={styles.profileInfo}>
-        <View style={styles.profileInfoItem}>
-          <NotepadText size={18} color="white" />
-          <Text style={styles.profileBio}>{profile.bio}</Text>
-        </View>
-      </View>
-      <View style={styles.profileInfo}>
-        <View style={styles.profileInfoItem}>
-          <Cake size={18} color="white" />
-          <Text style={globalStyles.regularText}>
-            {(() => {
-              const today = new Date();
-              const birthDate = new Date(profile.date_of_birth);
-              let age = today.getFullYear() - birthDate.getFullYear();
-              const monthDiff = today.getMonth() - birthDate.getMonth();
-              if (
-                monthDiff < 0 ||
-                (monthDiff === 0 && today.getDate() < birthDate.getDate())
-              ) {
-                age--;
-              }
-              return `${age} years old`;
-            })()}
-          </Text>
-        </View>
-        <View style={styles.profileInfoItem}>
-          <MapPin size={18} color="white" />
-          <Text style={globalStyles.regularText}>{profile.city}</Text>
-        </View>
-        {profile.education && (
+        {/* Rest of Profile Information */}
+        <View style={styles.profileInfo}>
           <View style={styles.profileInfoItem}>
-            <Book size={18} color="white" />
-            <Text style={globalStyles.regularText}>{profile.education}</Text>
+            <NotepadText size={18} color="white" />
+            <Text style={styles.profileBio}>{profile.bio}</Text>
           </View>
-        )}
-      </View>
+        </View>
+        <View style={styles.profileInfo}>
+          <View style={styles.profileInfoItem}>
+            <Cake size={18} color="white" />
+            <Text style={globalStyles.regularText}>
+              {(() => {
+                const today = new Date();
+                const birthDate = new Date(profile.date_of_birth);
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                if (
+                  monthDiff < 0 ||
+                  (monthDiff === 0 && today.getDate() < birthDate.getDate())
+                ) {
+                  age--;
+                }
+                return `${age} years old`;
+              })()}
+            </Text>
+          </View>
+          <View style={styles.profileInfoItem}>
+            <MapPin size={18} color="white" />
+            <Text style={globalStyles.regularText}>{profile.city}</Text>
+          </View>
+          {profile.education && (
+            <View style={styles.profileInfoItem}>
+              <Book size={18} color="white" />
+              <Text style={globalStyles.regularText}>{profile.education}</Text>
+            </View>
+          )}
+        </View>
       </Animated.View>
     </>
   );
@@ -2698,6 +2725,9 @@ export default function TabOneScreen() {
     type: "like" | "dislike";
     friendId?: number;
   } | null>(null);
+  const [locationPermissionGranted, setLocationPermissionGranted] = useState<
+    boolean | null
+  >(null);
 
   // Track match count for review prompts
   const [matchCount, setMatchCount] = useState(0);
@@ -2805,7 +2835,61 @@ export default function TabOneScreen() {
     });
   };
 
+  const checkLocationPermission = async () => {
+    try {
+      const status = await Location.getForegroundPermissionsAsync();
+      setLocationPermissionGranted(status.granted);
+      return status.granted;
+    } catch (error) {
+      console.log("Error checking location permission:", error);
+      setLocationPermissionGranted(false);
+      return false;
+    }
+  };
+
+  const requestLocationPermission = async () => {
+    try {
+      // First check current status
+      const currentStatus = await Location.getForegroundPermissionsAsync();
+
+      // If permission can still be requested
+      if (currentStatus.canAskAgain) {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        const granted = status === "granted";
+        setLocationPermissionGranted(granted);
+
+        if (granted) {
+          handleGetProfile();
+        } else {
+          // Permission was denied, open settings
+          await Linking.openSettings();
+        }
+
+        return granted;
+      } else {
+        // Can't ask again, go directly to settings
+        await Linking.openSettings();
+        setLocationPermissionGranted(false);
+        return false;
+      }
+    } catch (error) {
+      console.log("Error requesting location permission:", error);
+      setLocationPermissionGranted(false);
+      return false;
+    }
+  };
+
   const handleGetProfile = async () => {
+    // Check location permission first
+    if (locationPermissionGranted === null) {
+      const hasPermission = await checkLocationPermission();
+      if (!hasPermission) {
+        return;
+      }
+    } else if (!locationPermissionGranted) {
+      return;
+    }
+
     setLoading(true);
 
     const fetchProfile = async () => {
@@ -3083,6 +3167,44 @@ export default function TabOneScreen() {
   }
 
   if (!profile) {
+    if (locationPermissionGranted === false) {
+      return (
+        <View style={styles.noProfiles}>
+          <StatusBar style="light" />
+          <MapPin size={64} color="#a364f5" style={{ marginBottom: 20 }} />
+          <Text style={styles.noProfilesTitle}>
+            Location Required for Discovery
+          </Text>
+          <Text style={styles.noProfilesText}>
+            Location access is required to discover profiles near you.
+          </Text>
+          <TouchableOpacity
+            onPress={requestLocationPermission}
+            style={{
+              backgroundColor: mainPurple,
+              padding: 15,
+              borderRadius: 25,
+              alignItems: "center",
+              justifyContent: "center",
+              marginTop: 20,
+              width: 200,
+            }}
+          >
+            <Text
+              style={{
+                color: "white",
+                fontWeight: "bold",
+                fontSize: 16,
+                textAlign: "center",
+              }}
+            >
+              Allow Location Access
+            </Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
     return (
       <View style={styles.noProfiles}>
         <StatusBar style="light" />
@@ -3093,6 +3215,7 @@ export default function TabOneScreen() {
           color="#a364f5"
           style={{ marginBottom: 20 }}
         />
+        <Text style={styles.noProfilesTitle}>No More Profiles</Text>
         <Text style={styles.noProfilesText}>
           We ran out of profiles to show you.
         </Text>
@@ -3297,26 +3420,32 @@ export default function TabOneScreen() {
           </View>
         </SafeAreaView>
       </Modal>
+
       {!animationInProgress && profile && !hideProfileUI && (
         <>
           <ScrollView
             style={{
               position: "relative",
               backgroundColor: backgroundColor,
-              padding: 20,
             }}
             contentContainerStyle={{
               paddingBottom: 120, // Space for action buttons + breathing room
+              paddingTop: 10,
             }}
             showsVerticalScrollIndicator={false}
           >
-            <EnhancedProfileCard
-              profile={profile}
-              friends={potentialMatchFriends}
-              friendsFetched={potentialMatchFriendsFetched}
-              onBlock={handleBlock}
-              onViewAllFriends={() => setShowLikeModal(true)}
-            />
+            {/* Discovery Section */}
+            <View style={styles.section}>
+              <View style={{ paddingHorizontal: 20 }}>
+                <EnhancedProfileCard
+                  profile={profile}
+                  friends={potentialMatchFriends}
+                  friendsFetched={potentialMatchFriendsFetched}
+                  onBlock={handleBlock}
+                  onViewAllFriends={() => setShowLikeModal(true)}
+                />
+              </View>
+            </View>
           </ScrollView>
 
           {/* New Action Button Bar */}
@@ -3363,10 +3492,12 @@ export default function TabOneScreen() {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
+    maxWidth: isTablet ? maxContentWidth : "100%",
+    alignSelf: isTablet ? "center" : "auto",
   },
   profileImage: {
     width: "100%",
-    height: width - 20,
+    height: isTablet ? 400 : width - 20,
     borderRadius: 20,
     marginBottom: 20,
   },
@@ -3441,11 +3572,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     backgroundColor: backgroundColor,
+    paddingHorizontal: 40,
+  },
+  noProfilesTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "white",
+    textAlign: "center",
+    marginBottom: 16,
+    maxWidth: isTablet ? 400 : 280,
   },
   noProfilesText: {
     fontSize: 16,
     color: "white",
-    fontWeight: "bold",
+    textAlign: "center",
+    opacity: 0.8,
+    maxWidth: isTablet ? 400 : 280,
+    lineHeight: 24,
   },
   likeModalContainer: {
     backgroundColor: backgroundColor,
@@ -3538,7 +3681,7 @@ const styles = StyleSheet.create({
   },
   mainProfileImage: {
     width: "100%",
-    height: width - 40,
+    height: responsiveImageHeight,
     borderRadius: 12,
   },
   profileInfo: {
@@ -3561,5 +3704,29 @@ const styles = StyleSheet.create({
     textAlign: "left",
     color: "white",
     flex: 1,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "white",
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    opacity: 0.8,
+  },
+  section: {
+    marginBottom: 30,
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "white",
+    paddingHorizontal: 20,
+    marginBottom: 5,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: "white",
+    paddingHorizontal: 20,
+    marginBottom: 15,
+    opacity: 0.7,
   },
 });

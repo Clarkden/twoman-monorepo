@@ -91,6 +91,39 @@ declare global {
       reported_name: string;
       reported_username: string;
     }
+
+    // New notification system types
+    interface NotificationPreferences {
+      ID: number;
+      UserID: number;
+      NotificationsEnabled: boolean;
+      NewMatchesNotificationsEnabled: boolean;
+      NewMessagesNotificationsEnabled: boolean;
+      NewFriendRequestNotificationsEnabled: boolean;
+      CreatedAt: string;
+      UpdatedAt: string;
+    }
+
+    interface PushToken {
+      ID: number;
+      UserID: number;
+      Token: string;
+      Platform: string;
+      IsActive: boolean;
+      LastUsed: string;
+      CreatedAt: string;
+      UpdatedAt: string;
+    }
+
+    // Legacy notification type (for compatibility)
+    interface LegacyPushToken {
+      Token: string;
+      UserID: number;
+      NotificationsEnabled: boolean;
+      NewMatchesNotificationsEnabled: boolean;
+      NewMessagesNotificationsEnabled: boolean;
+      NewFriendRequestNotificationsEnabled: boolean;
+    }
   }
 }
 
