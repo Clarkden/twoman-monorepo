@@ -22,11 +22,11 @@ func (h Handler) HandleUpdateNotificationPreferences() http.Handler {
 
 		session := r.Context().Value(globals.SessionMiddlewareKey).(*types.Session)
 
-		if err := notifications.UpdateNotificationPreferences(session.UserID, req, h.DB(r)); err != nil {
+		// Use new V2 system
+		if err := notifications.UpdateNotificationPreferencesV2(session.UserID, req, h.DB(r)); err != nil {
 			log.Println("Error updating notification preferences: ", err)
 			response.InternalServerError(w, err, "Something went wrong")
 			return
-
 		}
 
 		response.OK(w, "Notification preferences updated")
@@ -37,7 +37,8 @@ func (h Handler) HandleGetNotificationPreferences() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session := r.Context().Value(globals.SessionMiddlewareKey).(*types.Session)
 
-		notificationPreferences, err := notifications.GetNotificationPreferences(session.UserID, h.DB(r))
+		// Use compatibility function to maintain legacy API response format
+		notificationPreferences, err := notifications.GetNotificationPreferencesCompat(session.UserID, h.DB(r))
 		if err != nil {
 			log.Println("Error getting notification preferences: ", err)
 			response.InternalServerError(w, err, "Something went wrong")
@@ -62,7 +63,9 @@ func (h Handler) HandleUpdatePushToken() http.Handler {
 				return
 			}
 
-			if err := notifications.AddPushToken(session.UserID, pushTokenRequest.PushToken, h.DB(r)); err != nil {
+			// Use new V2 system
+			if err := notifications.AddPushTokenV2(session.UserID, pushTokenRequest.PushToken, h.DB(r)); err != nil {
+				log.Println("Error adding push token: ", err)
 				response.InternalServerError(w, err, "Something went wrong")
 				return
 			}

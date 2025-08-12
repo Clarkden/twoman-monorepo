@@ -146,8 +146,8 @@ func (h Handler) HandleRedeemReferralCode() http.Handler {
 					return
 				}
 
-				// Send notification
-				err = notifications.SendReferralSuccessNotification(
+				// Send notification using new V2 system
+				err = notifications.SendReferralSuccessNotificationV2(
 					referralRecord.ReferrerID,
 					referredProfile.Name,
 					stats.CompletedCount,
