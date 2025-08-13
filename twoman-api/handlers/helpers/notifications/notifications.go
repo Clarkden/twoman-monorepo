@@ -113,11 +113,34 @@ func GetPushTokensByUserId(userId uint, db *gorm.DB) ([]schemas.PushTokens, erro
 func UpdateNotificationPreferences(userId uint, req types.UpdateNotificationPreferencesRequest, db *gorm.DB) error {
 	var pushTokens schemas.PushTokens
 	err := db.Where("user_id = ?", userId).First(&pushTokens).Error
+	
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// Create new record only if we have a valid token
+			if req.ExpoPushToken != "" {
+				newRecord := schemas.PushTokens{
+					UserID:                               userId,
+					Token:                                req.ExpoPushToken,
+					NotificationsEnabled:                 req.NotificationsEnabled,
+					NewMatchesNotificationsEnabled:       req.NewMatchesNotificationsEnabled,
+					NewMessagesNotificationsEnabled:      req.NewMessagesNotificationsEnabled,
+					NewFriendRequestNotificationsEnabled: req.NewFriendRequestNotificationsEnabled,
+				}
+
+				if err := db.Create(&newRecord).Error; err != nil {
+					return err
+				}
+			}
+			// If no token provided, just return success (preferences updated in memory only)
+			return nil
+		}
 		return err
 	}
 
-	pushTokens.Token = req.ExpoPushToken
+	// Update existing record
+	if req.ExpoPushToken != "" {
+		pushTokens.Token = req.ExpoPushToken
+	}
 	pushTokens.NotificationsEnabled = req.NotificationsEnabled
 	pushTokens.NewMatchesNotificationsEnabled = req.NewMatchesNotificationsEnabled
 	pushTokens.NewMessagesNotificationsEnabled = req.NewMessagesNotificationsEnabled
@@ -135,21 +158,19 @@ func GetNotificationPreferences(userId uint, db *gorm.DB) (*schemas.PushTokens, 
 	err := db.Where("user_id = ?", userId).First(&preferences).Error
 
 	if err != nil {
-
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			newRecord := schemas.PushTokens{
+			// Return default preferences without creating a database record
+			// A record will be created when the user updates preferences with a valid token
+			defaultPreferences := schemas.PushTokens{
 				UserID:                               userId,
+				Token:                                "", // Empty token - no DB record created
 				NotificationsEnabled:                 true,
 				NewMatchesNotificationsEnabled:       true,
 				NewMessagesNotificationsEnabled:      true,
 				NewFriendRequestNotificationsEnabled: true,
 			}
 
-			if err := db.Create(&newRecord).Error; err != nil {
-				return nil, err
-			}
-
-			return &newRecord, nil
+			return &defaultPreferences, nil
 		}
 
 		return nil, err

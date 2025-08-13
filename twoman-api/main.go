@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 	"twoman/handlers/helpers/database"
+	"twoman/migrations"
 	"twoman/router"
 	"twoman/schemas"
 
@@ -270,7 +271,6 @@ func main() {
 }
 
 func MigrateDB(db *gorm.DB) error {
-
 	err := db.Migrator().AutoMigrate(
 		&schemas.User{},
 		&schemas.Profile{},
@@ -298,6 +298,11 @@ func MigrateDB(db *gorm.DB) error {
 
 	if err != nil {
 		return err
+	}
+
+	log.Println("Running custom database migrations...")
+	if err := migrations.RunMigrations(db); err != nil {
+		return fmt.Errorf("failed to run custom migrations: %v", err)
 	}
 
 	return nil
