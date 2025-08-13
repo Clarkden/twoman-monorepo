@@ -50,11 +50,6 @@ export default function LocationPicker({
         expires: "never",
       });
 
-      if (status !== "granted") {
-        // Permission was denied, but don't automatically open settings
-        // Let user choose to open settings explicitly
-      }
-
       return status === "granted";
     } else {
       // Can't ask again, but don't automatically open settings
@@ -120,7 +115,7 @@ export default function LocationPicker({
   }, [requestLocation]);
 
   const openSettings = async () => {
-    await Linking.openURL('app-settings:');
+    await Linking.openURL("app-settings:");
   };
 
   if (!locationStatus && !value) {
