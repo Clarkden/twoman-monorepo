@@ -38,7 +38,6 @@ import {
 import { useEffect, useRef, useState } from "react";
 import {
   Alert,
-  AppState,
   Dimensions,
   Image,
   Modal,
@@ -49,9 +48,7 @@ import {
   Text,
   TouchableOpacity,
   View,
-  Linking,
 } from "react-native";
-import * as Location from "expo-location";
 import PagerView from "react-native-pager-view";
 import Purchases from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
@@ -66,9 +63,6 @@ import Animated, {
 } from "react-native-reanimated";
 
 const { width } = Dimensions.get("window");
-const isTablet = width > 768;
-const maxContentWidth = isTablet ? 500 : width;
-const responsiveImageHeight = isTablet ? 400 : width - 40;
 
 const backgroundColor = mainBackgroundColor;
 
@@ -2725,9 +2719,6 @@ export default function TabOneScreen() {
     type: "like" | "dislike";
     friendId?: number;
   } | null>(null);
-  const [locationPermissionGranted, setLocationPermissionGranted] = useState<
-    boolean | null
-  >(null);
 
   // Track match count for review prompts
   const [matchCount, setMatchCount] = useState(0);
@@ -2835,61 +2826,7 @@ export default function TabOneScreen() {
     });
   };
 
-  const checkLocationPermission = async () => {
-    try {
-      const status = await Location.getForegroundPermissionsAsync();
-      setLocationPermissionGranted(status.granted);
-      return status.granted;
-    } catch (error) {
-      console.log("Error checking location permission:", error);
-      setLocationPermissionGranted(false);
-      return false;
-    }
-  };
-
-  const requestLocationPermission = async () => {
-    try {
-      // First check current status
-      const currentStatus = await Location.getForegroundPermissionsAsync();
-
-      // If permission can still be requested
-      if (currentStatus.canAskAgain) {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        const granted = status === "granted";
-        setLocationPermissionGranted(granted);
-
-        if (granted) {
-          handleGetProfile();
-        } else {
-          // Permission was denied, open settings
-          await Linking.openSettings();
-        }
-
-        return granted;
-      } else {
-        // Can't ask again, go directly to settings
-        await Linking.openSettings();
-        setLocationPermissionGranted(false);
-        return false;
-      }
-    } catch (error) {
-      console.log("Error requesting location permission:", error);
-      setLocationPermissionGranted(false);
-      return false;
-    }
-  };
-
   const handleGetProfile = async () => {
-    // Check location permission first
-    if (locationPermissionGranted === null) {
-      const hasPermission = await checkLocationPermission();
-      if (!hasPermission) {
-        return;
-      }
-    } else if (!locationPermissionGranted) {
-      return;
-    }
-
     setLoading(true);
 
     const fetchProfile = async () => {
@@ -3167,44 +3104,6 @@ export default function TabOneScreen() {
   }
 
   if (!profile) {
-    if (locationPermissionGranted === false) {
-      return (
-        <View style={styles.noProfiles}>
-          <StatusBar style="light" />
-          <MapPin size={64} color="#a364f5" style={{ marginBottom: 20 }} />
-          <Text style={styles.noProfilesTitle}>
-            Location Required for Discovery
-          </Text>
-          <Text style={styles.noProfilesText}>
-            Location access is required to discover profiles near you.
-          </Text>
-          <TouchableOpacity
-            onPress={requestLocationPermission}
-            style={{
-              backgroundColor: mainPurple,
-              padding: 15,
-              borderRadius: 25,
-              alignItems: "center",
-              justifyContent: "center",
-              marginTop: 20,
-              width: 200,
-            }}
-          >
-            <Text
-              style={{
-                color: "white",
-                fontWeight: "bold",
-                fontSize: 16,
-                textAlign: "center",
-              }}
-            >
-              Allow Location Access
-            </Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
-
     return (
       <View style={styles.noProfiles}>
         <StatusBar style="light" />
@@ -3215,7 +3114,6 @@ export default function TabOneScreen() {
           color="#a364f5"
           style={{ marginBottom: 20 }}
         />
-        <Text style={styles.noProfilesTitle}>No More Profiles</Text>
         <Text style={styles.noProfilesText}>
           We ran out of profiles to show you.
         </Text>
@@ -3420,32 +3318,26 @@ export default function TabOneScreen() {
           </View>
         </SafeAreaView>
       </Modal>
-
       {!animationInProgress && profile && !hideProfileUI && (
         <>
           <ScrollView
             style={{
               position: "relative",
               backgroundColor: backgroundColor,
+              padding: 20,
             }}
             contentContainerStyle={{
               paddingBottom: 120, // Space for action buttons + breathing room
-              paddingTop: 10,
             }}
             showsVerticalScrollIndicator={false}
           >
-            {/* Discovery Section */}
-            <View style={styles.section}>
-              <View style={{ paddingHorizontal: 20 }}>
-                <EnhancedProfileCard
-                  profile={profile}
-                  friends={potentialMatchFriends}
-                  friendsFetched={potentialMatchFriendsFetched}
-                  onBlock={handleBlock}
-                  onViewAllFriends={() => setShowLikeModal(true)}
-                />
-              </View>
-            </View>
+            <EnhancedProfileCard
+              profile={profile}
+              friends={potentialMatchFriends}
+              friendsFetched={potentialMatchFriendsFetched}
+              onBlock={handleBlock}
+              onViewAllFriends={() => setShowLikeModal(true)}
+            />
           </ScrollView>
 
           {/* New Action Button Bar */}
@@ -3492,12 +3384,10 @@ export default function TabOneScreen() {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    maxWidth: isTablet ? maxContentWidth : "100%",
-    alignSelf: isTablet ? "center" : "auto",
   },
   profileImage: {
     width: "100%",
-    height: isTablet ? 400 : width - 20,
+    height: width - 20,
     borderRadius: 20,
     marginBottom: 20,
   },
@@ -3572,23 +3462,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     backgroundColor: backgroundColor,
-    paddingHorizontal: 40,
-  },
-  noProfilesTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "white",
-    textAlign: "center",
-    marginBottom: 16,
-    maxWidth: isTablet ? 400 : 280,
   },
   noProfilesText: {
     fontSize: 16,
     color: "white",
-    textAlign: "center",
-    opacity: 0.8,
-    maxWidth: isTablet ? 400 : 280,
-    lineHeight: 24,
+    fontWeight: "bold",
   },
   likeModalContainer: {
     backgroundColor: backgroundColor,
@@ -3681,7 +3559,7 @@ const styles = StyleSheet.create({
   },
   mainProfileImage: {
     width: "100%",
-    height: responsiveImageHeight,
+    height: width - 40,
     borderRadius: 12,
   },
   profileInfo: {
@@ -3704,29 +3582,5 @@ const styles = StyleSheet.create({
     textAlign: "left",
     color: "white",
     flex: 1,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "white",
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    opacity: 0.8,
-  },
-  section: {
-    marginBottom: 30,
-  },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "white",
-    paddingHorizontal: 20,
-    marginBottom: 5,
-  },
-  sectionSubtitle: {
-    fontSize: 14,
-    color: "white",
-    paddingHorizontal: 20,
-    marginBottom: 15,
-    opacity: 0.7,
   },
 });

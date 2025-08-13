@@ -7,12 +7,10 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-  Linking,
 } from "react-native";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import Purchases from "react-native-purchases";
-
-import { MapPin } from "lucide-react-native";
+import { FontAwesome } from "@expo/vector-icons";
 import DuoStandoutCard from "../../../components/DuoStandoutCard";
 import SoloStandoutCard from "../../../components/SoloStandoutCard";
 import SelectFriendMenu from "../../../components/SelectFriendMenu";
@@ -37,7 +35,6 @@ import {
   useDeductStars,
 } from "../../../stores/subscription";
 import { AppState } from "react-native";
-import * as Location from "expo-location";
 
 interface DuoStandout {
   id: number;
@@ -69,9 +66,6 @@ export default function StandoutsScreen() {
   const refreshStarBalance = useRefreshStarBalance();
   const deductStars = useDeductStars();
   const [loading, setLoading] = useState(true);
-  const [locationPermissionGranted, setLocationPermissionGranted] = useState<
-    boolean | null
-  >(null);
 
   const [sendingLike, setSendingLike] = useState<string | null>(null);
   const [friends, setFriends] = useState<Friendship[]>([]);
@@ -88,58 +82,7 @@ export default function StandoutsScreen() {
   const { sendMessage } = useWebSocket();
   // lastRefreshTime removed - refresh logic now handled globally in (app)/_layout.tsx
 
-  const checkLocationPermission = async () => {
-    try {
-      const status = await Location.getForegroundPermissionsAsync();
-      setLocationPermissionGranted(status.granted);
-      return status.granted;
-    } catch (error) {
-      console.log("Error checking location permission:", error);
-      setLocationPermissionGranted(false);
-      return false;
-    }
-  };
-
-  const requestLocationPermission = async () => {
-    try {
-      // First check current status
-      const currentStatus = await Location.getForegroundPermissionsAsync();
-
-      // If permission can still be requested
-      if (currentStatus.canAskAgain) {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        const granted = status === "granted";
-        setLocationPermissionGranted(granted);
-
-        if (granted) {
-          fetchStandouts();
-        } else {
-          // Permission was denied, open settings
-          await Linking.openSettings();
-        }
-
-        return granted;
-      } else {
-        // Can't ask again, go directly to settings
-        await Linking.openSettings();
-        setLocationPermissionGranted(false);
-        return false;
-      }
-    } catch (error) {
-      console.log("Error requesting location permission:", error);
-      setLocationPermissionGranted(false);
-      return false;
-    }
-  };
-
   const fetchStandouts = async () => {
-    // Check location permission first
-    const hasPermission = await checkLocationPermission();
-    if (!hasPermission) {
-      setLoading(false);
-      return;
-    }
-
     try {
       const [duoResponse, soloResponse, friendsResponse] = await Promise.all([
         apiFetch("/standouts/duo"),
@@ -172,26 +115,6 @@ export default function StandoutsScreen() {
   useEffect(() => {
     fetchStandouts();
   }, []);
-
-  useEffect(() => {
-    const handleAppStateChange = (nextAppState: string) => {
-      if (nextAppState === "active" && locationPermissionGranted === false) {
-        // Re-check location permission when app becomes active
-        checkLocationPermission().then((hasPermission) => {
-          if (hasPermission) {
-            setLoading(true);
-            fetchStandouts();
-          }
-        });
-      }
-    };
-
-    const subscription = AppState.addEventListener(
-      "change",
-      handleAppStateChange,
-    );
-    return () => subscription?.remove();
-  }, [locationPermissionGranted]);
 
   // Star balance refresh is now handled globally in (app)/_layout.tsx
 
@@ -603,30 +526,6 @@ export default function StandoutsScreen() {
     );
   }
 
-  if (locationPermissionGranted === false) {
-    return (
-      <View style={[styles.container, styles.locationPromptContainer]}>
-        <MapPin size={64} color={mainPurple} style={{ marginBottom: 20 }} />
-        <Text style={styles.locationPromptTitle}>
-          Location Required for Standouts
-        </Text>
-        <Text style={styles.locationPromptText}>
-          Standouts are based on your location to show you the most popular
-          profiles in your area. Enable location access to see standouts near
-          you.
-        </Text>
-        <TouchableOpacity
-          onPress={requestLocationPermission}
-          style={styles.locationPromptButton}
-        >
-          <Text style={styles.locationPromptButtonText}>
-            Allow Location Access
-          </Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
       <ScrollView
@@ -757,40 +656,6 @@ const styles = StyleSheet.create({
     color: "white",
     marginTop: 10,
     fontSize: 16,
-  },
-  locationPromptContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 40,
-  },
-  locationPromptTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "white",
-    textAlign: "center",
-    marginBottom: 16,
-  },
-  locationPromptText: {
-    fontSize: 16,
-    color: "white",
-    textAlign: "center",
-    lineHeight: 24,
-    marginBottom: 30,
-    opacity: 0.8,
-  },
-  locationPromptButton: {
-    backgroundColor: mainPurple,
-    padding: 15,
-    borderRadius: 25,
-    alignItems: "center",
-    justifyContent: "center",
-    width: 200,
-  },
-  locationPromptButtonText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 16,
-    textAlign: "center",
   },
   scrollContent: {
     paddingBottom: 20,
