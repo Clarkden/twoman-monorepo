@@ -77,11 +77,24 @@ export default function NotificationsScreen() {
 
     const newValue = !notificationPreferences.NotificationsEnabled;
 
+    // If enabling notifications and we don't have a token, try to get one
     if (!token && newValue) {
-      Alert.alert(
-        "Please enable notifications in your device settings to receive notifications.",
-      );
-      return;
+      try {
+        const result = await registerForPushNotificationsAsync();
+        if (result.success && result.token) {
+          setToken(result.token);
+        } else if (result.reason === "permissions") {
+          Alert.alert(
+            "Notifications Disabled",
+            "Please enable notifications in your device settings to receive push notifications.",
+          );
+          return;
+        }
+        // If it fails for other reasons (device, network, etc.), still allow the user to toggle the setting
+      } catch (error) {
+        console.log("Failed to get push token when enabling notifications:", error);
+        // Still allow the toggle - the user preference should be saved even if token generation fails
+      }
     }
 
     setNotificationPreferences((prev) =>
