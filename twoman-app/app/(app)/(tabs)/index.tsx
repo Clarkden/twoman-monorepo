@@ -2406,10 +2406,12 @@ function EnhancedProfileCard({
               </Pressable>
             </View>
           </View>
-          <View style={{
-            paddingHorizontal: 20,
-            gap: 10,
-          }}>
+          <View
+            style={{
+              paddingHorizontal: 20,
+              gap: 10,
+            }}
+          >
             <TouchableOpacity
               style={{
                 backgroundColor: secondaryBackgroundColor,
@@ -2437,7 +2439,9 @@ function EnhancedProfileCard({
               }}
             >
               <AlertTriangle size={18} color="white" />
-              <Text style={{ color: "white", fontSize: 16, fontWeight: "400" }}>Report Profile</Text>
+              <Text style={{ color: "white", fontSize: 16, fontWeight: "400" }}>
+                Report Profile
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={{
@@ -2466,206 +2470,223 @@ function EnhancedProfileCard({
               }}
             >
               <UserRoundMinus size={18} color="white" />
-              <Text style={{ color: "white", fontSize: 16, fontWeight: "400" }}>Block Profile</Text>
+              <Text style={{ color: "white", fontSize: 16, fontWeight: "400" }}>
+                Block Profile
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
       <Animated.View style={animatedStyle}>
-      {/* Profile Header */}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 10,
-        }}
-      >
-        <Text style={styles.profileName}>{profile.name}</Text>
-        <TouchableOpacity onPress={() => setProfileOptionsVisible(true)}>
-          <MoreHorizontal color={"white"} size={20} />
-        </TouchableOpacity>
-      </View>
+        {/* Profile Header */}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 10,
+          }}
+        >
+          <Text style={styles.profileName}>{profile.name}</Text>
+          <TouchableOpacity onPress={() => setProfileOptionsVisible(true)}>
+            <MoreHorizontal color={"white"} size={20} />
+          </TouchableOpacity>
+        </View>
 
-      {/* Profile Image */}
-      <Image source={{ uri: profile.image1 }} style={styles.mainProfileImage} />
+        {/* Profile Image */}
+        <Image
+          source={{ uri: profile.image1 }}
+          style={styles.mainProfileImage}
+        />
 
-      {/* Friends Section - Right after image */}
-      <View
-        style={{
-          backgroundColor: secondaryBackgroundColor,
-          borderRadius: 12,
-          padding: 16,
-          marginTop: 16,
-          marginBottom: 16,
-        }}
-      >
-        {!friendsFetched ? (
-          <View style={{ alignItems: "center", paddingVertical: 12 }}>
-            <Text style={{ color: "#888", fontSize: 14 }}>
-              Loading friends...
-            </Text>
-          </View>
-        ) : friends.length === 0 ? (
-          <View style={{ alignItems: "center", paddingVertical: 12 }}>
-            <Text
-              style={{
-                color: "#888",
-                fontSize: 16,
-                fontWeight: "600",
-                marginBottom: 4,
-              }}
-            >
-              No Friends for Duo Dating
-            </Text>
-            <Text style={{ color: "#666", fontSize: 14, textAlign: "center" }}>
-              {profile.name} hasn't added any friends yet
-            </Text>
-          </View>
-        ) : (
-          <>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: 12,
-              }}
-            >
-              <Text style={{ color: "white", fontSize: 16, fontWeight: "700" }}>
-                {profile.name}'s Friends ({friends.length})
+        {/* Friends Section - Right after image */}
+        <View
+          style={{
+            backgroundColor: secondaryBackgroundColor,
+            borderRadius: 12,
+            padding: 16,
+            marginTop: 16,
+            marginBottom: 16,
+          }}
+        >
+          {!friendsFetched ? (
+            <View style={{ alignItems: "center", paddingVertical: 12 }}>
+              <Text style={{ color: "#888", fontSize: 14 }}>
+                Loading friends...
               </Text>
-              {friends.length > 3 && (
-                <TouchableOpacity
-                  onPress={onViewAllFriends}
-                  style={{
-                    backgroundColor: mainPurple,
-                    paddingHorizontal: 12,
-                    paddingVertical: 6,
-                    borderRadius: 15,
-                  }}
-                >
-                  <Text
-                    style={{ color: "white", fontSize: 12, fontWeight: "600" }}
-                  >
-                    View All
-                  </Text>
-                </TouchableOpacity>
-              )}
             </View>
-
-            <View style={{ flexDirection: "row", gap: 12 }}>
-              {friends.slice(0, 3).map((friendship, index) => {
-                const friendProfile = getFriendProfile(friendship);
-                return (
+          ) : friends.length === 0 ? (
+            <View style={{ alignItems: "center", paddingVertical: 12 }}>
+              <Text
+                style={{
+                  color: "#888",
+                  fontSize: 16,
+                  fontWeight: "600",
+                  marginBottom: 4,
+                }}
+              >
+                No Friends for Duo Dating
+              </Text>
+              <Text
+                style={{ color: "#666", fontSize: 14, textAlign: "center" }}
+              >
+                {profile.name} hasn't added any friends yet
+              </Text>
+            </View>
+          ) : (
+            <>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 12,
+                }}
+              >
+                <Text
+                  style={{ color: "white", fontSize: 16, fontWeight: "700" }}
+                >
+                  {profile.name}'s Friends ({friends.length})
+                </Text>
+                {friends.length > 3 && (
                   <TouchableOpacity
-                    key={index}
                     onPress={onViewAllFriends}
                     style={{
-                      flex: 1,
-                      alignItems: "center",
-                      backgroundColor: "rgba(255, 255, 255, 0.05)",
-                      borderRadius: 10,
-                      padding: 12,
+                      backgroundColor: mainPurple,
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      borderRadius: 15,
                     }}
                   >
-                    <Image
-                      source={{ uri: friendProfile.image1 }}
-                      style={{
-                        width: 60,
-                        height: 60,
-                        borderRadius: 30,
-                        marginBottom: 8,
-                      }}
-                    />
                     <Text
                       style={{
                         color: "white",
                         fontSize: 12,
                         fontWeight: "600",
-                        textAlign: "center",
                       }}
-                      numberOfLines={1}
                     >
-                      {friendProfile.name}
-                    </Text>
-                    <Text
-                      style={{
-                        color: "#888",
-                        fontSize: 10,
-                        textAlign: "center",
-                        marginTop: 2,
-                      }}
-                      numberOfLines={1}
-                    >
-                      {friendProfile.age}
+                      View All
                     </Text>
                   </TouchableOpacity>
-                );
-              })}
-            </View>
+                )}
+              </View>
 
-            {friends.length > 0 && (
-              <TouchableOpacity
-                onPress={onViewAllFriends}
-                style={{
-                  backgroundColor: "rgba(163, 100, 245, 0.1)",
-                  borderWidth: 1,
-                  borderColor: "rgba(163, 100, 245, 0.3)",
-                  borderRadius: 8,
-                  paddingVertical: 12,
-                  marginTop: 12,
-                  alignItems: "center",
-                }}
-              >
-                <Text
-                  style={{ color: mainPurple, fontSize: 14, fontWeight: "600" }}
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                {friends.slice(0, 3).map((friendship, index) => {
+                  const friendProfile = getFriendProfile(friendship);
+                  return (
+                    <TouchableOpacity
+                      key={index}
+                      onPress={onViewAllFriends}
+                      style={{
+                        flex: 1,
+                        alignItems: "center",
+                        backgroundColor: "rgba(255, 255, 255, 0.05)",
+                        borderRadius: 10,
+                        padding: 12,
+                      }}
+                    >
+                      <Image
+                        source={{ uri: friendProfile.image1 }}
+                        style={{
+                          width: 60,
+                          height: 60,
+                          borderRadius: 30,
+                          marginBottom: 8,
+                        }}
+                      />
+                      <Text
+                        style={{
+                          color: "white",
+                          fontSize: 12,
+                          fontWeight: "600",
+                          textAlign: "center",
+                        }}
+                        numberOfLines={1}
+                      >
+                        {friendProfile.name}
+                      </Text>
+                      <Text
+                        style={{
+                          color: "#888",
+                          fontSize: 10,
+                          textAlign: "center",
+                          marginTop: 2,
+                        }}
+                        numberOfLines={1}
+                      >
+                        {friendProfile.age}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {friends.length > 0 && (
+                <TouchableOpacity
+                  onPress={onViewAllFriends}
+                  style={{
+                    backgroundColor: "rgba(163, 100, 245, 0.1)",
+                    borderWidth: 1,
+                    borderColor: "rgba(163, 100, 245, 0.3)",
+                    borderRadius: 8,
+                    paddingVertical: 12,
+                    marginTop: 12,
+                    alignItems: "center",
+                  }}
                 >
-                  🎭 Start Duo Match with {profile.name}
-                </Text>
-              </TouchableOpacity>
-            )}
-          </>
-        )}
-      </View>
+                  <Text
+                    style={{
+                      color: mainPurple,
+                      fontSize: 14,
+                      fontWeight: "600",
+                    }}
+                  >
+                    🎭 Start Duo Match with {profile.name}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+        </View>
 
-      {/* Rest of Profile Information */}
-      <View style={styles.profileInfo}>
-        <View style={styles.profileInfoItem}>
-          <NotepadText size={18} color="white" />
-          <Text style={styles.profileBio}>{profile.bio}</Text>
-        </View>
-      </View>
-      <View style={styles.profileInfo}>
-        <View style={styles.profileInfoItem}>
-          <Cake size={18} color="white" />
-          <Text style={globalStyles.regularText}>
-            {(() => {
-              const today = new Date();
-              const birthDate = new Date(profile.date_of_birth);
-              let age = today.getFullYear() - birthDate.getFullYear();
-              const monthDiff = today.getMonth() - birthDate.getMonth();
-              if (
-                monthDiff < 0 ||
-                (monthDiff === 0 && today.getDate() < birthDate.getDate())
-              ) {
-                age--;
-              }
-              return `${age} years old`;
-            })()}
-          </Text>
-        </View>
-        <View style={styles.profileInfoItem}>
-          <MapPin size={18} color="white" />
-          <Text style={globalStyles.regularText}>{profile.city}</Text>
-        </View>
-        {profile.education && (
+        {/* Rest of Profile Information */}
+        <View style={styles.profileInfo}>
           <View style={styles.profileInfoItem}>
-            <Book size={18} color="white" />
-            <Text style={globalStyles.regularText}>{profile.education}</Text>
+            <NotepadText size={18} color="white" />
+            <Text style={styles.profileBio}>{profile.bio}</Text>
           </View>
-        )}
-      </View>
+        </View>
+        <View style={styles.profileInfo}>
+          <View style={styles.profileInfoItem}>
+            <Cake size={18} color="white" />
+            <Text style={globalStyles.regularText}>
+              {(() => {
+                const today = new Date();
+                const birthDate = new Date(profile.date_of_birth);
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                if (
+                  monthDiff < 0 ||
+                  (monthDiff === 0 && today.getDate() < birthDate.getDate())
+                ) {
+                  age--;
+                }
+                return `${age} years old`;
+              })()}
+            </Text>
+          </View>
+          <View style={styles.profileInfoItem}>
+            <MapPin size={18} color="white" />
+            <Text style={globalStyles.regularText}>{profile.city}</Text>
+          </View>
+          {profile.education && (
+            <View style={styles.profileInfoItem}>
+              <Book size={18} color="white" />
+              <Text style={globalStyles.regularText}>{profile.education}</Text>
+            </View>
+          )}
+        </View>
       </Animated.View>
     </>
   );

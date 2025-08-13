@@ -43,6 +43,8 @@ import ProfileCard from "@/components/ProfileCard";
 import Colors from "@/constants/Colors";
 
 const { width, height } = Dimensions.get("window");
+const isTablet = width > 768;
+const maxContentWidth = isTablet ? 500 : width;
 
 const capitalize = (str: string) => {
   return str.charAt(0).toUpperCase() + str.slice(1);
@@ -979,10 +981,12 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: mainBackgroundColor,
     gap: 20,
+    maxWidth: isTablet ? maxContentWidth : "100%",
+    alignSelf: isTablet ? "center" : "auto",
   },
   profileImage: {
     width: "100%",
-    height: width - 20,
+    height: isTablet ? 400 : width - 20,
     borderRadius: 10,
   },
   imagePickerButton: {
@@ -1002,8 +1006,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   gridImageContainer: {
-    width: (width - 50) / 2,
-    height: (width - 50) / 2,
+    width: isTablet ? (maxContentWidth - 50) / 2 : (width - 50) / 2,
+    height: isTablet ? (maxContentWidth - 50) / 2 : (width - 50) / 2,
     margin: 5,
     borderRadius: 10,
     position: "relative",

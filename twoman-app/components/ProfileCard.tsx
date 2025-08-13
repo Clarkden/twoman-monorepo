@@ -36,7 +36,10 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
+const isTablet = width > 768;
+const maxContentWidth = isTablet ? 500 : width;
+const imageHeight = isTablet ? 400 : width - 20;
 
 export default function ProfileCard({
   profile,
@@ -87,7 +90,7 @@ export default function ProfileCard({
           style={[
             {
               width: "100%",
-              height: width - 20,
+              height: imageHeight,
               marginBottom: 20,
             },
             animatedContainerStyle,
@@ -246,7 +249,12 @@ export default function ProfileCard({
           </View>
         </View>
       </Modal>
-      <View style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          isTablet && { maxWidth: maxContentWidth, alignSelf: "center" },
+        ]}
+      >
         <View
           style={{
             flexDirection: "row",
@@ -325,7 +333,7 @@ const styles = StyleSheet.create({
   },
   profileImage: {
     width: "100%",
-    height: width - 20,
+    height: imageHeight,
     borderRadius: 10,
     marginBottom: 20,
   },

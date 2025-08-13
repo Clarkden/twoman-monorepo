@@ -37,14 +37,25 @@ export default function LocationPicker({
   }, []);
 
   const requestLocationPermission = useCallback(async () => {
-    const { status } = await requestForegroundPermissionsAsync();
-    setLocationStatus({
-      status,
-      canAskAgain: true,
-      granted: status === "granted",
-      expires: "never",
-    });
-    return status === "granted";
+    // First check current status
+    const currentStatus = await getForegroundPermissionsAsync();
+
+    // If permission can still be requested
+    if (currentStatus.canAskAgain) {
+      const { status } = await requestForegroundPermissionsAsync();
+      setLocationStatus({
+        status,
+        canAskAgain: status !== "granted",
+        granted: status === "granted",
+        expires: "never",
+      });
+
+      return status === "granted";
+    } else {
+      // Can't ask again, but don't automatically open settings
+      // Let user choose to open settings explicitly
+      return false;
+    }
   }, []);
 
   const handleAppStateChange = useCallback(
@@ -104,7 +115,7 @@ export default function LocationPicker({
   }, [requestLocation]);
 
   const openSettings = async () => {
-    await Linking.openSettings();
+    await Linking.openURL("app-settings:");
   };
 
   if (!locationStatus && !value) {
@@ -124,21 +135,25 @@ export default function LocationPicker({
               <Text style={{ color: "white", textAlign: "center" }}>
                 {errorMsg}
               </Text>
-              {!locationStatus.granted && (
-                <TouchableOpacity
-                  onPress={openSettings}
-                  style={styles.requestLocationButton}
-                >
-                  <Text style={styles.requestLocationButtonText}>
-                    Open Settings
-                  </Text>
-                </TouchableOpacity>
-              )}
+              <View style={{ gap: 10, width: "100%" }}>
+                {!locationStatus.granted && (
+                  <TouchableOpacity
+                    onPress={openSettings}
+                    style={globalStyles.onboardingNextButton}
+                  >
+                    <Text style={globalStyles.onBoardingNextButtonText}>
+                      Open Settings
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           ) : (
-            <Text style={{ color: "white", textAlign: "center" }}>
-              Getting your location...
-            </Text>
+            <View style={{ gap: 10, alignItems: "center" }}>
+              <Text style={{ color: "white", textAlign: "center" }}>
+                Getting your location...
+              </Text>
+            </View>
           )}
         </>
       ) : (

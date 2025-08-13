@@ -90,6 +90,8 @@ const ONBOARD_SCREENS = [
 ] as const;
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const isTablet = SCREEN_WIDTH > 768;
+const maxContentWidth = isTablet ? 500 : SCREEN_WIDTH;
 
 export default function OnBoardScreen() {
   const router = useRouter();
@@ -173,7 +175,12 @@ export default function OnBoardScreen() {
     setNextScreenIndex(newIndex);
     updateProgress(newIndex);
 
-    const targetValue = direction === "next" ? -SCREEN_WIDTH : SCREEN_WIDTH;
+    const targetValue =
+      direction === "next"
+        ? -(isTablet ? maxContentWidth : SCREEN_WIDTH)
+        : isTablet
+          ? maxContentWidth
+          : SCREEN_WIDTH;
 
     nextScreenOpacity.value = withTiming(1, { duration: 150 });
     slideAnimation.value = withTiming(
@@ -651,7 +658,7 @@ const styles = StyleSheet.create({
   progressBarContainer: {
     height: 4,
     backgroundColor: borderColor,
-    width: SCREEN_WIDTH - 40,
+    width: isTablet ? maxContentWidth - 40 : SCREEN_WIDTH - 40,
     borderRadius: 25,
   },
   progressBar: {
@@ -666,19 +673,23 @@ const styles = StyleSheet.create({
   screenViewContainer: {
     flex: 1,
     flexDirection: "row",
-    width: SCREEN_WIDTH * 2,
+    width: isTablet ? maxContentWidth * 2 : SCREEN_WIDTH * 2,
   },
   welcomeScreenContainer: {
     flex: 1,
     justifyContent: "center",
-    alignItems: "flex-start",
+    alignItems: isTablet ? "center" : "flex-start",
     padding: 20,
+    maxWidth: isTablet ? maxContentWidth : "100%",
+    alignSelf: isTablet ? "center" : "auto",
   },
   screenContainer: {
     flex: 1,
     justifyContent: "flex-start",
-    alignItems: "flex-start",
+    alignItems: isTablet ? "center" : "flex-start",
     padding: 20,
+    maxWidth: isTablet ? maxContentWidth : "100%",
+    alignSelf: isTablet ? "center" : "auto",
   },
   title: {
     fontSize: 24,
@@ -702,8 +713,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   screen: {
-    width: SCREEN_WIDTH,
+    width: isTablet ? maxContentWidth : SCREEN_WIDTH,
     flex: 1,
+    alignSelf: isTablet ? "center" : "auto",
   },
   celebrationContainer: {
     alignItems: "center",
