@@ -51,14 +51,14 @@ export default function LocationPicker({
       });
 
       if (status !== "granted") {
-        // Permission was denied, open settings
-        await openSettings();
+        // Permission was denied, but don't automatically open settings
+        // Let user choose to open settings explicitly
       }
 
       return status === "granted";
     } else {
-      // Can't ask again, go directly to settings
-      await openSettings();
+      // Can't ask again, but don't automatically open settings
+      // Let user choose to open settings explicitly
       return false;
     }
   }, []);
@@ -120,7 +120,7 @@ export default function LocationPicker({
   }, [requestLocation]);
 
   const openSettings = async () => {
-    await Linking.openSettings();
+    await Linking.openURL('app-settings:');
   };
 
   if (!locationStatus && !value) {
@@ -144,36 +144,13 @@ export default function LocationPicker({
                 {!locationStatus.granted && (
                   <TouchableOpacity
                     onPress={openSettings}
-                    style={styles.requestLocationButton}
+                    style={globalStyles.onboardingNextButton}
                   >
-                    <Text style={styles.requestLocationButtonText}>
+                    <Text style={globalStyles.onBoardingNextButtonText}>
                       Open Settings
                     </Text>
                   </TouchableOpacity>
                 )}
-                <TouchableOpacity
-                  onPress={() => {
-                    onValueChange(null);
-                    onNext();
-                  }}
-                  style={[
-                    styles.requestLocationButton,
-                    {
-                      backgroundColor: "transparent",
-                      borderWidth: 1,
-                      borderColor: "white",
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.requestLocationButtonText,
-                      { color: "white" },
-                    ]}
-                  >
-                    Skip for Now
-                  </Text>
-                </TouchableOpacity>
               </View>
             </View>
           ) : (
@@ -181,26 +158,6 @@ export default function LocationPicker({
               <Text style={{ color: "white", textAlign: "center" }}>
                 Getting your location...
               </Text>
-              <TouchableOpacity
-                onPress={() => {
-                  onValueChange(null);
-                  onNext();
-                }}
-                style={[
-                  styles.requestLocationButton,
-                  {
-                    backgroundColor: "transparent",
-                    borderWidth: 1,
-                    borderColor: "white",
-                  },
-                ]}
-              >
-                <Text
-                  style={[styles.requestLocationButtonText, { color: "white" }]}
-                >
-                  Skip for Now
-                </Text>
-              </TouchableOpacity>
             </View>
           )}
         </>
