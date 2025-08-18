@@ -113,6 +113,14 @@ func (mw Provider) AuthMiddleware(next http.Handler) http.HandlerFunc {
 			return
 		}
 
+		// Extend session on each authenticated request (90 days from now)
+		extensionDuration := 90 * 24 * time.Hour
+		err = auth.ExtendSession(r.Context(), token, mw.rdb, extensionDuration)
+		if err != nil {
+			log.Printf("AuthMiddleware: Error extending session: %v", err)
+			// Continue processing - session extension failure shouldn't block request
+		}
+
 		ctx := context.WithValue(r.Context(), globals.SessionMiddlewareKey, session)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}

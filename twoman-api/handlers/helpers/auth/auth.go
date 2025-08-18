@@ -34,12 +34,15 @@ const (
 func CreateAuthToken(ctx context.Context, userID uint, rdb *redis.Client, userType string) (string, string, error) {
 	sessionToken := uuid.New().String()
 	refreshToken := uuid.New().String()
+	
+	// Set session duration to 90 days for new sessions (but keep backward compatibility)
+	sessionDuration := 90 * 24 * time.Hour
 
 	session := types.Session{
 		UserID:       userID,
 		SessionID:    sessionToken,
-		RefreshToken: refreshToken,
-		Expiration:   time.Now().Add(24 * 30 * time.Hour),
+		RefreshToken: refreshToken, // Keep for backward compatibility with mobile clients
+		Expiration:   time.Now().Add(sessionDuration),
 		Type:         userType,
 	}
 
@@ -49,22 +52,26 @@ func CreateAuthToken(ctx context.Context, userID uint, rdb *redis.Client, userTy
 	}
 
 	sessionKey := SessionPrefix + sessionToken
-	log.Printf("DEBUG: Creating session - userID: %d, sessionKey: %s", userID, sessionKey[:16]+"...")
+	log.Printf("DEBUG: Creating backward-compatible long-lived session - userID: %d, sessionKey: %s, duration: %v", userID, sessionKey[:16]+"...", sessionDuration)
 
-	err = rdb.Set(ctx, sessionKey, jsonData, 24*time.Hour).Err()
+	// Store session with 90-day TTL to match expiration
+	err = rdb.Set(ctx, sessionKey, jsonData, sessionDuration).Err()
 	if err != nil {
 		log.Printf("DEBUG: Failed to save session to Redis: %v", err)
 		return "", "", err
 	}
 
-	log.Printf("DEBUG: Session saved successfully to Redis")
-
+	// Store refresh token that maps to the same session (for backward compatibility)
+	// This allows old mobile clients to "refresh" by getting the same long-lived session
 	refreshKey := RefreshPrefix + refreshToken
-	err = rdb.Set(ctx, refreshKey, userID, 30*24*time.Hour).Err()
+	err = rdb.Set(ctx, refreshKey, userID, sessionDuration).Err()
 	if err != nil {
 		return "", "", err
 	}
 
+	log.Printf("DEBUG: Backward-compatible session and refresh token saved successfully")
+
+	// Return both tokens for backward compatibility with mobile clients
 	return sessionToken, refreshToken, nil
 }
 
@@ -102,16 +109,24 @@ func RefreshToken(ctx context.Context, refreshToken string, rdb *redis.Client, u
 		return "", "", errors.New("invalid refresh token")
 	}
 
-	// Generate new tokens
+	// Find existing session for this user (for backward compatibility)
+	// In the new system, we extend the existing session instead of creating new tokens
+	
+	// For backward compatibility with existing refresh tokens, we'll find any active session for this user
+	// and extend it. If no session exists, we create a new long-lived session.
+	
+	// This is a simplified approach - in production you might want to track which session corresponds to which refresh token
+	sessionDuration := 90 * 24 * time.Hour
+	
+	// Create a new long-lived session (since we can't easily map refresh tokens to existing sessions)
 	newSessionToken := uuid.New().String()
-	newRefreshToken := uuid.New().String()
-
+	
 	session := types.Session{
-		UserID:       uint(userID),
-		SessionID:    newSessionToken,
-		RefreshToken: newRefreshToken,
-		Expiration:   time.Now().Add(24 * time.Hour),
-		Type:         userType,
+		UserID:     uint(userID),
+		SessionID:  newSessionToken,
+		Expiration: time.Now().Add(sessionDuration),
+		Type:       userType,
+		// No RefreshToken field for new sessions
 	}
 
 	jsonData, err := json.Marshal(session)
@@ -119,24 +134,54 @@ func RefreshToken(ctx context.Context, refreshToken string, rdb *redis.Client, u
 		return "", "", err
 	}
 
-	// Store the new session data
+	// Store the new session data with 90-day TTL
 	newSessionKey := SessionPrefix + newSessionToken
-	err = rdb.Set(ctx, newSessionKey, jsonData, 24*30*time.Hour).Err()
+	err = rdb.Set(ctx, newSessionKey, jsonData, sessionDuration).Err()
 	if err != nil {
 		return "", "", err
 	}
 
-	// Store the new refresh token
-	newRefreshKey := RefreshPrefix + newRefreshToken
-	err = rdb.Set(ctx, newRefreshKey, userID, 90*24*time.Hour).Err()
-	if err != nil {
-		return "", "", err
-	}
-
-	// Delete the old refresh token
+	// Delete the old refresh token since it's no longer needed
 	rdb.Del(ctx, refreshKey)
 
-	return newSessionToken, newRefreshToken, nil
+	log.Printf("DEBUG: Migrated refresh token to long-lived session for user %d", userID)
+
+	// Return the new session token and empty refresh token
+	return newSessionToken, "", nil
+}
+
+func ExtendSession(ctx context.Context, sessionToken string, rdb *redis.Client, extensionDuration time.Duration) error {
+	sessionKey := SessionPrefix + sessionToken
+	
+	// Get current session data
+	jsonData, err := rdb.Get(ctx, sessionKey).Result()
+	if err != nil {
+		return err
+	}
+	
+	var session types.Session
+	err = json.Unmarshal([]byte(jsonData), &session)
+	if err != nil {
+		return err
+	}
+	
+	// Update expiration time
+	session.Expiration = time.Now().Add(extensionDuration)
+	
+	// Marshal updated session data
+	updatedJsonData, err := json.Marshal(session)
+	if err != nil {
+		return err
+	}
+	
+	// Update session in Redis with new expiration and TTL
+	err = rdb.Set(ctx, sessionKey, updatedJsonData, extensionDuration).Err()
+	if err != nil {
+		return err
+	}
+	
+	log.Printf("DEBUG: Extended session %s for %v", sessionKey[:16]+"...", extensionDuration)
+	return nil
 }
 
 func ClearRefreshToken(refreshToken string, rdb *redis.Client) error {

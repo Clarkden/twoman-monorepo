@@ -90,7 +90,7 @@ func (h Handler) HandleAppleAuth() http.Handler {
 				response.InternalServerError(w, err, "Something went wrong")
 				return
 			}
-			response.OKWithData(w, "OK", map[string]interface{}{
+			response.OKWithData(w, "OK", map[string]any{
 				"session_token": sessionToken,
 				"refresh_token": refreshToken,
 				"user_id":       userRecord.ID,
@@ -160,6 +160,7 @@ func (h Handler) HandleCheckSession() http.Handler {
 			}
 
 			// If we've reached here, the session is valid
+			// Note: Session is already extended in AuthMiddleware, but we could add additional logic here if needed
 			response.OK(w, "Session valid")
 		}
 	})
