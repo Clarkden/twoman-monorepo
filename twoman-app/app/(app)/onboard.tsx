@@ -32,6 +32,7 @@ import {
   Alert,
   Button,
   Dimensions,
+  Platform,
   Pressable,
   SafeAreaView,
   StyleSheet,
@@ -654,6 +655,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: mainBackgroundColor,
     maxHeight: SCREEN_HEIGHT,
+    paddingTop: Platform.OS === "ios" ? 0 : 40,
   },
   progressBarContainer: {
     height: 4,
