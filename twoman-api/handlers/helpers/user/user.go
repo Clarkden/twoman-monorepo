@@ -179,3 +179,32 @@ func FindUserByAppleID(appleID string, db *gorm.DB) (*schemas.User, error) {
 
 	return &user, nil
 }
+
+func CreateUserWithGoogleID(googleID string, email string, db *gorm.DB) (*schemas.User, error) {
+	user := schemas.User{
+		OauthProvider:   "google",
+		OauthProviderID: googleID,
+		Email:           email,
+		Verified:        true,
+	}
+
+	if err := db.Create(&user).Error; err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func FindUserByGoogleID(googleID string, db *gorm.DB) (*schemas.User, error) {
+	var user schemas.User
+	err := db.Where("oauth_provider = ? AND oauth_provider_id = ?", "google", googleID).First(&user).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	return &user, nil
+}

@@ -104,6 +104,11 @@ type AppleAuthRequest struct {
 	UserID        string `json:"user_id"`
 	Email         string `json:"email"`
 }
+
+type GoogleAuthRequest struct {
+	IdToken string `json:"id_token"`
+	Email   string `json:"email"`
+}
 type ReportProfileRequest struct {
 	ReportedID uint   `json:"reported_id"`
 	Reason     string `json:"reason"`

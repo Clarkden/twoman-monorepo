@@ -68,6 +68,12 @@
         }
       ],
       "expo-apple-authentication",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.1058496627011-406ug4gim9t6c0sql6tvq5i3mbbiua00"
+        }
+      ],
       "expo-secure-store",
       [
         "expo-build-properties",

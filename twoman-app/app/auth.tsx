@@ -9,6 +9,7 @@ import {
   Modal,
   ScrollView,
   Dimensions,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -27,10 +28,13 @@ import apiFetch from "@/utils/fetch";
 import { LucidePhone } from "lucide-react-native";
 import PhoneAuthModal from "@/components/PhoneAuthModalContent";
 import PhoneAuthVerifyModal from "@/components/PhoneAuthModalVerifyContent";
-import { useAppleInfo, useSession } from "@/stores/auth";
-import { LoginWithApple } from "@/utils/auth";
+import { useAppleInfo, useGoogleInfo, useSession } from "@/stores/auth";
+import { LoginWithApple, LoginWithGoogle } from "@/utils/auth";
+import { AntDesign } from "@expo/vector-icons";
+import { GoogleSigninButton } from "@react-native-google-signin/google-signin";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("screen");
+const platform = Platform.OS;
 
 // Component prop types
 interface AuthHeaderProps {
@@ -51,6 +55,7 @@ interface SignInSectionProps {
   smsAuthEnabled: boolean;
   screenHeight: number;
   onAppleSignIn: () => void;
+  onGoogleSignIn: () => void;
   onPhoneAuthPress: () => void;
 }
 
@@ -182,6 +187,7 @@ function SignInSection({
   smsAuthEnabled,
   screenHeight,
   onAppleSignIn,
+  onGoogleSignIn,
   onPhoneAuthPress,
 }: SignInSectionProps) {
   return (
@@ -197,7 +203,6 @@ function SignInSection({
         shadowOffset: { width: 0, height: -8 },
         shadowOpacity: 0.25,
         shadowRadius: 20,
-        elevation: 20,
       }}
     >
       <View
@@ -227,23 +232,64 @@ function SignInSection({
         </Text>
       </View>
 
-      <AppleAuthentication.AppleAuthenticationButton
-        buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-        buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
-        cornerRadius={15}
-        style={[
-          styles.button,
-          {
-            height: screenHeight > 800 ? 52 : 48,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.15,
-            shadowRadius: 8,
-            elevation: 8,
-          },
-        ]}
-        onPress={onAppleSignIn}
-      />
+      {Platform.OS === "ios" && (
+        <AppleAuthentication.AppleAuthenticationButton
+          buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+          buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
+          cornerRadius={15}
+          style={[
+            styles.button,
+            {
+              height: screenHeight > 800 ? 52 : 48,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 8,
+              elevation: 8,
+            },
+          ]}
+          onPress={onAppleSignIn}
+        />
+      )}
+
+      {Platform.OS === "android" && (
+        <TouchableOpacity
+          style={[
+            styles.button,
+            {
+              height: screenHeight > 800 ? 52 : 48,
+              backgroundColor: "#ffffff",
+              borderRadius: 15,
+              borderWidth: 1,
+              borderColor: "#dadce0",
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 12,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              elevation: 4,
+            },
+          ]}
+          onPress={onGoogleSignIn}
+          activeOpacity={0.8}
+        >
+          <AntDesign name="google" size={24} color="black" />
+          <Text
+            style={{
+              fontSize: screenHeight > 800 ? 18 : 16,
+              fontWeight: "600",
+              color: "#3c4043",
+              fontFamily: platform === "ios" ? "System" : "Roboto",
+              letterSpacing: 0.25,
+            }}
+          >
+            Sign in with Google
+          </Text>
+        </TouchableOpacity>
+      )}
 
       {smsAuthEnabled && (
         <TouchableOpacity
@@ -261,7 +307,6 @@ function SignInSection({
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.1,
             shadowRadius: 8,
-            elevation: 8,
           }}
           onPress={onPhoneAuthPress}
           activeOpacity={0.8}
@@ -392,6 +437,7 @@ function AuthBackground() {
 export default function Auth() {
   const { session, setSession } = useSession();
   const { setAppleInfo } = useAppleInfo();
+  const { setGoogleInfo } = useGoogleInfo();
   const router = useRouter();
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
@@ -416,6 +462,26 @@ export default function Auth() {
       }
     } catch (error) {
       console.error("Apple sign in error:", error);
+      Alert.alert("Error", "An unexpected error occurred. Please try again.");
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsAuthenticating(true);
+    try {
+      const { sessionData, googleUserId, googleUserName } =
+        await LoginWithGoogle();
+      if (sessionData) {
+        setSession(sessionData);
+        setGoogleInfo(googleUserId, googleUserName);
+        router.push("/(app)/");
+      } else {
+        Alert.alert("Error", "Google sign in failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Google sign in error:", error);
       Alert.alert("Error", "An unexpected error occurred. Please try again.");
     } finally {
       setIsAuthenticating(false);
@@ -559,6 +625,7 @@ export default function Auth() {
         smsAuthEnabled={smsAuthEnabled}
         screenHeight={SCREEN_HEIGHT}
         onAppleSignIn={handleAppleSignIn}
+        onGoogleSignIn={handleGoogleSignIn}
         onPhoneAuthPress={() => setPhoneAuthModalVisible(true)}
       />
     </View>

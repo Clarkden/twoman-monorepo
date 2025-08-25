@@ -1,5 +1,6 @@
 import { SessionData } from "@/types/api";
 import * as AppleAuthentication from "expo-apple-authentication";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import apiFetch from "./fetch";
 import { useSession } from "@/stores/auth";
 
@@ -96,4 +97,65 @@ export const RefreshSession = async () => {
   }
 
   return false;
+};
+
+export const LoginWithGoogle = async (): Promise<{
+  sessionData: SessionData | null;
+  googleUserId: string | null;
+  googleUserName: string | null;
+}> => {
+  try {
+    // Configure Google Sign-In (this should ideally be done once at app startup)
+    console.log("DEBUG: Configuring Google Sign-In");
+    GoogleSignin.configure({
+      webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID, // From Google Cloud Console
+      offlineAccess: false,
+    });
+    console.log("DEBUG: Checking if device supports Google Play services");
+    // Check if device supports Google Play services
+    await GoogleSignin.hasPlayServices();
+
+    console.log("DEBUG: Signing in with Google");
+    // Sign in with Google
+    const userInfo = await GoogleSignin.signIn();
+
+    console.log("DEBUG: Google sign in request sent");
+    if (!userInfo.data?.idToken) {
+      throw new Error("No ID token received from Google");
+    }
+    console.log("DEBUG: Google sign in response received");
+
+    console.log("DEBUG: Sending Google sign in response to server");
+    const response = await apiFetch<SessionData>("/auth/google", {
+      method: "POST",
+      body: JSON.stringify({
+        id_token: userInfo.data.idToken,
+        email: userInfo.data.user.email,
+      }),
+      headers: { "Content-Type": "application/json" },
+    });
+    console.log("DEBUG: Google sign in response sent to server");
+
+    console.log("RESPONSE", response);
+
+    if (response.success) {
+      return {
+        sessionData: response.data,
+        googleUserId: userInfo.data.user.id,
+        googleUserName: userInfo.data.user.name || userInfo.data.user.givenName,
+      };
+    } else {
+      throw new Error("Failed to authenticate with the server");
+    }
+  } catch (error: any) {
+    console.log("DEBUG: Google sign in error", error);
+    if (error.code === "SIGN_IN_CANCELLED") {
+      console.log("User canceled Google sign-in");
+    } else if (error.code === "PLAY_SERVICES_NOT_AVAILABLE") {
+      console.log("Google Play services not available");
+    } else {
+      console.error("Google sign in error", error);
+    }
+    return { sessionData: null, googleUserId: null, googleUserName: null };
+  }
 };

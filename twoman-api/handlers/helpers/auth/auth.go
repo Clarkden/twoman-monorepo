@@ -34,7 +34,7 @@ const (
 func CreateAuthToken(ctx context.Context, userID uint, rdb *redis.Client, userType string) (string, string, error) {
 	sessionToken := uuid.New().String()
 	refreshToken := uuid.New().String()
-	
+
 	// Set session duration to 90 days for new sessions (but keep backward compatibility)
 	sessionDuration := 90 * 24 * time.Hour
 
@@ -111,16 +111,16 @@ func RefreshToken(ctx context.Context, refreshToken string, rdb *redis.Client, u
 
 	// Find existing session for this user (for backward compatibility)
 	// In the new system, we extend the existing session instead of creating new tokens
-	
+
 	// For backward compatibility with existing refresh tokens, we'll find any active session for this user
 	// and extend it. If no session exists, we create a new long-lived session.
-	
+
 	// This is a simplified approach - in production you might want to track which session corresponds to which refresh token
 	sessionDuration := 90 * 24 * time.Hour
-	
+
 	// Create a new long-lived session (since we can't easily map refresh tokens to existing sessions)
 	newSessionToken := uuid.New().String()
-	
+
 	session := types.Session{
 		UserID:     uint(userID),
 		SessionID:  newSessionToken,
@@ -152,34 +152,34 @@ func RefreshToken(ctx context.Context, refreshToken string, rdb *redis.Client, u
 
 func ExtendSession(ctx context.Context, sessionToken string, rdb *redis.Client, extensionDuration time.Duration) error {
 	sessionKey := SessionPrefix + sessionToken
-	
+
 	// Get current session data
 	jsonData, err := rdb.Get(ctx, sessionKey).Result()
 	if err != nil {
 		return err
 	}
-	
+
 	var session types.Session
 	err = json.Unmarshal([]byte(jsonData), &session)
 	if err != nil {
 		return err
 	}
-	
+
 	// Update expiration time
 	session.Expiration = time.Now().Add(extensionDuration)
-	
+
 	// Marshal updated session data
 	updatedJsonData, err := json.Marshal(session)
 	if err != nil {
 		return err
 	}
-	
+
 	// Update session in Redis with new expiration and TTL
 	err = rdb.Set(ctx, sessionKey, updatedJsonData, extensionDuration).Err()
 	if err != nil {
 		return err
 	}
-	
+
 	log.Printf("DEBUG: Extended session %s for %v", sessionKey[:16]+"...", extensionDuration)
 	return nil
 }
@@ -368,4 +368,48 @@ func IsDemoNumber(phone string, db *gorm.DB) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func VerifyGoogleIdToken(idToken string) (*types.GoogleIdentity, error) {
+	// Use Google's tokeninfo endpoint directly
+	url := fmt.Sprintf("https://oauth2.googleapis.com/tokeninfo?id_token=%s", idToken)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("error making request to tokeninfo: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("tokeninfo returned status %d: %s", resp.StatusCode, string(body))
+	}
+
+	var tokenInfo struct {
+		Sub           string `json:"sub"`
+		Email         string `json:"email"`
+		EmailVerified string `json:"email_verified"`
+		Name          string `json:"name"`
+		Aud           string `json:"aud"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&tokenInfo); err != nil {
+		return nil, fmt.Errorf("error decoding tokeninfo response: %w", err)
+	}
+
+	// Validate that email is verified (Google returns "true" as string)
+	emailVerified := tokenInfo.EmailVerified == "true"
+	if !emailVerified {
+		return nil, fmt.Errorf("email is not verified")
+	}
+
+	// Create GoogleIdentity from token info
+	identity := &types.GoogleIdentity{
+		Email:         tokenInfo.Email,
+		Sub:           tokenInfo.Sub,
+		EmailVerified: emailVerified,
+		Name:          tokenInfo.Name,
+	}
+
+	return identity, nil
 }

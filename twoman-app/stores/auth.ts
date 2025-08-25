@@ -30,6 +30,31 @@ export const useAppleInfo = create(
   ),
 );
 
+type GoogleInfoStore = {
+  id: string | null;
+  name: string | null;
+  setGoogleInfo: (id: string | null, name: string | null) => void;
+};
+
+export const useGoogleInfo = create(
+  persist<GoogleInfoStore>(
+    (set) => ({
+      id: null,
+      name: null,
+      setGoogleInfo: async (id, name) => {
+        set(() => ({
+          id,
+          name,
+        }));
+      },
+    }),
+    {
+      name: "google-info-storage",
+      storage: createJSONStorage(() => AsyncStorage),
+    },
+  ),
+);
+
 type SessionStore = {
   session: SessionData | null;
   setSession: (session: SessionData | null) => void;
