@@ -24,6 +24,7 @@ func Router(liveDB, demoDB *gorm.DB, rdb *redis.Client, s3 *s3.S3, rlmdb *redis.
 
 	// Auth Routes
 	router.Handle("POST /v1/auth/apple", middlewareProvider.DatabaseMiddleware(handler.HandleAppleAuth()))
+	router.Handle("POST /v1/auth/google", middlewareProvider.DatabaseMiddleware(handler.HandleGoogleAuth()))
 	router.Handle("GET /v1/auth/check", middlewareProvider.AuthMiddleware(middlewareProvider.DatabaseMiddleware(handler.HandleCheckSession())))
 	router.Handle("POST /v1/auth/refresh", middlewareProvider.DatabaseMiddleware(handler.HandleRefreshToken()))
 	router.Handle("GET /v1/session/validate", middlewareProvider.AuthMiddleware(middlewareProvider.DatabaseMiddleware(handler.HandleValidateSession(rdb))))

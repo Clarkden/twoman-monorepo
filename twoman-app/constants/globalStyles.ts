@@ -4,7 +4,7 @@ export const mainPurple = "#a364f5";
 export const goldYellow = "#f5d364"; // Goldish yellow that complements the purple
 export const mainBackgroundColor = "#1a1a1a"; // Instagram-style matte dark gray
 export const secondaryBackgroundColor = "#262626"; // Slightly brighter for contrast
-export const accentGray = "#7f7985";
+export const accentGray = "#9a95a1";
 export const borderColor = "#2e2c2c";
 
 export const globalStyles = StyleSheet.create({

@@ -19,10 +19,12 @@ import {
   useRefreshStarBalance,
 } from "@/stores/subscription";
 import { resetReviewSession } from "@/utils/reviewPrompt";
+import { setupNotificationChannels, configureNotificationHandler, getNotificationChannelInfo } from "@/utils/notifications";
 
 export { ErrorBoundary } from "expo-router";
 
-Notifications.setNotificationHandler(null);
+// Configure the notification handler with our custom logic
+configureNotificationHandler();
 
 SplashScreen.preventAutoHideAsync();
 
@@ -111,25 +113,48 @@ export default function RootLayout() {
   }, [userId, refreshStarBalance]);
 
   useEffect(() => {
-    registerForPushNotificationsAsync().then((token) => {
+    const initializeNotifications = async () => {
+      // Set up all notification channels first
+      await setupNotificationChannels();
+      
+      // Log channel info for debugging (Android only)
+      if (Platform.OS === "android") {
+        await getNotificationChannelInfo();
+      }
+      
+      // Then register for push notifications
+      const token = await registerForPushNotificationsAsync();
       if (token) {
         updatePushToken(token);
       }
-    });
+    };
 
-    // if (Platform.OS === "android") {
-    //   Notifications.getNotificationChannelsAsync().then((value) =>
-    //     setChannels(value ?? []),
-    //   );
-    // }
+    initializeNotifications();
+
+    // Set up notification listeners with enhanced handling
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
-        console.log(notification);
+        console.log("📱 Notification received:", notification);
+        const { data } = notification.request.content;
+        console.log("📱 Notification type:", data?.type, "Channel:", data?.channel);
       });
 
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log(response);
+        console.log("👆 Notification tapped:", response);
+        const { data } = response.notification.request.content;
+        
+        // Handle different notification types
+        if (data?.type === "match" && data?.matchId) {
+          // Navigate to match screen
+          console.log("🔗 Should navigate to match:", data.matchId);
+        } else if (data?.type === "message" && data?.matchId) {
+          // Navigate to chat screen  
+          console.log("🔗 Should navigate to chat:", data.matchId);
+        } else if (data?.type === "friend_request") {
+          // Navigate to friends screen
+          console.log("🔗 Should navigate to friends");
+        }
       });
 
     return () => {
@@ -219,14 +244,8 @@ const Theme = {
 async function registerForPushNotificationsAsync() {
   let token;
 
-  if (Platform.OS === "android") {
-    await Notifications.setNotificationChannelAsync("default", {
-      name: "default",
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: "#FF231F7C",
-    });
-  }
+  // Note: Channel setup is now handled by setupNotificationChannels()
+  // This function focuses only on token registration
 
   if (Device.isDevice) {
     const { status: existingStatus } =

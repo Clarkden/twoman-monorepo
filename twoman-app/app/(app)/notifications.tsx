@@ -20,6 +20,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { setupNotificationChannels } from "@/utils/notifications";
 
 type ErrorState = {
   type: "preferences" | "update" | null;
@@ -325,14 +326,9 @@ async function registerForPushNotificationsAsync(): Promise<PushTokenResult> {
   }
 
   try {
-    // Set up Android notification channel
+    // Set up all Android notification channels
     if (Platform.OS === "android") {
-      await Notifications.setNotificationChannelAsync("default", {
-        name: "default",
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: "#FF231F7C",
-      });
+      await setupNotificationChannels();
     }
 
     // Check existing permissions

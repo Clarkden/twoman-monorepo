@@ -14,6 +14,9 @@
     "build:ios:dev:local": "eas build --platform ios --profile development --local",
     "build:ios:prod:eas": "eas build --platform ios --profile production",
     "build:ios:prod:eas:submit": "eas build --platform ios --profile production --submit",
+    "build:android:dev:local": "eas build --platform android --profile development --local",
+    "build:android:prod:eas": "eas build --platform android --profile production",
+    "build:android:prod:eas:submit": "eas build --platform android --profile production --submit",
     "generate-types": "node scripts/generate-types.js",
     "sync-schemas": "cp ../twoman-api/websocket-schemas/*.json ./schemas/ && npm run generate-types"
   },
@@ -25,6 +28,7 @@
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-community/datetimepicker": "8.4.1",
     "@react-native-community/slider": "4.5.6",
+    "@react-native-google-signin/google-signin": "^15.0.0",
     "@react-native-picker/picker": "2.11.1",
     "@react-navigation/native": "^7.1.6",
     "@sentry/react-native": "~6.14.0",

@@ -21,6 +21,9 @@
         "NSLocationAlwaysUsageDescription": "Allow 2 Man to use your location to find show nearby profiles and let your profile be discovered by other users",
         "NSLocationWhenInUseUsageDescription": "Allow 2 Man to use your location to find show nearby profiles and let your profile be discovered by other users",
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "config": {
+        "usesNonExemptEncryption": false
       }
     },
     "android": {
@@ -33,9 +36,13 @@
         "android.permission.READ_CONTACTS",
         "android.permission.WRITE_CONTACTS",
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.VIBRATE",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.POST_NOTIFICATIONS"
       ],
-      "package": "dating.twoman.twoman"
+      "package": "dating.twoman.twoman",
+      "edgeToEdgeEnabled": true
     },
     "web": {
       "bundler": "metro",
@@ -43,6 +50,7 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "./withCustomAndroidManifest.js",
       "expo-router",
       "expo-splash-screen",
       [
@@ -64,12 +72,18 @@
         }
       ],
       "expo-apple-authentication",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.1058496627011-406ug4gim9t6c0sql6tvq5i3mbbiua00"
+        }
+      ],
       "expo-secure-store",
       [
         "expo-build-properties",
         {
           "android": {
-            "minSdkVersion": 24
+            "targetSdkVersion": 35
           },
           "ios": {
             "deploymentTarget": "15.1"
@@ -89,6 +103,15 @@
         "expo-contacts",
         {
           "contactsPermission": "Allow 2 Man to access your contacts so you can add your friends."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#A364F5",
+          "defaultChannel": "default",
+          "sounds": []
         }
       ],
       "expo-web-browser",

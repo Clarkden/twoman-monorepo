@@ -462,6 +462,80 @@ func (h Handler) HandlePhoneVerify() http.Handler {
 	})
 }
 
+func (h Handler) HandleGoogleAuth() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		clientVersion := r.Header.Get("X-Client-Version")
+
+		switch clientVersion {
+		default:
+			var req types.GoogleAuthRequest
+			err := json.NewDecoder(r.Body).Decode(&req)
+
+			if err != nil {
+				log.Println("Google Auth: ", err)
+				response.BadRequest(w, "Invalid request")
+				return
+			}
+
+			identity, err := auth.VerifyGoogleIdToken(req.IdToken)
+
+			if err != nil {
+				log.Println("Google Auth: ", err)
+				response.BadRequest(w, "Invalid ID token")
+				return
+			}
+
+			userRecord, err := user.FindUserByGoogleID(identity.Sub, h.DB(r))
+
+			if err != nil {
+				log.Println("Google Auth: ", err)
+				response.InternalServerError(w, err, "Something went wrong")
+				return
+			}
+
+			if userRecord == nil || userRecord.ID == 0 {
+				userRecord, err = user.CreateUserWithGoogleID(identity.Sub, identity.Email, h.DB(r))
+
+				if err != nil {
+					log.Println("Google Auth: ", err)
+					response.InternalServerError(w, err, "Something went wrong")
+					return
+				}
+			} else {
+				// Update email if it has changed
+				if userRecord.Email != identity.Email {
+					userRecord.Email = identity.Email
+					if err := h.DB(r).Save(userRecord).Error; err != nil {
+						log.Println("Google Auth: Failed to update email: ", err)
+						// Continue without returning, as this is not a critical error
+					}
+				}
+			}
+
+			if userRecord.ID == 0 {
+				log.Println("Google Auth: User record not created")
+				response.InternalServerError(w, err, "Something went wrong")
+				return
+			}
+
+			sessionToken, refreshToken, err := auth.CreateAuthToken(r.Context(), userRecord.ID, h.rdb, userRecord.Type)
+
+			if err != nil {
+				log.Println("Google Auth: ", err)
+				response.InternalServerError(w, err, "Something went wrong")
+				return
+			}
+
+			response.OKWithData(w, "OK", map[string]any{
+				"session_token": sessionToken,
+				"refresh_token": refreshToken,
+				"user_id":       userRecord.ID,
+			})
+			return
+		}
+	})
+}
+
 func (h Handler) HandleLogout(rdb *redis.Client) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session := r.Context().Value(globals.SessionMiddlewareKey).(*types.Session)
