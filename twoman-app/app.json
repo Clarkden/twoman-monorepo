@@ -36,7 +36,10 @@
         "android.permission.READ_CONTACTS",
         "android.permission.WRITE_CONTACTS",
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.VIBRATE",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.POST_NOTIFICATIONS"
       ],
       "package": "dating.twoman.twoman"
     },
@@ -99,6 +102,15 @@
         "expo-contacts",
         {
           "contactsPermission": "Allow 2 Man to access your contacts so you can add your friends."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#A364F5",
+          "defaultChannel": "default",
+          "sounds": []
         }
       ],
       "expo-web-browser",
