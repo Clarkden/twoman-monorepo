@@ -41,7 +41,8 @@
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.POST_NOTIFICATIONS"
       ],
-      "package": "dating.twoman.twoman"
+      "package": "dating.twoman.twoman",
+      "edgeToEdgeEnabled": true
     },
     "web": {
       "bundler": "metro",
