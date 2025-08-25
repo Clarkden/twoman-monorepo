@@ -21,6 +21,9 @@
         "NSLocationAlwaysUsageDescription": "Allow 2 Man to use your location to find show nearby profiles and let your profile be discovered by other users",
         "NSLocationWhenInUseUsageDescription": "Allow 2 Man to use your location to find show nearby profiles and let your profile be discovered by other users",
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "config": {
+        "usesNonExemptEncryption": false
       }
     },
     "android": {
@@ -43,6 +46,7 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "./withCustomAndroidManifest.js",
       "expo-router",
       "expo-splash-screen",
       [
@@ -69,7 +73,7 @@
         "expo-build-properties",
         {
           "android": {
-            "minSdkVersion": 24
+            "targetSdkVersion": 35
           },
           "ios": {
             "deploymentTarget": "15.1"

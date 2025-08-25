@@ -14,6 +14,9 @@
     "build:ios:dev:local": "eas build --platform ios --profile development --local",
     "build:ios:prod:eas": "eas build --platform ios --profile production",
     "build:ios:prod:eas:submit": "eas build --platform ios --profile production --submit",
+    "build:android:dev:local": "eas build --platform android --profile development --local",
+    "build:android:prod:eas": "eas build --platform android --profile production",
+    "build:android:prod:eas:submit": "eas build --platform android --profile production --submit",
     "generate-types": "node scripts/generate-types.js",
     "sync-schemas": "cp ../twoman-api/websocket-schemas/*.json ./schemas/ && npm run generate-types"
   },
