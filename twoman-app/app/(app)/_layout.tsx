@@ -19,7 +19,11 @@ import {
   useRefreshStarBalance,
 } from "@/stores/subscription";
 import { resetReviewSession } from "@/utils/reviewPrompt";
-import { setupNotificationChannels, configureNotificationHandler, getNotificationChannelInfo } from "@/utils/notifications";
+import {
+  setupNotificationChannels,
+  configureNotificationHandler,
+  getNotificationChannelInfo,
+} from "@/utils/notifications";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -30,6 +34,8 @@ SplashScreen.preventAutoHideAsync();
 
 const REVENUE_CAT_APPLE_API_KEY =
   process.env.EXPO_PUBLIC_REVENUE_CAT_APPLE_API_KEY || "";
+const REVENUE_CAT_ANDROID_API_KEY =
+  process.env.EXPO_PUBLIC_REVENUE_CAT_ANDROID_API_KEY || "";
 
 const commonHeaderOptions = {
   headerTintColor: mainPurple,
@@ -65,14 +71,17 @@ export default function RootLayout() {
     Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
 
     Purchases.configure({
-      apiKey: REVENUE_CAT_APPLE_API_KEY,
+      apiKey:
+        Platform.OS === "ios"
+          ? REVENUE_CAT_APPLE_API_KEY
+          : REVENUE_CAT_ANDROID_API_KEY,
       ...(userId && { appUserID: userId.toString() }),
     });
 
     // Initialize subscription status when user is available
     if (userId) {
       console.log(
-        "User ID available in root layout, fetching subscription status...",
+        "User ID available in root layout, fetching subscription status..."
       );
       fetchSubscriptionStatus();
 
@@ -103,7 +112,7 @@ export default function RootLayout() {
 
     const subscription = AppState.addEventListener(
       "change",
-      handleAppStateChange,
+      handleAppStateChange
     );
 
     return () => {
@@ -116,12 +125,12 @@ export default function RootLayout() {
     const initializeNotifications = async () => {
       // Set up all notification channels first
       await setupNotificationChannels();
-      
+
       // Log channel info for debugging (Android only)
       if (Platform.OS === "android") {
         await getNotificationChannelInfo();
       }
-      
+
       // Then register for push notifications
       const token = await registerForPushNotificationsAsync();
       if (token) {
@@ -136,20 +145,25 @@ export default function RootLayout() {
       Notifications.addNotificationReceivedListener((notification) => {
         console.log("📱 Notification received:", notification);
         const { data } = notification.request.content;
-        console.log("📱 Notification type:", data?.type, "Channel:", data?.channel);
+        console.log(
+          "📱 Notification type:",
+          data?.type,
+          "Channel:",
+          data?.channel
+        );
       });
 
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
         console.log("👆 Notification tapped:", response);
         const { data } = response.notification.request.content;
-        
+
         // Handle different notification types
         if (data?.type === "match" && data?.matchId) {
           // Navigate to match screen
           console.log("🔗 Should navigate to match:", data.matchId);
         } else if (data?.type === "message" && data?.matchId) {
-          // Navigate to chat screen  
+          // Navigate to chat screen
           console.log("🔗 Should navigate to chat:", data.matchId);
         } else if (data?.type === "friend_request") {
           // Navigate to friends screen
@@ -160,7 +174,7 @@ export default function RootLayout() {
     return () => {
       notificationListener.current &&
         Notifications.removeNotificationSubscription(
-          notificationListener.current,
+          notificationListener.current
         );
       responseListener.current &&
         Notifications.removeNotificationSubscription(responseListener.current);
