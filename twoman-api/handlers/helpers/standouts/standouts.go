@@ -279,6 +279,9 @@ func generateAndCacheDuoStandouts(userID uint, limit int, db *gorm.DB, rdb *redi
 		return fmt.Errorf("failed to get user profile: %v", err)
 	}
 
+	// Log gender preference for debugging
+	log.Printf("Generating duo standouts for user %d with gender preference: '%s'", userID, userProfile.PreferredGender)
+
 	// Get user's location point for distance calculation
 	userLocationWKT := fmt.Sprintf("POINT(%f %f)",
 		userProfile.LocationPoint.Point.Coords()[0],
@@ -306,6 +309,8 @@ func generateAndCacheDuoStandouts(userID uint, limit int, db *gorm.DB, rdb *redi
 		AND f1.profile_id < f1.friend_id -- Avoid duplicates
 		AND (ST_Distance_Sphere(p1.location_point, ST_GeomFromText(?)) <= ? * 1000
 		     OR ST_Distance_Sphere(p2.location_point, ST_GeomFromText(?)) <= ? * 1000)
+		AND (p1.gender = ? OR ? = '')
+		AND (p2.gender = ? OR ? = '')
 		GROUP BY f1.profile_id, f1.friend_id
 		ORDER BY match_count DESC, RAND()
 		LIMIT ?
@@ -318,7 +323,7 @@ func generateAndCacheDuoStandouts(userID uint, limit int, db *gorm.DB, rdb *redi
 	}
 
 	var results []DuoResult
-	if err := db.Raw(query, userID, userID, userLocationWKT, userProfile.PreferredDistanceMax, userLocationWKT, userProfile.PreferredDistanceMax, limit).Scan(&results).Error; err != nil {
+	if err := db.Raw(query, userID, userID, userLocationWKT, userProfile.PreferredDistanceMax, userLocationWKT, userProfile.PreferredDistanceMax, userProfile.PreferredGender, userProfile.PreferredGender, userProfile.PreferredGender, userProfile.PreferredGender, limit).Scan(&results).Error; err != nil {
 		return fmt.Errorf("failed to query duo standouts: %v", err)
 	}
 
@@ -342,10 +347,12 @@ func generateAndCacheDuoStandouts(userID uint, limit int, db *gorm.DB, rdb *redi
 			AND f1.profile_id < f1.friend_id -- Avoid duplicates
 			AND (ST_Distance_Sphere(p1.location_point, ST_GeomFromText(?)) <= ? * 1000
 			     OR ST_Distance_Sphere(p2.location_point, ST_GeomFromText(?)) <= ? * 1000)
+			AND (p1.gender = ? OR ? = '')
+			AND (p2.gender = ? OR ? = '')
 			ORDER BY RAND()
 			LIMIT ?
 		`
-		if err := db.Raw(fallbackQuery, userID, userID, userLocationWKT, userProfile.PreferredDistanceMax, userLocationWKT, userProfile.PreferredDistanceMax, limit).Scan(&results).Error; err != nil {
+		if err := db.Raw(fallbackQuery, userID, userID, userLocationWKT, userProfile.PreferredDistanceMax, userLocationWKT, userProfile.PreferredDistanceMax, userProfile.PreferredGender, userProfile.PreferredGender, userProfile.PreferredGender, userProfile.PreferredGender, limit).Scan(&results).Error; err != nil {
 			return fmt.Errorf("failed to query fallback duo standouts: %v", err)
 		}
 
@@ -360,15 +367,19 @@ func generateAndCacheDuoStandouts(userID uint, limit int, db *gorm.DB, rdb *redi
 					0 as match_count
 				FROM friendships f1
 				JOIN friendships f2 ON f1.profile_id = f2.friend_id AND f1.friend_id = f2.profile_id
+				JOIN profiles p1 ON f1.profile_id = p1.user_id
+				JOIN profiles p2 ON f1.friend_id = p2.user_id
 				WHERE f1.accepted = true
 				AND f2.accepted = true
 				AND f1.profile_id != ?
 				AND f1.friend_id != ?
 				AND f1.profile_id < f1.friend_id -- Avoid duplicates
+				AND (p1.gender = ? OR ? = '')
+				AND (p2.gender = ? OR ? = '')
 				ORDER BY RAND()
 				LIMIT ?
 			`
-			if err := db.Raw(noDistanceFallbackQuery, userID, userID, limit).Scan(&results).Error; err != nil {
+			if err := db.Raw(noDistanceFallbackQuery, userID, userID, userProfile.PreferredGender, userProfile.PreferredGender, userProfile.PreferredGender, userProfile.PreferredGender, limit).Scan(&results).Error; err != nil {
 				return fmt.Errorf("failed to query no-distance fallback duo standouts: %v", err)
 			}
 
@@ -389,10 +400,12 @@ func generateAndCacheDuoStandouts(userID uint, limit int, db *gorm.DB, rdb *redi
 					AND f.profile_id != ?
 					AND f.friend_id != ?
 					AND f.profile_id != f.friend_id
+					AND (p1.gender = ? OR ? = '')
+					AND (p2.gender = ? OR ? = '')
 					ORDER BY RAND()
 					LIMIT ?
 				`
-				if err := db.Raw(simpleFriendshipQuery, userID, userID, limit).Scan(&results).Error; err != nil {
+				if err := db.Raw(simpleFriendshipQuery, userID, userID, userProfile.PreferredGender, userProfile.PreferredGender, userProfile.PreferredGender, userProfile.PreferredGender, limit).Scan(&results).Error; err != nil {
 					log.Printf("Failed to query simple friendship duo standouts for user %d: %v", userID, err)
 					return fmt.Errorf("failed to query simple friendship duo standouts: %v", err)
 				}
@@ -436,6 +449,9 @@ func generateAndCacheSoloStandouts(userID uint, limit int, db *gorm.DB, rdb *red
 		return fmt.Errorf("failed to get user profile: %v", err)
 	}
 
+	// Log gender preference for debugging
+	log.Printf("Generating solo standouts for user %d with gender preference: '%s'", userID, userProfile.PreferredGender)
+
 	// Get user's location point for distance calculation
 	userLocationWKT := fmt.Sprintf("POINT(%f %f)",
 		userProfile.LocationPoint.Point.Coords()[0],
@@ -458,6 +474,7 @@ func generateAndCacheSoloStandouts(userID uint, limit int, db *gorm.DB, rdb *red
 		)
 		WHERE p1.user_id != ?
 		AND ST_Distance_Sphere(p1.location_point, ST_GeomFromText(?)) <= ? * 1000
+		AND (p1.gender = ? OR ? = '')
 		GROUP BY p1.user_id
 		ORDER BY popularity_score DESC, RAND()
 		LIMIT ?
@@ -469,7 +486,7 @@ func generateAndCacheSoloStandouts(userID uint, limit int, db *gorm.DB, rdb *red
 	}
 
 	var results []SoloResult
-	if err := db.Raw(query, userID, userLocationWKT, userProfile.PreferredDistanceMax, limit).Scan(&results).Error; err != nil {
+	if err := db.Raw(query, userID, userLocationWKT, userProfile.PreferredDistanceMax, userProfile.PreferredGender, userProfile.PreferredGender, limit).Scan(&results).Error; err != nil {
 		return fmt.Errorf("failed to query solo standouts: %v", err)
 	}
 
@@ -482,10 +499,11 @@ func generateAndCacheSoloStandouts(userID uint, limit int, db *gorm.DB, rdb *red
 			FROM profiles p1
 			WHERE p1.user_id != ?
 			AND ST_Distance_Sphere(p1.location_point, ST_GeomFromText(?)) <= ? * 1000
+			AND (p1.gender = ? OR ? = '')
 			ORDER BY RAND()
 			LIMIT ?
 		`
-		if err := db.Raw(fallbackQuery, userID, userLocationWKT, userProfile.PreferredDistanceMax, limit).Scan(&results).Error; err != nil {
+		if err := db.Raw(fallbackQuery, userID, userLocationWKT, userProfile.PreferredDistanceMax, userProfile.PreferredGender, userProfile.PreferredGender, limit).Scan(&results).Error; err != nil {
 			return fmt.Errorf("failed to query fallback solo standouts: %v", err)
 		}
 	}
@@ -557,6 +575,7 @@ func convertDuoRedisToResponse(duoData DuoStandoutsRedis, db *gorm.DB) ([]schema
 		standouts = append(standouts, standout)
 	}
 
+	log.Printf("Converted %d duo standouts from Redis to response format", len(standouts))
 	return standouts, nil
 }
 
