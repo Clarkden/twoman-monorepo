@@ -2,7 +2,7 @@
   "expo": {
     "name": "2 Man",
     "slug": "twoman-app",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "twoman",
@@ -12,7 +12,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#1A1A1A"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "usesAppleSignIn": true,
@@ -68,7 +70,9 @@
       [
         "expo-font",
         {
-          "fonts": [""]
+          "fonts": [
+            ""
+          ]
         }
       ],
       "expo-apple-authentication",
@@ -90,7 +94,10 @@
           }
         }
       ],
-      ["react-native-appsflyer", {}],
+      [
+        "react-native-appsflyer",
+        {}
+      ],
       [
         "@sentry/react-native/expo",
         {
